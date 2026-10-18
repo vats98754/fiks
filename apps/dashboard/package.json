@@ -1,0 +1,8 @@
+{
+  "name": "@fiks/dashboard",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  }
+}

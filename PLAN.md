@@ -54,9 +54,9 @@ Every milestone ends the same way: the verifier reports PASS, PROGRESS.md is upd
 node -v                                   # >= v22.12
 pnpm i --frozen-lockfile && pnpm typecheck && pnpm lint && pnpm test
 node scripts/check-pins.mjs               # exit 0, prints each pin with its publish date
-git check-ignore -q .env .work .fiks && echo IGNORED_OK
+for p in .env .work .fiks; do git check-ignore -q "$p" || exit 1; done && echo IGNORED_OK
 grep -q '^BENCH_MODEL=claude-sonnet-5-5' .env.example && grep -q '^REPAIR_MODEL=claude-opus-5-5' .env.example && echo ENV_OK
-git -C .work/shop-mcp remote get-url origin   # git@github.com:vats98754/shop-mcp.git
+git -C .work/shop-mcp remote get-url origin   # github.com[:/]vats98754/shop-mcp(.git); a clean clone uses https for fetch
 gh run list -R vats98754/shop-mcp --branch main --limit 1 --json conclusion,headSha -q '.[0]'   # conclusion=success, headSha == next line
 git -C .work/shop-mcp rev-parse HEAD
 test -f PROGRESS.md && echo PROGRESS_OK
