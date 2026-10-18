@@ -54,6 +54,12 @@ export interface ProxyOptions {
    * (after persisting a trace) to have it named in the receipt.
    */
   onCall?: (rec: CallRecord) => Promise<{ traceId?: string } | undefined> | { traceId?: string } | undefined;
+  /**
+   * Name of the field fiks adds to `structuredContent` with the receipt text (default
+   * `fiks_receipt`; `null` to disable). Clients such as Claude Code show the model only
+   * structuredContent when a tool returns it, so a text block alone never reaches the agent.
+   */
+  receiptField?: string | null;
 }
 
 export interface FiksProxy {
@@ -89,8 +95,27 @@ const errorResult = (message: string): CallToolResult => ({
   content: [{ type: 'text', text: message }],
 });
 
+export const DEFAULT_RECEIPT_FIELD = 'fiks_receipt';
+
+/** The declared outputSchema plus fiks's optional receipt field, so clients that validate accept it. */
+export function withReceiptField(schema: unknown, field: string): unknown {
+  const s = schema as { type?: unknown; properties?: Record<string, unknown> } | undefined;
+  if (s?.type !== 'object') return schema;
+  return {
+    ...s,
+    properties: {
+      ...(s.properties ?? {}),
+      [field]: {
+        type: 'string',
+        description: 'Added by fiks-proxy: a check of this result against its contract.',
+      },
+    },
+  };
+}
+
 export async function startProxy(opts: ProxyOptions): Promise<FiksProxy> {
   validateContracts(opts.contracts);
+  const receiptField = opts.receiptField === undefined ? DEFAULT_RECEIPT_FIELD : opts.receiptField;
   const now = opts.now ?? (() => new Date());
   let tap = opts.tap;
   let ownTap: Tap | undefined;
@@ -197,11 +222,18 @@ export async function startProxy(opts: ProxyOptions): Promise<FiksProxy> {
           : !result.structuredContent
             ? 'no structured result to check'
             : undefined;
-      // The upstream content and structuredContent are passed through untouched; fiks only
-      // adds its receipt to _meta and one trailing text block.
+      // Upstream fields are passed through unchanged. fiks only adds: its receipt in _meta, one
+      // trailing text block, and (when there is structured output) one receipt field in it.
+      const text = receiptText(receipt, name, reason);
+      const structured =
+        // Never overwrite an upstream field that happens to have the same name.
+        result.structuredContent && receiptField && !(receiptField in result.structuredContent)
+          ? { structuredContent: { ...result.structuredContent, [receiptField]: text } }
+          : {};
       return {
         ...result,
-        content: [...(result.content ?? []), { type: 'text', text: receiptText(receipt, name, reason) }],
+        ...structured,
+        content: [...(result.content ?? []), { type: 'text', text }],
         _meta: { ...(result._meta ?? {}), [RECEIPT_META_KEY]: receipt },
       };
     });
@@ -212,7 +244,15 @@ export async function startProxy(opts: ProxyOptions): Promise<FiksProxy> {
     server.setRequestHandler(ListToolsRequestSchema, async (req) => {
       const res = await listUpstream(req.params);
       for (const t of res.tools) schemas.set(t.name, t.outputSchema as JsonSchema | undefined);
-      return res;
+      if (!receiptField) return res;
+      return {
+        ...res,
+        tools: res.tools.map((t) =>
+          t.outputSchema
+            ? { ...t, outputSchema: withReceiptField(t.outputSchema, receiptField) as Tool['outputSchema'] }
+            : t,
+        ),
+      };
     });
     server.setRequestHandler(CallToolRequestSchema, (req) =>
       handleCall(req.params.name, (req.params.arguments ?? {}) as Record<string, unknown>),

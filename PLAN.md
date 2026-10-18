@@ -154,6 +154,8 @@ node scripts/sync-contracts.mjs --check   # exit 0 (vendored evaluator identical
 
 **HTTP tap.** `--tap VENDOR_BASE_URL`: the proxy starts a recording reverse proxy, rewrites that env var for the upstream child process, and forwards traffic to the real URL. Calls are serialized per upstream with a mutex, so every exchange belongs to exactly one call (limitation recorded in the README). Sensitive headers are redacted: `authorization`, `cookie`, `x-api-key`.
 
+**Receipt field (finding from the first live bench smoke, M4).** Claude Code shows the model only `structuredContent` when a tool returns it, so a receipt in `_meta` and a trailing text block never reached the agent: a Haiku agent read `price: null` as "no price listed" (C4, C9). fiks-proxy therefore also adds one field, `fiks_receipt` (the receipt text), to `structuredContent`, and declares it as an optional string in that tool's `outputSchema` in `tools/list`. Upstream fields stay unchanged, contracts are evaluated on the untouched upstream result, and `--compare-direct` strips the three additions before comparing. `--receipt-field none` disables it.
+
 **Receipt text.** Status goes on the first line, the next action is named, and the whole block is under 60 tokens (agent-ux-tester grades this). Format:
 `[fiks] VIOLATED get_product: price is null, but p-1001 should have one. Do not treat the missing price as meaningful; tell the user it is unavailable right now.` (tool name first, one plain fact per field, one action per problem kind). Property ids, the trace id and `upstreamObserved` are in `_meta` only, since the agent cannot act on them. Tool errors get `NOT CHECKED`. Budget: 60 tokens, enforced in receipt.test.ts with an estimator that reads slightly low, so the limit there is 54.
 
@@ -267,7 +269,8 @@ env -u ANTHROPIC_API_KEY pnpm test
    - It appends `confirmed` only if that holds.
 
 **Files:**
-- `packages/repair/src/{worktree.ts,prompt.ts,runner-agent-sdk.ts,runner-claude-cli.ts,guard.ts,local-gate.ts,ci-gate.ts,pr.ts,events.ts}` plus tests. The tests use a fake `gh` shim on PATH and a local bare git remote.
+- `packages/repair/src/{guard.ts,prompt.ts,runner.ts,gates.ts,pr.ts}` plus tests (deviation: worktree and events live in `@fiks/repro`; both runners in `runner.ts`; local and CI gates in `gates.ts`). The tests use a fake `gh` (`FIKS_GH`) and a local bare git remote.
+- Deviations recorded after the M4 verifier: the CI gate polls `gh run list` for the push run on the exact pushed SHA instead of `gh run watch`; `RepairResult` has no `job` field and adds a `ready` status (`--no-pr`); `fiks confirm` re-runs the drift live under full v2 AND replays the whole shop-mcp suite (all traces, repros, contracts) on merged main, and records `confirmed` only when both hold. The guard compares against the repro commit (not HEAD) and rejects agent commits; agent reads are limited to the worktree; agent Bash is limited to `pnpm typecheck|lint|test [paths]` and `pnpm exec vitest run [paths]` with no flags. Agent transcripts are saved per attempt. Limitation (README): agent-written src/ code runs on the host during the gates, with the user's credentials in the environment.
 - `packages/cli/src/commands/{repair.ts,confirm.ts}`.
 
 **Interfaces:**
@@ -286,12 +289,15 @@ interface LoopEvent { ts: string; runId: string; traceId?: string; propertyId?: 
 
 **Acceptance, no key:**
 ```
-pnpm --filter @fiks/repair test     # covers: worktree create/cleanup; guard rejects test/** edits;
-                                    # PR body sections; CI red -> fake gh never receives "pr create"; order of gates
-pnpm fiks repair --scenario D2 --selftest oracle-broken --no-pr --json | tee .fiks/red.json | jq -e '.status == "ci_red"'
-gh pr list -R vats98754/shop-mcp --head "$(jq -r .job.branch .fiks/red.json)" --json number -q length    # 0
+pnpm --filter @fiks/repair test     # guard: agent writes only src/**, runs only pnpm checks; commit guards
+pnpm --filter @fiks/cli test -- repair   # offline pipeline against a local bare remote + fake gh (FIKS_GH):
+                                    # D2 PR only after green CI, 6 body sections, label fiks, no merge call;
+                                    # D3 re-record commit holds only *.rerecorded.json; red CI -> ci_red, no PR;
+                                    # CI pending -> ci_timeout, no PR; test-editing agent -> gate_failed, nothing pushed;
+                                    # wrong fix -> gate_failed at the local gate, nothing pushed
 grep -rnE "pr merge|--auto|merge_method|automerge" packages scripts ; test $? -eq 1 && echo NO_AUTOMERGE
 ```
+(Deviation: the plan's `--selftest oracle|oracle-broken` CLI flags became injected test runners, so oracle code never ships in the CLI. The red-CI case uses the fake gh rather than a deliberately broken push to GitHub.)
 
 **Acceptance, key required (live, real PRs; D1–D3 required, D4–D5 stretch):**
 ```
@@ -323,7 +329,8 @@ Repeat for D1 and D3. Before reporting PASS, the verifier inspects the F-gate as
 - `falsePositivesV1`: count of violated receipts in phase A. It must be 0.
 
 **Files:**
-- `packages/bench/src/{tasks.ts,grader.ts,agent.ts,run.ts,summarize.ts,drift-map.ts}` plus tests. `drift-map.ts` maps propertyId to a drift and is used only by the bench; the proxy knows nothing about drifts.
+- `packages/bench/src/{tasks.ts,grader.ts,agent.ts,run.ts,summarize.ts,drift-map.ts}` plus tests.
+- Deviations (recorded after the M5/M6 verifier): the bench package holds `tasks.ts` (tasks and graders), `agent.ts` (Claude Agent SDK agent, no built-in tools) and `stats.ts`; the run loop is `packages/cli/src/commands/bench.ts` and the summary is `packages/cli/src/commands/summarize.ts` (they need the harness and worktrees). Drift-to-property mapping comes from the scenario targets. Per-run proxy calls are in `proxy/<task>-<trial>.jsonl` (no per-run events.jsonl); loop evidence is copied to `bench/results/loop/`. Added phase `B_v2_direct` (same tasks, no fiks) as a without-fiks baseline. Outcomes are correct / declined / wrong / no answer. summarize uses only full runs (every task, k ≥ 5, all rows, finished); partial runs default to `.fiks/bench/`; phase C is labelled `C_v2_fixed` only after `gh` shows every fix PR merged, else it refuses unless `--shop-ref pr-heads` (label `C_v2_prheads`). `reproValid` = F gate ok and the local gate ok (which includes the P gate). Each run's meta records the fiks commit (runs before that change do not). There is no `drift-map.ts`; the proxy knows nothing about drifts.
 - `bench/results/<runId>/{trials.jsonl,events.jsonl,meta.json}` (committed).
 - `bench/results/summary.json`.
 

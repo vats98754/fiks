@@ -58,7 +58,10 @@ describe('fiks proxy', () => {
       name: 'get_product',
       arguments: { id: 'p-1' },
     })) as CallToolResult;
-    expect(r.structuredContent).toEqual({ id: 'p-1', price: null });
+    const { fiks_receipt, ...upstream } = r.structuredContent as Record<string, unknown>;
+    expect(upstream).toEqual({ id: 'p-1', price: null });
+    // Claude Code shows the model only structuredContent: the receipt must be in it too.
+    expect(fiks_receipt).toBe(lastText(r));
     expect(r.content[0]).toEqual({ type: 'text', text: '{"id":"p-1","price":null}' });
     expect(r.content).toHaveLength(2);
     expect(receiptOf(r)).toMatchObject({
@@ -105,6 +108,23 @@ describe('fiks proxy', () => {
     env = await proxied(build, CONTRACTS);
     const { tools } = await env.client.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual(['boom', 'echo', 'get_product']);
-    expect(tools.find((t) => t.name === 'get_product')?.outputSchema).toBeDefined();
+    const schema = tools.find((t) => t.name === 'get_product')?.outputSchema as {
+      properties: Record<string, unknown>;
+    };
+    expect(Object.keys(schema.properties).sort()).toEqual(['fiks_receipt', 'id', 'price']);
+  });
+
+  test('the receipt field can be disabled', async () => {
+    env = await proxied(build, CONTRACTS, { receiptField: null });
+    const r = (await env.client.callTool({
+      name: 'get_product',
+      arguments: { id: 'p-1' },
+    })) as CallToolResult;
+    expect(r.structuredContent).toEqual({ id: 'p-1', price: null });
+    const { tools } = await env.client.listTools();
+    const schema = tools.find((t) => t.name === 'get_product')?.outputSchema as {
+      properties: Record<string, unknown>;
+    };
+    expect(Object.keys(schema.properties).sort()).toEqual(['id', 'price']);
   });
 });

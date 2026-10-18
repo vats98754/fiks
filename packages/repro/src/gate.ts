@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import type { ReproSpec } from './generate.ts';
 
 export interface FailedTest {
@@ -68,11 +68,13 @@ export function runSuite(repoDir: string): SuiteRun {
       command,
     };
   }
+  // vitest reports resolved paths (e.g. /private/var/... on macOS for /var/...).
+  const realRepo = realpathSync(repoDir);
   const failed: FailedTest[] = [];
   const files: FileResult[] = [];
   const suiteErrors: string[] = [];
   for (const file of report.testResults) {
-    const rel = file.name.replace(`${repoDir}/`, '');
+    const rel = relative(realRepo, realpathSync(file.name));
     files.push({ file: rel, statuses: file.assertionResults.map((a) => a.status) });
     const fails = file.assertionResults.filter((a) => a.status === 'failed');
     for (const a of fails) {

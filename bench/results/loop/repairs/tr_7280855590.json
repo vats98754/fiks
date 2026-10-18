@@ -1,0 +1,90 @@
+{
+  "status": "pr_opened",
+  "reason": "PR https://github.com/vats98754/shop-mcp/pull/3",
+  "scenario": "D3",
+  "traceId": "tr_7280855590",
+  "propertyIds": [
+    "shop.create_order/readAfterWrite"
+  ],
+  "branch": "fiks/create-order-readafterwrite-tr_7280855590",
+  "base": "main",
+  "model": "claude-opus-5-5",
+  "attempts": 1,
+  "costUsd": 0.20662879999999997,
+  "turns": 14,
+  "gates": [
+    {
+      "gate": "F",
+      "ok": true,
+      "reason": "fails for the stated reason on 2/2 runs",
+      "evidence": {
+        "command": "vitest run --reporter=json --outputFile=/var/folders/s_/y1_hxfjs6d704wyr6clkvdp80000gn/T/fiks-gate-i9EC99/vitest.json",
+        "exitCode": 1,
+        "failed": [
+          {
+            "file": "test/repro/tr_7280855590.test.ts",
+            "test": "shop.create_order/readAfterWrite holds for create_order [fiks tr_7280855590]",
+            "message": "AssertionError: shop.create_order/readAfterWrite violated (/Users/anvayvats/fiks/.work/wt/fiks/create-order-readafterwrite-tr_7280855590/test/repro/tr_7280855590.json): expected [ Array(1) ] to deeply equal []\n    at expectRecordingHolds (/Users/anvayvats/fiks/.work/wt/fiks/create-order-readafterwrite-tr_7280855590/test/fiks/check.ts:79:53)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at /Users/anvayvats/fiks/.work/wt/fiks/create-order-readafterwrite-tr_7280855590/test/repro/tr_7280855590.test.ts:12:3\n    at async file:///Users/anvayvats/fiks/.work/shop-mcp/node_modules/.pnpm/vitest@5.0.3_@types+node@22.20.5_vite@8.3.4_@types+node@22.20.5_esbuild@0.28.2_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BTlFXlnv.js:2783:20"
+          }
+        ],
+        "logPath": "/var/folders/s_/y1_hxfjs6d704wyr6clkvdp80000gn/T/fiks-gate-i9EC99/vitest.json",
+        "runs": 2
+      }
+    },
+    {
+      "gate": "P",
+      "ok": true,
+      "reason": "repro test ran and passed",
+      "evidence": {
+        "command": "pnpm typecheck && pnpm lint && pnpm test",
+        "exitCode": 0,
+        "failed": [],
+        "logPath": ""
+      }
+    },
+    {
+      "gate": "local",
+      "ok": true,
+      "reason": "repro test, full contract suite, all traces, typecheck and lint pass",
+      "evidence": {
+        "command": "pnpm typecheck && pnpm lint && pnpm test",
+        "exitCode": 0,
+        "failed": [],
+        "logPath": ""
+      }
+    },
+    {
+      "gate": "ci",
+      "evidence": {
+        "command": "gh run view 39115351429",
+        "exitCode": 0,
+        "failed": [],
+        "logPath": "",
+        "url": "https://github.com/vats98754/shop-mcp/actions/runs/39115351429"
+      },
+      "ok": true,
+      "status": "green",
+      "reason": "CI success on 1de2d3a"
+    }
+  ],
+  "fixCommitFiles": [
+    "src/tools/create_order.ts"
+  ],
+  "rerecorded": [
+    "test/fixtures/v1/order-create.rerecorded.json",
+    "test/repro/tr_7280855590.rerecorded.json"
+  ],
+  "commits": [
+    "bce692acf922cdc1eace3b97f845d147a0fb330f",
+    "7c5f4ea9a635239625241ad6a2bee48b0f9ad28b",
+    "1de2d3afcd9611303092100c116645ec2072b2ea"
+  ],
+  "startedAt": "2026-10-18T09:25:39.044Z",
+  "finishedAt": "2026-10-18T09:27:16.191Z",
+  "runner": "agent-sdk",
+  "ciRunUrl": "https://github.com/vats98754/shop-mcp/actions/runs/39115351429",
+  "pr": {
+    "number": 3,
+    "url": "https://github.com/vats98754/shop-mcp/pull/3"
+  }
+}

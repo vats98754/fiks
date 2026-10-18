@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="13" role="img" aria-labelledby="t"><title id="t">pass^k by k for each bench phase (from bench/results/summary.json)</title>
+<rect width="720" height="360" fill="#fcfcfb"/>
+<line x1="56" x2="696" y1="240" y2="240" stroke="#e1e0d9"/>
+<text x="48" y="244" text-anchor="end" fill="#898781">0%</text>
+<line x1="56" x2="696" y1="186" y2="186" stroke="#e1e0d9"/>
+<text x="48" y="190" text-anchor="end" fill="#898781">25%</text>
+<line x1="56" x2="696" y1="132" y2="132" stroke="#e1e0d9"/>
+<text x="48" y="136" text-anchor="end" fill="#898781">50%</text>
+<line x1="56" x2="696" y1="78" y2="78" stroke="#e1e0d9"/>
+<text x="48" y="82" text-anchor="end" fill="#898781">75%</text>
+<line x1="56" x2="696" y1="24" y2="24" stroke="#e1e0d9"/>
+<text x="48" y="28" text-anchor="end" fill="#898781">100%</text>
+<text x="56" y="260" text-anchor="middle" fill="#898781">pass^1</text>
+<text x="216" y="260" text-anchor="middle" fill="#898781">pass^2</text>
+<text x="376" y="260" text-anchor="middle" fill="#898781">pass^3</text>
+<text x="536" y="260" text-anchor="middle" fill="#898781">pass^4</text>
+<text x="696" y="260" text-anchor="middle" fill="#898781">pass^5</text>
+<polyline fill="none" stroke="#2a78d6" stroke-width="2" points="56,24 216,24 376,24 536,24 696,24"/>
+<circle cx="56" cy="24" r="4" fill="#fcfcfb" stroke="#2a78d6" stroke-width="2"/>
+<circle cx="216" cy="24" r="4" fill="#fcfcfb" stroke="#2a78d6" stroke-width="2"/>
+<circle cx="376" cy="24" r="4" fill="#fcfcfb" stroke="#2a78d6" stroke-width="2"/>
+<circle cx="536" cy="24" r="4" fill="#fcfcfb" stroke="#2a78d6" stroke-width="2"/>
+<circle cx="696" cy="24" r="4" fill="#fcfcfb" stroke="#2a78d6" stroke-width="2"/>
+<rect x="56" y="274" width="12" height="12" rx="3" fill="#2a78d6"/>
+<text x="74" y="284" fill="#0b0b0b">Before the vendor change: pass^5 = 100% (30 trials)</text>
+<polyline fill="none" stroke="#eb6834" stroke-width="2" points="56,95.9928 216,95.9928 376,95.9928 536,95.9928 696,95.9928"/>
+<circle cx="56" cy="95.9928" r="4" fill="#fcfcfb" stroke="#eb6834" stroke-width="2"/>
+<circle cx="216" cy="95.9928" r="4" fill="#fcfcfb" stroke="#eb6834" stroke-width="2"/>
+<circle cx="376" cy="95.9928" r="4" fill="#fcfcfb" stroke="#eb6834" stroke-width="2"/>
+<circle cx="536" cy="95.9928" r="4" fill="#fcfcfb" stroke="#eb6834" stroke-width="2"/>
+<circle cx="696" cy="95.9928" r="4" fill="#fcfcfb" stroke="#eb6834" stroke-width="2"/>
+<rect x="56" y="292" width="12" height="12" rx="3" fill="#eb6834"/>
+<text x="74" y="302" fill="#0b0b0b">After the change, without fiks: pass^5 = 67% (30 trials)</text>
+<polyline fill="none" stroke="#1baf7a" stroke-width="2" points="56,146.4072 216,157.2072 376,164.4 536,168.0072 696,168.0072"/>
+<circle cx="56" cy="146.4072" r="4" fill="#fcfcfb" stroke="#1baf7a" stroke-width="2"/>
+<circle cx="216" cy="157.2072" r="4" fill="#fcfcfb" stroke="#1baf7a" stroke-width="2"/>
+<circle cx="376" cy="164.4" r="4" fill="#fcfcfb" stroke="#1baf7a" stroke-width="2"/>
+<circle cx="536" cy="168.0072" r="4" fill="#fcfcfb" stroke="#1baf7a" stroke-width="2"/>
+<circle cx="696" cy="168.0072" r="4" fill="#fcfcfb" stroke="#1baf7a" stroke-width="2"/>
+<rect x="56" y="310" width="12" height="12" rx="3" fill="#1baf7a"/>
+<text x="74" y="320" fill="#0b0b0b">After the change, with fiks receipts: pass^5 = 33% (30 trials)</text>
+</svg>

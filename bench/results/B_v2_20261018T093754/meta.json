@@ -1,0 +1,26 @@
+{
+  "runId": "B_v2_20261018T093754",
+  "phase": "B_v2",
+  "model": "claude-sonnet-5-5",
+  "k": 5,
+  "tasks": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+  ],
+  "shopRef": "seed-v1",
+  "shopMcpSha": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7",
+  "vendor": "v2",
+  "vendorDrifts": [
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    "D5"
+  ],
+  "startedAt": "2026-10-18T09:37:54.441Z",
+  "finishedAt": "2026-10-18T09:43:44.643Z"
+}

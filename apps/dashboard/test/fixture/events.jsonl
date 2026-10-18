@@ -1,0 +1,6 @@
+{"ts":"2026-10-18T09:00:00.000Z","runId":"r","type":"violation","traceId":"tr_fixture01"}
+{"ts":"2026-10-18T09:00:12.000Z","runId":"r","type":"gate_F","traceId":"tr_fixture01","ok":true,"data":{"reason":"fails for the stated reason on 3/3 runs"}}
+{"ts":"2026-10-18T09:00:40.000Z","runId":"r","type":"gate_local","traceId":"tr_fixture01","ok":false,"data":{"reason":"pnpm test failed"}}
+{"ts":"2026-10-18T09:01:05.000Z","runId":"r","type":"gate_local","traceId":"tr_fixture01","ok":true,"data":{"reason":"all pass"}}
+{"ts":"2026-10-18T09:01:30.000Z","runId":"r","type":"gate_ci","traceId":"tr_fixture01","ok":true,"data":{"url":"https://example.com/run"}}
+{"ts":"2026-10-18T09:01:34.000Z","runId":"r","type":"pr_opened","traceId":"tr_fixture01","data":{"url":"https://github.com/vats98754/shop-mcp/pull/1"}}

@@ -1,0 +1,458 @@
+/* fiks dashboard. Tokens follow the reference data-viz palette (light and dark selected). */
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --good: #0ca30c;
+  --warning: #fab219;
+  --critical: #d03b3b;
+  --serious: #ec835a;
+  --good-ink: #006300;
+  --link: #256abf;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #f0efec;
+    --ink-2: #c3c2b7;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --good-ink: #0ca30c;
+    --link: #86b6ef;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --ink: #f0efec;
+  --ink-2: #c3c2b7;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255, 255, 255, 0.1);
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --good-ink: #0ca30c;
+  --link: #86b6ef;
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font:
+    18px / 1.5 system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  -webkit-text-size-adjust: 100%;
+}
+main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+a {
+  color: var(--link);
+  text-underline-offset: 2px;
+}
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.state {
+  padding: 48px 24px;
+  color: var(--ink-2);
+}
+
+/* Header */
+.brand {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+}
+.lede {
+  color: var(--ink-2);
+  margin: 0 0 16px;
+  max-width: 68ch;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  color: var(--ink-2);
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Sections */
+section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  margin-top: 32px;
+}
+h1 {
+  font-size: 36px;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  margin: 0 0 28px;
+}
+h1 .unit {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+h2 {
+  font-size: 24px;
+  line-height: 1.25;
+  margin: 0 0 12px;
+}
+
+/* Shared marks */
+.swatch {
+  display: inline-block;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  margin-right: 8px;
+  vertical-align: -1px;
+}
+.status {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  color: #0b0b0b;
+  font-size: 16px;
+  font-weight: 700;
+  margin-right: 8px;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+  list-style: none;
+  padding: 0;
+  color: var(--ink-2);
+  font-size: 16px;
+  margin: 0 0 16px;
+}
+.legend > * {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Headline: one number per phase, in reading order */
+.phases {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+}
+.phases li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--grid);
+}
+.phase-label {
+  display: flex;
+  align-items: baseline;
+  color: var(--ink-2);
+  font-size: 16px;
+  min-height: 48px;
+}
+.phase-value {
+  display: flex;
+  align-items: flex-end;
+  height: 64px;
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+/* Same box as a value, so the after-fix number can arrive without moving anything. */
+.phases li.pending .phase-value {
+  color: var(--ink-2);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 0;
+  padding-bottom: 6px;
+}
+.caption {
+  color: var(--ink-2);
+  font-size: 16px;
+  margin: 0 0 24px;
+  max-width: 72ch;
+}
+.chart {
+  margin: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--grid);
+}
+.chart .legend {
+  margin: 12px 0 0;
+}
+.legend-title {
+  color: var(--ink);
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th,
+td {
+  text-align: left;
+  padding: 12px 10px;
+  border-top: 1px solid var(--grid);
+  vertical-align: middle;
+}
+thead th {
+  border-top: 0;
+  color: var(--ink-2);
+  font-weight: 500;
+  font-size: 16px;
+  vertical-align: bottom;
+}
+tbody th {
+  font-weight: 600;
+}
+th.num,
+td.num {
+  text-align: right;
+}
+.outcomes tbody th {
+  white-space: nowrap;
+}
+.bar-col {
+  width: 36%;
+}
+.stack {
+  display: flex;
+  gap: 2px;
+  height: 16px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.stack span {
+  display: block;
+  min-width: 3px;
+}
+.table-scroll {
+  overflow-x: auto;
+}
+.drifts button {
+  background: none;
+  border: 0;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+}
+.drifts button:hover {
+  text-decoration: underline;
+}
+.drifts tr.selected th,
+.drifts tr.selected td {
+  background: var(--page);
+}
+.drifts tr.selected th {
+  box-shadow: inset 3px 0 0 var(--ink);
+}
+.yes {
+  color: var(--good-ink);
+  font-weight: 700;
+}
+.no {
+  color: var(--muted);
+}
+
+/* Timeline */
+.timeline {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.timeline li {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 2px 16px;
+  padding: 10px 0 10px 20px;
+  border-left: 2px solid var(--good);
+  margin-left: 7px;
+  position: relative;
+}
+.timeline li::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 17px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--good);
+}
+.timeline li.fail {
+  border-left-color: var(--critical);
+}
+.timeline li.fail::before {
+  border-color: var(--critical);
+  background: var(--critical);
+}
+.timeline li.pending {
+  border-left-style: dashed;
+  border-left-color: var(--muted);
+}
+.timeline li.pending::before {
+  border-color: var(--muted);
+}
+.timeline li.pending .what {
+  color: var(--ink-2);
+}
+.when {
+  color: var(--ink-2);
+}
+.evidence {
+  margin-left: 12px;
+  font-size: 16px;
+}
+.detail {
+  grid-column: 2;
+  color: var(--ink-2);
+  font-size: 16px;
+}
+
+@media (max-width: 720px) {
+  main {
+    padding: 24px 16px 56px;
+  }
+  section {
+    padding: 20px 16px;
+    margin-top: 24px;
+  }
+  h1 {
+    font-size: 32px;
+  }
+  .phases {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 16px;
+  }
+  .phase-label {
+    min-height: 72px;
+  }
+  .phase-value {
+    height: 52px;
+    font-size: 44px;
+  }
+
+  /* Tables become one card per row; each cell carries its own label. */
+  .outcomes thead,
+  .drifts thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .outcomes tbody tr,
+  .drifts tbody tr {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px 12px;
+    padding: 14px 0;
+    border-top: 1px solid var(--grid);
+  }
+  .outcomes tbody th,
+  .outcomes tbody td,
+  .drifts tbody th,
+  .drifts tbody td {
+    display: block;
+    padding: 0;
+    border: 0;
+    text-align: left;
+    white-space: normal;
+  }
+  .outcomes tbody th,
+  .drifts tbody th,
+  .outcomes td.bar-col {
+    grid-column: 1 / -1;
+    width: auto;
+  }
+  .outcomes td[data-label="Trials"] {
+    display: none;
+  }
+  .outcomes td[data-label]::before,
+  .drifts td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--ink-2);
+    font-size: 16px;
+  }
+  .drifts tr.selected th,
+  .drifts tr.selected td {
+    background: none;
+  }
+  .drifts tbody tr {
+    padding-left: 12px;
+    box-shadow: inset 3px 0 0 transparent;
+  }
+  .drifts tbody tr.selected {
+    box-shadow: inset 3px 0 0 var(--ink);
+  }
+  .drifts tr.selected th {
+    box-shadow: none;
+  }
+  .timeline li {
+    grid-template-columns: 80px 1fr;
+    gap: 2px 12px;
+  }
+}

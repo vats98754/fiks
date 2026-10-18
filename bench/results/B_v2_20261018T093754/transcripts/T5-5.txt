@@ -1,0 +1,7 @@
+tool_use mcp__shop__get_order {"order_id":"o-5001"}
+tool_result "{\"order_id\":\"o-5001\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1005\",\"quantity\":2,\"unit_price\":329}],\"total\":658,\"created_at\":\"1970-01-01T00:00:00.000Z\",\"fiks_receipt\":\"[fiks] VIOLATED get_order: created_at shows 1970-01-01 but upstream sent 2026-10-16T09:43Z. Do not quote the tool's value; give the upstream value if needed, as unconfirmed.\"}"
+tool_use mcp__bench__submit_answer {"answer":"The order tool returned a created_at of 1970-01-01. A check on that result flagged it as wrong, so I'm not using it. The check said the upstream system sent 2026-10-16T09:43Z, which gives a date of 2026-10-16. I couldn't confirm that date independently."}
+tool_result [{"type":"text","text":"Submitted."}]
+assistant: Order o-5001 was most likely placed on 2026-10-16, but I couldn't confirm that date.
+
+The order tool returned a created_at of 1970-01-01. A check on that result flagged it as wrong, so I didn't use it. The check said the upstream system sent 2026-10-16T09:43Z.

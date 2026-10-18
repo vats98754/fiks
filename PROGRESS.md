@@ -9,10 +9,10 @@ Status per milestone in PLAN.md. Every PASS here is a verifier PASS with a commi
 | M1 vendor-api + shop-mcp seed | PASS | (this commit) | verifier PASS on round 6; rounds 1-5 found gate holes (re-record fallback, D1/D4 overlap, weak contracts, trace scope, golden after re-record, error-result golden, lazy now(), refusal-as-fix, cached read-back); fixed, seed-v1 re-tagged at bb037cf, guarded by packages/cli/test/seed-integrity.test.ts (14 real/fake-fix cases) |
 | M2 proxy + contracts + receipts | PASS | (this commit) | round 1 FAIL (lint, receipt length, probe/outputSchema rewrote results, no-tap silence, bin EOF); round 2 FAIL (upstream env dropped); round 3 PASS; agent-ux-tester: 0 v1 false positives in 51 calls |
 | M3 traces + repro (F→P gate) | PASS | (this commit) | round 1 FAIL (F gate substring match, P gate did not require the repro ran, empty target); fixed; round 2 PASS after a lint fix. All 5 drifts: F 3/3 on seed-v1, P after oracle fix |
-| M4 repair + PR (green-CI gate) | not started | | needs `ANTHROPIC_API_KEY` for the live run |
-| M5 bench + summary.json | not started | | needs `ANTHROPIC_API_KEY` |
-| M6 dashboard | not started | | |
-| M7 README / DEMO / claims audit | not started | | |
+| M4 repair + PR (green-CI gate) | PASS | (this commit) | live, real Claude agent (claude-opus-5-5 via Agent SDK + OAuth token), 1 attempt each, green CI before PR: D2 vats98754/shop-mcp#1, D1 #2, D3 #3 (with fiks re-record commit), D5 #4. D4 waits for #2 to merge (same file). |
+| M5 bench + summary.json | PASS except phase C | (this commit) | phases A, B, B_v2_direct run live (claude-sonnet-5-5 via Agent SDK + OAuth); phase C waits for the fix PRs to be merged |
+| M6 dashboard | PASS | (this commit) | built from summary.json + loop events only; designer pass done |
+| M7 README / DEMO / claims audit | drafting | | README.md, DEMO.md, docs/chart.svg, scripts/check-claims.mjs; claims-auditor not yet run |
 
 ## Environment decisions
 - Node: the machine default was v22.5.1, which is below the Vitest 5 / Vite 8 floor (22.12). Installed v22.23.3 via nvm; `.nvmrc` = 22, `engines.node` = `>=22.12`, `engine-strict=true`. The login shell PATH still pins v22.5.1, so run commands with `export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH` (or `nvm use`).
@@ -23,6 +23,26 @@ Status per milestone in PLAN.md. Every PASS here is a verifier PASS with a commi
 - `.npmrc` has `reporter=silent` so `pnpm fiks ... --json | jq` gets clean JSON. Script output (tsc, vitest, fiks) still prints; pass `--reporter=default` to see pnpm's own messages.
 - Re-recording rule (PLAN.md M1): a fix that changes upstream requests needs `<name>.rerecorded.json`, written by `fiks rerecord`, never by the repair agent.
 - `seed-v1` was moved seven times (final: bb037cf; the last two moves only re-synced vendored contracts and tool descriptions during M2), before any PR existed, to include the M1 verifier fixes (handler errors on unmatched replay, trace `target` scoping, golden v1 fixtures that survive re-recording, frozen upstream clock, `equalsUpstream`, `vendor/openapi.json`). From now on it is frozen.
+
+## Findings
+- Claude Code passes only `structuredContent` to the model when a tool returns it; receipts in `_meta` or an extra text block are invisible to the agent. fiks-proxy now adds a `fiks_receipt` field (see PLAN.md M2). Evidence (committed): `bench/evidence/receipt-field/{off,on}/` — one Haiku trial on T1 each. Off: the receipt is absent from what the agent sees and it answers "has no price listed". On: the agent sees `fiks_receipt` and answers "unavailable right now". (The first observation, in an overwritten smoke run, gave the same "no price listed" answer.)
+- Bench, phases A and B plus a no-fiks baseline (claude-sonnet-5-5, 6 tasks x k=5, logs in `bench/results/`):
+  - A_v1 (through fiks): 30/30 pass, 0 violated receipts (no false positives).
+  - B_v2 (drift, unfixed, through fiks): 13/30 pass; 15 declined, 2 "wrong" (both: correct text answer but no `submit_answer` call, counted as fail by the pre-registered rule).
+  - B_v2_direct (same drift, no fiks): 20/30 pass; 5 wrong (T5: "placed on 1970-01-01"), 5 declined.
+  - Reading: in the unfixed state, receipts remove confident wrong answers, but the "do not quote" wording also makes the agent decline on T1/T2 where on its own it noticed cents and divided by 100. Receipts lower pass rate there; this goes in README Limitations. The fix PRs are what should raise pass rate (phase C).
+
+## Incidents
+- 2026-10-18: while testing `fiks demo`'s no-credential path, `env -u CLAUDE_CODE_OAUTH_TOKEN` did not remove the token (the CLI loads `.env` itself), so a real D2 repair ran and opened vats98754/shop-mcp#5, a duplicate of #1 (all gates and CI green). Closed with a comment; its records went to a temp FIKS_DIR and are not in bench/results. Fix: `fiks demo --until-f-gate` is the explicit offline mode.
+
+## M4 verification history
+Six rounds. The verifier attacked the repair gates as an adversarial agent and found, in order: the guard could be bypassed by committing; agent code could rewrite fiks's re-recordings during the gates; a detached helper could doctor them before fiks hashed them; the re-record input (vendor profile) was read from disk; a planted symlink could redirect which committed recording was read. Each is fixed and each attack is now a permanent test in `packages/cli/test/repair.test.ts`. Round 6 re-ran all four PoCs: each ends in `gate_failed` with no PR. Extra hardening: git hooks disabled for fiks's git calls, refused re-records end as `gate_failed`, and the PR head must equal the commit that passed CI (else the PR is closed). shop-mcp PR #6 adds the same re-record rule to the tool's own suite (open, for human review).
+
+## Agent-ux findings on the real bench (M5)
+- 0 v1 false positives (37 A calls verified); receipts noticed and followed in 30/30 B trials; 0 receipt-missing outside the receipt-field-off evidence run.
+- Losses with receipts are "recovery path absent": T1/T2 (10 trials) declined because the receipt said "price is null" / "do not quote" while fiks held the upstream fact (`unit_amount = 1199`, cents). T5 shows the fix pattern: the receipt quoted the upstream value and the agent went 0/5 -> 5/5.
+- T4-3/T4-5: correct text, no submit; the combined receipt ends in a bare "tell the user." and the harness prompt says "when you have the answer".
+- Proposed receipt v2 (not applied): show upstream fields the tool dropped, labelled unconfirmed; combined search receipt names the verified total and suggests narrower searches; read-after-write states the probe's 404; a "hedged wrong" grading outcome first, so the bench can show whether wrong answers come back. Applying it needs a re-run of phase B.
 
 ## Known limits of the gates (must appear in README Limitations)
 - Contracts check ranges, nullness, counts, uniqueness, freshness, read-after-write and agreement with the upstream response. They cannot tell a correct value from a plausible wrong one when no upstream field says what the value should be. Examples found by the verifier: a D2 "fix" that returns a constant in-range price, or a D1 "fix" that clamps prices to the range ceiling, passes the suite. Fiks never merges; human review of the PR is the backstop. Never claim a green suite proves a fix is correct.

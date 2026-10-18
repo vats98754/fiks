@@ -1,15 +1,19 @@
 import { isDeepStrictEqual } from 'node:util';
-import { RECEIPT_META_KEY, type Receipt } from '@fiks/proxy';
+import { DEFAULT_RECEIPT_FIELD, RECEIPT_META_KEY, type Receipt } from '@fiks/proxy';
 import type { VendorVersion } from '@fiks/vendor-api';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { startHarness } from '../harness.ts';
 
-/** The proxied result with fiks's additions removed: its receipt and the trailing text block. */
-export function stripReceipt(r: CallToolResult): CallToolResult {
+/** The proxied result with fiks's additions removed: _meta receipt, trailing text block, receipt field. */
+export function stripReceipt(r: CallToolResult, field = DEFAULT_RECEIPT_FIELD): CallToolResult {
   const { _meta, ...rest } = r;
   const meta = { ...(_meta ?? {}) };
   delete meta[RECEIPT_META_KEY];
   const out: CallToolResult = { ...rest, content: (r.content ?? []).slice(0, -1) };
+  if (r.structuredContent) {
+    const { [field]: _receipt, ...upstream } = r.structuredContent;
+    out.structuredContent = upstream;
+  }
   if (Object.keys(meta).length) out._meta = meta;
   return out;
 }

@@ -1,0 +1,23 @@
+{
+  "runId": "B_v2_20261018T095112",
+  "phase": "B_v2",
+  "proxy": true,
+  "receiptField": true,
+  "model": "claude-haiku-5-5",
+  "k": 1,
+  "tasks": [
+    "T1"
+  ],
+  "shopRef": "seed-v1",
+  "shopMcpSha": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7",
+  "vendor": "v2",
+  "vendorDrifts": [
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    "D5"
+  ],
+  "startedAt": "2026-10-18T09:51:12.318Z",
+  "finishedAt": "2026-10-18T09:51:20.471Z"
+}

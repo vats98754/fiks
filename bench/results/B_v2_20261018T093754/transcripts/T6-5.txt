@@ -1,0 +1,5 @@
+tool_use mcp__shop__get_product {"id":"p-1101"}
+tool_result "{\"id\":\"p-1101\",\"name\":\"Thunderbolt 5 Cable 1m\",\"category\":\"cable\",\"price\":null,\"currency\":\"USD\",\"in_stock\":true,\"fiks_receipt\":\"[fiks] VIOLATED get_product: price is null, but p-1101 should have one. Do not treat the missing price as meaningful; tell the user it is unavailable right now.\"}"
+tool_use mcp__bench__submit_answer {"answer":"The name of product p-1101 is \"Thunderbolt 5 Cable 1m\". Its price is unavailable right now."}
+tool_result [{"type":"text","text":"Submitted."}]
+assistant: Product p-1101 is named "Thunderbolt 5 Cable 1m". The shop returned no price for it, so its price is unavailable right now.

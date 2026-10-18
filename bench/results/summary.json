@@ -1,0 +1,293 @@
+{
+  "generatedAt": "2026-10-18T10:47:51.767Z",
+  "phases": {
+    "A_v1": {
+      "runId": "A_v1_20261018T093357",
+      "model": "claude-sonnet-5-5",
+      "shopMcpSha": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7",
+      "tasks": 6,
+      "k": 5,
+      "trials": 30,
+      "passHatK": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "outcomes": {
+        "correct": 30,
+        "wrong": 0,
+        "declined": 0,
+        "noAnswer": 0
+      },
+      "perTask": {
+        "T1": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T2": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T3": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T4": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T5": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T6": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        }
+      },
+      "violatedCalls": 0
+    },
+    "B_v2": {
+      "runId": "B_v2_20261018T093754",
+      "model": "claude-sonnet-5-5",
+      "shopMcpSha": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7",
+      "tasks": 6,
+      "k": 5,
+      "trials": 30,
+      "passHatK": [
+        0.4333,
+        0.3833,
+        0.35,
+        0.3333,
+        0.3333
+      ],
+      "outcomes": {
+        "correct": 13,
+        "wrong": 0,
+        "declined": 15,
+        "noAnswer": 2
+      },
+      "perTask": {
+        "T1": {
+          "n": 5,
+          "pass": 0,
+          "correct": 0,
+          "wrong": 0,
+          "declined": 5,
+          "noAnswer": 0
+        },
+        "T2": {
+          "n": 5,
+          "pass": 0,
+          "correct": 0,
+          "wrong": 0,
+          "declined": 5,
+          "noAnswer": 0
+        },
+        "T3": {
+          "n": 5,
+          "pass": 0,
+          "correct": 0,
+          "wrong": 0,
+          "declined": 5,
+          "noAnswer": 0
+        },
+        "T4": {
+          "n": 5,
+          "pass": 3,
+          "correct": 3,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 2
+        },
+        "T5": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T6": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        }
+      },
+      "violatedCalls": 35
+    },
+    "B_v2_direct": {
+      "runId": "B_v2_direct_20261018T094446",
+      "model": "claude-sonnet-5-5",
+      "shopMcpSha": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7",
+      "tasks": 6,
+      "k": 5,
+      "trials": 30,
+      "passHatK": [
+        0.6667,
+        0.6667,
+        0.6667,
+        0.6667,
+        0.6667
+      ],
+      "outcomes": {
+        "correct": 20,
+        "wrong": 5,
+        "declined": 5,
+        "noAnswer": 0
+      },
+      "perTask": {
+        "T1": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T2": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T3": {
+          "n": 5,
+          "pass": 0,
+          "correct": 0,
+          "wrong": 0,
+          "declined": 5,
+          "noAnswer": 0
+        },
+        "T4": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T5": {
+          "n": 5,
+          "pass": 0,
+          "correct": 0,
+          "wrong": 5,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T6": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        }
+      },
+      "violatedCalls": 0
+    }
+  },
+  "drifts": {
+    "D1": {
+      "detected": true,
+      "reproValid": true,
+      "prGreen": true,
+      "prUrl": "https://github.com/vats98754/shop-mcp/pull/2",
+      "minutesDriftToPr": 1.4,
+      "merged": false,
+      "confirmed": false,
+      "repairAttempts": 1,
+      "repairTurns": 13
+    },
+    "D2": {
+      "detected": true,
+      "reproValid": true,
+      "prGreen": true,
+      "prUrl": "https://github.com/vats98754/shop-mcp/pull/1",
+      "minutesDriftToPr": 1.4,
+      "merged": false,
+      "confirmed": false,
+      "repairAttempts": 1,
+      "repairTurns": 10
+    },
+    "D3": {
+      "detected": true,
+      "reproValid": true,
+      "prGreen": true,
+      "prUrl": "https://github.com/vats98754/shop-mcp/pull/3",
+      "minutesDriftToPr": 1.6,
+      "merged": false,
+      "confirmed": false,
+      "repairAttempts": 1,
+      "repairTurns": 14
+    },
+    "D4": {
+      "detected": true,
+      "reproValid": false,
+      "prGreen": false,
+      "prUrl": null,
+      "minutesDriftToPr": null,
+      "merged": false,
+      "confirmed": false,
+      "repairAttempts": null,
+      "repairTurns": null
+    },
+    "D5": {
+      "detected": true,
+      "reproValid": true,
+      "prGreen": true,
+      "prUrl": "https://github.com/vats98754/shop-mcp/pull/4",
+      "minutesDriftToPr": 1.4,
+      "merged": false,
+      "confirmed": false,
+      "repairAttempts": 1,
+      "repairTurns": 12
+    }
+  },
+  "falsePositivesV1": 0,
+  "incompleteRuns": [],
+  "sources": [
+    "bench/results/A_v1_20261018T093357/meta.json",
+    "bench/results/A_v1_20261018T093357/trials.jsonl",
+    "bench/results/B_v2_20261018T093754/meta.json",
+    "bench/results/B_v2_20261018T093754/trials.jsonl",
+    "bench/results/B_v2_direct_20261018T094446/meta.json",
+    "bench/results/B_v2_direct_20261018T094446/trials.jsonl",
+    "bench/results/loop/events.jsonl",
+    "bench/results/loop/repairs/tr_079b90c89e.json",
+    "bench/results/loop/repairs/tr_4db46c86e4.json",
+    "bench/results/loop/repairs/tr_7280855590.json",
+    "bench/results/loop/repairs/tr_b47c5b77c6.json"
+  ]
+}

@@ -23,6 +23,7 @@ const { values } = parseArgs({
     listen: { type: 'string', default: 'stdio' },
     'upstream-url': { type: 'string' },
     events: { type: 'string' },
+    'receipt-field': { type: 'string' },
   },
 });
 
@@ -56,6 +57,7 @@ const proxy = await startProxy({
   upstream,
   contracts,
   tapEnvVar: values['upstream-url'] ? undefined : values.tap,
+  receiptField: values['receipt-field'] === 'none' ? null : values['receipt-field'],
   onCall: (rec) => {
     if (events) appendFileSync(events, `${JSON.stringify({ type: 'call', ...rec })}\n`);
     return undefined;

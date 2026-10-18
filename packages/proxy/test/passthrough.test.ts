@@ -52,7 +52,8 @@ test('a result that breaks its declared outputSchema passes through, with a viol
       await import('@modelcontextprotocol/sdk/types.js')
     ).CallToolResultSchema,
   )) as CallToolResult;
-  expect(r.structuredContent).toEqual(bad.structuredContent);
+  expect(r.structuredContent).toMatchObject(bad.structuredContent);
+  expect(Object.keys(r.structuredContent ?? {}).sort()).toEqual(['fiks_receipt', 'id', 'price']);
   expect(r.content[0]).toEqual(bad.content[0]);
   expect(receipt(r).violations.map((v) => v.propertyId)).toEqual(['raw.get/outputSchema']);
 });
@@ -69,7 +70,7 @@ test('a probe that throws does not replace the write result', async () => {
   cleanups.push(env.close);
   const r = (await env.client.callTool({ name: 'write', arguments: {} })) as CallToolResult;
   expect(r.isError).toBeFalsy();
-  expect(r.structuredContent).toEqual({ id: 'w-1' });
+  expect(r.structuredContent).toMatchObject({ id: 'w-1' });
   expect(receipt(r).verdict).toBe('violated');
   expect(receipt(r).violations[0]?.message).toMatch(/not found on read-back/);
 });

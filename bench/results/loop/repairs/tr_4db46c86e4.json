@@ -1,0 +1,87 @@
+{
+  "status": "pr_opened",
+  "reason": "PR https://github.com/vats98754/shop-mcp/pull/4",
+  "scenario": "D5",
+  "traceId": "tr_4db46c86e4",
+  "propertyIds": [
+    "shop.get_order/created_at.freshness",
+    "shop.get_order/created_at.equalsUpstream"
+  ],
+  "branch": "fiks/get-order-created-at-freshness-tr_4db46c86e4",
+  "base": "main",
+  "model": "claude-opus-5-5",
+  "attempts": 1,
+  "costUsd": 0.1189144,
+  "turns": 12,
+  "gates": [
+    {
+      "gate": "F",
+      "ok": true,
+      "reason": "fails for the stated reason on 2/2 runs",
+      "evidence": {
+        "command": "vitest run --reporter=json --outputFile=/var/folders/s_/y1_hxfjs6d704wyr6clkvdp80000gn/T/fiks-gate-kMyjk9/vitest.json",
+        "exitCode": 1,
+        "failed": [
+          {
+            "file": "test/repro/tr_4db46c86e4.test.ts",
+            "test": "shop.get_order/created_at.freshness + shop.get_order/created_at.equalsUpstream holds for get_order [fiks tr_4db46c86e4]",
+            "message": "AssertionError: shop.get_order/created_at.freshness, shop.get_order/created_at.equalsUpstream violated (/Users/anvayvats/fiks/.work/wt/fiks/get-order-created-at-freshness-tr_4db46c86e4/test/repro/tr_4db46c86e4.json): expected [ …(2) ] to deeply equal []\n    at expectRecordingHolds (/Users/anvayvats/fiks/.work/wt/fiks/get-order-created-at-freshness-tr_4db46c86e4/test/fiks/check.ts:79:53)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at /Users/anvayvats/fiks/.work/wt/fiks/get-order-created-at-freshness-tr_4db46c86e4/test/repro/tr_4db46c86e4.test.ts:13:3\n    at async file:///Users/anvayvats/fiks/.work/shop-mcp/node_modules/.pnpm/vitest@5.0.3_@types+node@22.20.5_vite@8.3.4_@types+node@22.20.5_esbuild@0.28.2_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BTlFXlnv.js:2783:20"
+          }
+        ],
+        "logPath": "/var/folders/s_/y1_hxfjs6d704wyr6clkvdp80000gn/T/fiks-gate-kMyjk9/vitest.json",
+        "runs": 2
+      }
+    },
+    {
+      "gate": "P",
+      "ok": true,
+      "reason": "repro test ran and passed",
+      "evidence": {
+        "command": "pnpm typecheck && pnpm lint && pnpm test",
+        "exitCode": 0,
+        "failed": [],
+        "logPath": ""
+      }
+    },
+    {
+      "gate": "local",
+      "ok": true,
+      "reason": "repro test, full contract suite, all traces, typecheck and lint pass",
+      "evidence": {
+        "command": "pnpm typecheck && pnpm lint && pnpm test",
+        "exitCode": 0,
+        "failed": [],
+        "logPath": ""
+      }
+    },
+    {
+      "gate": "ci",
+      "evidence": {
+        "command": "gh run view 39115465250",
+        "exitCode": 0,
+        "failed": [],
+        "logPath": "",
+        "url": "https://github.com/vats98754/shop-mcp/actions/runs/39115465250"
+      },
+      "ok": true,
+      "status": "green",
+      "reason": "CI success on cd50289"
+    }
+  ],
+  "fixCommitFiles": [
+    "src/tools/get_order.ts"
+  ],
+  "rerecorded": [],
+  "commits": [
+    "fa8ffa1c50b28fa5abf0c5713a2665c94341ad15",
+    "cd502891573bf640a01a46a52ce8ba11a4ba81bc"
+  ],
+  "startedAt": "2026-10-18T09:27:37.940Z",
+  "finishedAt": "2026-10-18T09:29:02.119Z",
+  "runner": "agent-sdk",
+  "ciRunUrl": "https://github.com/vats98754/shop-mcp/actions/runs/39115465250",
+  "pr": {
+    "number": 4,
+    "url": "https://github.com/vats98754/shop-mcp/pull/4"
+  }
+}

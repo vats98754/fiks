@@ -1,10 +1,22 @@
 #!/usr/bin/env node
+import { existsSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import { bench } from './commands/bench.ts';
 import { callOnce } from './commands/call.ts';
+import { confirm } from './commands/confirm.ts';
+import { demo } from './commands/demo.ts';
 import { recordFixtures } from './commands/record-fixtures.ts';
+import { repair } from './commands/repair.ts';
 import { repro } from './commands/repro.ts';
+import { ROOT } from './paths.ts';
+
+// Credentials (CLAUDE_CODE_OAUTH_TOKEN) and settings come from .env; values are never printed.
+if (existsSync(join(ROOT, '.env'))) process.loadEnvFile(join(ROOT, '.env'));
+
 import { rerecord } from './commands/rerecord.ts';
 import { runScenario, SCENARIOS } from './commands/scenario.ts';
+import { summarize } from './commands/summarize.ts';
 import { vendorDiff } from './commands/vendor-diff.ts';
 
 const USAGE = `usage: fiks <command> [options]
@@ -17,7 +29,15 @@ commands:
   call <tool> '<json args>' [--vendor v2] [--drifts D2] [--compare-direct]
                                            one call through fiks-proxy
   repro --scenario D2 [--target seed-v1] [--runs 3] [--keep]
-                                           capture a trace, generate its repro test, run the F gate`;
+                                           capture a trace, generate its repro test, run the F gate
+  repair --scenario D2 [--base main] [--no-pr] [--model claude-opus-5-5]
+                                           repro -> repair agent -> gates -> green CI -> PR (never merges)
+  confirm                                  after a human merge: re-run each repaired drift on main
+  bench --phase A|B|C --k 5 [--tasks T1,T6] [--model m] [--shop-ref pr-heads] [--direct] [--out dir]
+                                           agent trials through fiks-proxy; logs to bench/results/<runId>
+  demo [--drifts D1,D2,D3] [--base fresh|main] [--until-f-gate]
+                                           the whole loop per drift; prints PR URLs, never merges
+  summarize [--check]                      bench/results/summary.json from logs only (--check: rebuild and compare)`;
 
 const [command, ...rest] = process.argv.slice(2);
 const { values, positionals } = parseArgs({
@@ -34,6 +54,18 @@ const { values, positionals } = parseArgs({
     target: { type: 'string', default: 'seed-v1' },
     runs: { type: 'string', default: '3' },
     keep: { type: 'boolean', default: false },
+    base: { type: 'string', default: 'main' },
+    'no-pr': { type: 'boolean', default: false },
+    model: { type: 'string' },
+    trace: { type: 'string' },
+    phase: { type: 'string' },
+    k: { type: 'string', default: '5' },
+    tasks: { type: 'string' },
+    'shop-ref': { type: 'string' },
+    check: { type: 'boolean', default: false },
+    'until-f-gate': { type: 'boolean', default: false },
+    direct: { type: 'boolean', default: false },
+    'no-receipt-field': { type: 'boolean', default: false },
   },
 });
 
@@ -65,7 +97,7 @@ switch (command) {
   }
   case 'rerecord': {
     const done: Awaited<ReturnType<typeof rerecord>>[] = [];
-    for (const f of positionals) done.push(await rerecord(f));
+    for (const f of positionals) done.push(await rerecord(resolve(f)));
     print(done, () => done.map((d) => `wrote ${d.file} (vendor ${d.vendor})`).join('\n'));
     break;
   }
@@ -134,6 +166,101 @@ switch (command) {
       ].join('\n'),
     );
     if (!r.gateF.ok) process.exitCode = 1;
+    break;
+  }
+  case 'repair': {
+    if (!values.scenario && !values.trace) {
+      console.error(USAGE);
+      process.exit(2);
+    }
+    const r = await repair({
+      scenario: values.scenario,
+      traceFile: values.trace,
+      base: values.base,
+      noPr: values['no-pr'],
+      model: values.model,
+    });
+    print(r, () =>
+      [
+        `${r.status}: ${r.reason}`,
+        `trace ${r.traceId} -> branch ${r.branch} (${r.attempts} attempt(s), runner ${r.runner ?? '-'}, ${r.turns} turns)`,
+        ...r.gates.map((g) => `  ${g.ok ? 'PASS' : 'FAIL'} ${g.gate}: ${g.reason}`),
+        r.pr ? `PR: ${r.pr.url}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    );
+    if (r.status !== 'pr_opened' && r.status !== 'ready') process.exitCode = 1;
+    break;
+  }
+  case 'confirm': {
+    const r = await confirm();
+    print(r, () =>
+      r.length
+        ? r
+            .map(
+              (c) =>
+                `${c.scenario ?? c.traceId}: ${c.confirmed ? 'CONFIRMED' : c.merged ? 'NOT CONFIRMED' : 'not merged'} (${c.reason}) ${c.pr}`,
+            )
+            .join('\n')
+        : 'no fiks PRs found in .fiks/repairs',
+    );
+    break;
+  }
+  case 'bench': {
+    const phase = values.phase as 'A' | 'B' | 'C';
+    if (values['shop-ref'] !== undefined && values['shop-ref'] !== 'pr-heads') {
+      console.error(`--shop-ref only accepts pr-heads (phase C), got ${JSON.stringify(values['shop-ref'])}`);
+      process.exit(2);
+    }
+    if (!['A', 'B', 'C'].includes(phase)) {
+      console.error(USAGE);
+      process.exit(2);
+    }
+    const r = await bench({
+      phase,
+      k: Number(values.k),
+      tasks: values.tasks?.split(','),
+      model: values.model,
+      shopRef: values['shop-ref'] === 'pr-heads' ? 'pr-heads' : undefined,
+      out: values.out,
+      direct: values.direct,
+      noReceiptField: values['no-receipt-field'],
+      onTrial: (t) => {
+        if (!values.json) console.error(`${t.phase} ${t.taskId} #${t.trial}: ${t.outcome} (${t.reason})`);
+      },
+    });
+    print(
+      r,
+      () => `${r.runId}: ${r.trials.filter((t) => t.pass).length}/${r.trials.length} passed -> ${r.out}`,
+    );
+    break;
+  }
+  case 'demo': {
+    const r = await demo({
+      drifts: (values.drifts ?? 'D1,D2,D3').split(','),
+      base: values.base === 'fresh' ? 'fresh' : 'main',
+      untilFGate: values['until-f-gate'],
+    });
+    print(r, () =>
+      [
+        `base branch: ${r.base}`,
+        ...r.results.map((x) => `${x.scenario}: ${x.status} ${x.pr ?? ''} (${x.reason})`),
+        r.missing ? `missing: ${r.missing}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    );
+    const want = r.credential && !values['until-f-gate'] ? 'pr_opened' : 'ready';
+    if (r.missing || r.results.some((x) => x.status !== want)) process.exitCode = 1;
+    break;
+  }
+  case 'summarize': {
+    const r = summarize({ check: values.check });
+    print(values.check ? { ok: r.ok, diff: r.diff } : r.summary, () =>
+      values.check ? (r.ok ? 'summary.json matches the logs' : (r.diff ?? 'mismatch')) : `wrote ${r.file}`,
+    );
+    if (!r.ok) process.exitCode = 1;
     break;
   }
   default:

@@ -1,0 +1,5 @@
+tool_use mcp__shop__get_product {"id":"p-1101"}
+tool_result "{\"id\":\"p-1101\",\"name\":\"Thunderbolt 5 Cable 1m\",\"category\":\"cable\",\"price\":null,\"currency\":\"USD\",\"in_stock\":true}"
+tool_use mcp__bench__submit_answer {"answer":"Thunderbolt 5 Cable 1m"}
+tool_result [{"type":"text","text":"Submitted."}]
+assistant: Product p-1101 is named **Thunderbolt 5 Cable 1m**.

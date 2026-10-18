@@ -1,0 +1,63 @@
+{
+  "generatedAt": "2026-10-18T10:00:00.000Z",
+  "phases": {
+    "A_v1": {
+      "runId": "A",
+      "model": "m",
+      "shopMcpSha": "s",
+      "tasks": 2,
+      "k": 2,
+      "trials": 4,
+      "passHatK": [1, 1],
+      "outcomes": { "correct": 4, "wrong": 0, "declined": 0, "noAnswer": 0 },
+      "violatedCalls": 0
+    },
+    "B_v2": {
+      "runId": "B",
+      "model": "m",
+      "shopMcpSha": "s",
+      "tasks": 2,
+      "k": 2,
+      "trials": 4,
+      "passHatK": [0.5, 0.25],
+      "outcomes": { "correct": 2, "wrong": 0, "declined": 2, "noAnswer": 0 },
+      "violatedCalls": 3
+    },
+    "B_v2_direct": {
+      "runId": "Bd",
+      "model": "m",
+      "shopMcpSha": "s",
+      "tasks": 2,
+      "k": 2,
+      "trials": 4,
+      "passHatK": [0.75, 0.5],
+      "outcomes": { "correct": 3, "wrong": 1, "declined": 0, "noAnswer": 0 },
+      "violatedCalls": 0
+    }
+  },
+  "drifts": {
+    "D2": {
+      "detected": true,
+      "reproValid": true,
+      "prGreen": true,
+      "prUrl": "https://github.com/vats98754/shop-mcp/pull/1",
+      "minutesDriftToPr": 1.6,
+      "merged": false,
+      "confirmed": false,
+      "repairAttempts": 1,
+      "repairTurns": 10
+    },
+    "D4": {
+      "detected": true,
+      "reproValid": false,
+      "prGreen": false,
+      "prUrl": null,
+      "minutesDriftToPr": null,
+      "merged": false,
+      "confirmed": false,
+      "repairAttempts": null,
+      "repairTurns": null
+    }
+  },
+  "falsePositivesV1": 0
+}
