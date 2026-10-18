@@ -1,0 +1,95 @@
+{
+  "server": "shop-mcp",
+  "version": 1,
+  "contracts": [
+    {
+      "id": "shop.search_products",
+      "tool": "search_products",
+      "invariants": [
+        {
+          "id": "items.price.range",
+          "kind": "range",
+          "path": "items[*].price",
+          "min": 20,
+          "max": 2000,
+          "unit": "USD"
+        },
+        {
+          "id": "countMatchesTotal",
+          "kind": "countMatchesTotal",
+          "itemsPath": "items",
+          "totalPath": "total"
+        },
+        { "id": "total.equalsUpstream", "kind": "equalsUpstream", "path": "total", "upstreamPath": "total" },
+        { "id": "items.id.unique", "kind": "unique", "path": "items[*].id" },
+        { "id": "items.nonEmpty", "kind": "nonEmpty", "path": "items", "onlyKnownGood": true }
+      ],
+      "knownGoodInputs": [{ "query": "laptop" }, { "query": "monitor" }, { "query": "cable" }]
+    },
+    {
+      "id": "shop.get_product",
+      "tool": "get_product",
+      "invariants": [
+        { "id": "price.notNull", "kind": "notNull", "path": "price", "onlyKnownGood": true },
+        { "id": "price.range", "kind": "range", "path": "price", "min": 20, "max": 2000, "unit": "USD" }
+      ],
+      "knownGoodInputs": [
+        { "id": "p-1001" },
+        { "id": "p-1002" },
+        { "id": "p-1003" },
+        { "id": "p-1004" },
+        { "id": "p-1005" },
+        { "id": "p-1006" },
+        { "id": "p-1007" },
+        { "id": "p-1008" },
+        { "id": "p-1101" },
+        { "id": "p-1102" },
+        { "id": "p-1103" },
+        { "id": "p-1104" },
+        { "id": "p-1105" },
+        { "id": "p-1106" },
+        { "id": "p-1107" }
+      ]
+    },
+    {
+      "id": "shop.create_order",
+      "tool": "create_order",
+      "invariants": [
+        { "id": "total.range", "kind": "range", "path": "total", "min": 0.5, "max": 100000, "unit": "USD" }
+      ],
+      "postconditions": [
+        {
+          "id": "readAfterWrite",
+          "probeTool": "get_order",
+          "probeArgs": { "order_id": "order_id" },
+          "upstream": { "idPath": "id", "equalsResultPath": "order_id" },
+          "expect": [
+            { "probePath": "order_id", "equalsResultPath": "order_id" },
+            { "probePath": "total", "equalsResultPath": "total" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shop.get_order",
+      "tool": "get_order",
+      "invariants": [
+        {
+          "id": "created_at.freshness",
+          "kind": "freshness",
+          "path": "created_at",
+          "maxAgeDays": 365,
+          "maxFutureDays": 1
+        },
+        {
+          "id": "created_at.equalsUpstream",
+          "kind": "equalsUpstream",
+          "path": "created_at",
+          "upstreamPath": "created_at",
+          "compare": "instant"
+        },
+        { "id": "total.range", "kind": "range", "path": "total", "min": 0.5, "max": 100000, "unit": "USD" }
+      ]
+    }
+  ]
+}

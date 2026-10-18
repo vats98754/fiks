@@ -70,7 +70,7 @@ test -f PROGRESS.md && echo PROGRESS_OK
 - `vendor-api` serves the same OpenAPI document in v1 and v2 but behaves differently in v2. Each drift can be toggled on its own.
 - shop-mcp wraps vendor-api with four tools, is tagged `seed-v1`, and is green in CI.
 
-**Drift design.** Each drift is on a different endpoint, so drifts never hide each other:
+**Drift design.** D1 and D4 share `GET /products`; the others each have their own endpoint. Drifts are isolated with `VENDOR_DRIFTS`, every recording stores its upstream profile (`upstream: {version, drifts}`), and stored-trace tests assert only the properties that trace violated, so a D4 fix can land without D1:
 
 | Drift | Endpoint | v2 behavior | Bug in seed shop-mcp (silent) | Contract property that catches it |
 |---|---|---|---|---|
@@ -91,13 +91,13 @@ test -f PROGRESS.md && echo PROGRESS_OK
 - `scripts/sync-contracts.mjs`. It copies `evaluate.ts` and the contracts JSON into `.work/shop-mcp/test/fiks/` with a "GENERATED, do not edit" header. A fiks test checks that the copies are byte-identical.
 
 **Files (shop-mcp):**
-- `src/index.ts`: stdio by default; `--http <port>` for Streamable HTTP.
+- `src/main.ts`: stdio by default; `--http <port>` for Streamable HTTP. `src/index.ts` is the library export.
 - `src/server.ts`; `src/vendor.ts`, a fetch client whose base URL comes from `VENDOR_BASE_URL`.
 - One file per tool: `src/tools/{search_products,get_product,create_order,get_order}.ts`. Each declares an `outputSchema` (C26) and returns `structuredContent`.
 - `vendor/openapi.json`, a copy of the vendor spec.
 - `test/fiks/replay.ts`: a strict replay HTTP server. Any request that doesn't match a recording gets status 599 with an `UNMATCHED_REQUEST` body.
-- `test/fiks/contracts.test.ts`: every contract, run over every recording in `test/fixtures/**`.
-- `test/fiks/traces.test.ts`: replays every `test/traces/*.json` and asserts that its contract holds. The folder starts empty and holds a `.gitkeep`.
+- `test/fiks/contracts.test.ts`: every contract, run over every recording in `test/fixtures/**`. Fixtures are golden: when a fixture applies, the tool output must equal the recorded output (catches fixes that break v1).
+- `test/fiks/traces.test.ts`: replays every `test/traces/*.json` and asserts every contract property except the ones it violated that are outside its `target` (faults fixed by other PRs). Re-recorded fixtures are still compared against the original golden output; recordings carry a frozen upstream clock so this comparison is exact. The folder starts empty and holds a `.gitkeep`.
 - `test/fixtures/v1/*.json`: baseline recordings made against vendor v1.
 - `test/repro/.gitkeep`.
 
@@ -117,7 +117,8 @@ interface ToolContract { id: string /* e.g. shop.get_product */; tool: string; o
 interface Violation { propertyId: string /* `${contract.id}/${invariant.id}` */; kind: string; path: string;
   expected: string; actual: unknown; message: string }
 interface EvalResult { verdict: Verdict; contractId: string | null; checked: string[]; violations: Violation[] }
-function evaluate(c: ToolContract | undefined, args: unknown, result: CallToolResult, now: Date): EvalResult; // pure
+function evaluate(c: ToolContract | undefined, input: { args; result; now: Date; declaredOutputSchema?; probe?; upstream?: HttpExchange[] }): EvalResult; // pure
+// extra invariant kind: { kind: 'equalsUpstream'; path; upstreamPath }  (tool must report what upstream said)
 ```
 
 **Acceptance:**
@@ -132,6 +133,10 @@ gh run list -R vats98754/shop-mcp --branch main --limit 1 --json conclusion -q '
 node scripts/sync-contracts.mjs --check   # exit 0 (vendored evaluator identical)
 ```
 `fiks vendor-diff` starts v1 and v2 on ephemeral ports, compares `/openapi.json`, makes one probe request per drift, and shuts both down.
+
+**Trace profile rule (M1 verifier).** Isolated `VENDOR_DRIFTS` profiles still send the v2 version header while serving only some v2 behavior, a combination the real vendor never produces. A correct fix that branches on the header would wrongly fail an isolated trace. So traces that go into shop-mcp (repro tests, `test/traces`) are always captured under the full v2 profile, with `target` set to the drift's property. The M3 trace writer refuses a v2 trace whose `upstream.drifts` is not the full set. Isolated profiles are used only by `fiks scenario` detection checks and fiks unit tests.
+
+**Re-recording rule (added during M1, frozen in `seed-v1`).** Replay matching is on method, path+query, body and the set of significant request header names. Two drifts cannot be fixed under a static replay of the broken interaction: the D3 fix sends a new header, and the read-back of the recorded 404 would still fail; the D4 fix fetches a page the trace never saw. So when the current code makes upstream requests a recording never saw, that recording "no longer applies". The suite then requires `<name>.rerecorded.json`: the same call, re-recorded by fiks (`fiks rerecord`) through the current code against the same upstream version. That copy must apply and pass. The repair agent never writes these. fiks adds them in a separate commit, `test: re-record ... (fiks)`, that contains only `*.rerecorded.json` files, and the M4 guard checks this. The F gate treats UNMATCHED_REQUEST as the wrong failure.
 
 ---
 
@@ -175,12 +180,14 @@ interface CallRecord { tool: string; args: unknown; result: CallToolResult; rece
 pnpm --filter @fiks/proxy test
 pnpm fiks scenario v1-all --json | jq -e '[.calls[].receipt.verdict] | (map(select(.=="violated")) | length) == 0'
 for D in D1 D2 D3 D4 D5; do pnpm fiks scenario $D --json | jq -r '.calls[].receipt.violations[].propertyId'; done
-   # expected, one per line: shop.search_products/items.price.range, shop.get_product/price.notNull,
-   # shop.create_order/readAfterWrite, shop.search_products/countMatchesTotal, shop.get_order/created_at.freshness
+   # expected, in order: shop.search_products/items.price.range, shop.get_product/price.notNull,
+   # shop.create_order/readAfterWrite, shop.search_products/countMatchesTotal,
+   # shop.get_order/created_at.freshness and shop.get_order/created_at.equalsUpstream (D5 violates both)
 pnpm fiks call get_product '{"id":"p-1001"}' --vendor v2 --compare-direct --json | jq -e '.upstreamIdentical == true'
 pnpm fiks call get_product '{"id":"p-1001"}' --vendor v2 --json | jq -r '.result.content[-1].text' | head -c 6   # [fiks]
 pnpm fiks call get_product '{"id":"p-1001"}' --vendor v2 --json | jq -e '.result._meta["fiks/receipt"].verdict == "violated"'
 pnpm fiks scenario D2 --transport http --json | jq -e '[.calls[].receipt.verdict] | index("violated") != null'
+pnpm --filter @fiks/proxy test -- probe-upstream   # the proxy passes the tap's probe exchanges, so a cached read-back is still violated
 env -u ANTHROPIC_API_KEY pnpm test
 ```
 `--compare-direct` makes the same call without the proxy, then removes `_meta["fiks/receipt"]` and the last text block from the proxied result, and deep-compares the two. The proxy unit tests cover the `unverifiable` verdict (a tool with no contract) and the case where the upstream returns `isError`.
@@ -194,6 +201,7 @@ Then run **agent-ux-tester** (scripted transcripts only; it does not need the AP
 **Goal:**
 - **Capture.** On a violation, write `.fiks/traces/<traceId>.json` and append a `violation` and a `trace_saved` event.
 - **Reproduce.** Generate a deterministic vitest test into a target shop-mcp checkout. The test replays the trace's recorded HTTP exchanges through `test/fiks/replay.ts`, freezes the clock at `capturedAt`, calls the tool in-process, and asserts the violated property. Every assertion message contains the `propertyId`.
+- **Repro test body.** `expectRecordingHolds(tracePath, { ignore: outOfScope(trace), mustCheck: targetOf(trace) })` from `test/fiks/check.ts`: the same rule as stored traces (no new errors where data was returned, target properties evaluated and holding, no regressions on properties that held).
 - **F gate.** Run the generated test on the unfixed code. It passes the gate only if all three hold:
   - (a) the run exits non-zero;
   - (b) exactly the generated test fails, with an AssertionError whose message contains the `propertyId`;
@@ -246,11 +254,12 @@ env -u ANTHROPIC_API_KEY pnpm test
    - Model `REPAIR_MODEL`, `maxTurns` 30, `maxBudgetUsd` 5, `settingSources: []`.
    - Tools: Read/Grep/Glob/Edit/Write, and Bash limited to `pnpm *`.
    - Allowed edits: `src/**` only. Forbidden path guard: anything under `test/**`, `.github/**`, `package.json` or `pnpm-lock.yaml` → the attempt is rejected.
-4. **Local gate** (C20, C21): P gate, then `pnpm typecheck && pnpm lint && pnpm test`. That last command includes the full contract suite, all stored traces and the v1 fixtures. Commit 2 is `fix: <summary> (fiks)`, containing agent edits only.
-5. If any gate fails, retry at most 2 times with the failure log appended, then try the fallback runner once. Otherwise record `status: gate_failed` with the reason. Never hand-fix and report the result as the agent's.
-6. **Green-CI gate.** Push the branch. Wait for the push-triggered run with `gh run watch <id> --exit-status` (15-minute timeout). Only when it is green run `gh pr create`. If CI is red or times out, no PR is opened, the branch stays for inspection, and the status is `ci_red` or `ci_timeout`. This is how "never open a PR with failing CI" is enforced in code.
-7. **PR body sections:** `## What broke`, `## Trace`, `## Reproduction test`, `## Fix`, `## Before / after`, `## Gates`. Before/after shows the F output, the P output and the CI run URL. Add the label `fiks`. **Never** call `gh pr merge` or enable auto-merge.
-8. `fiks confirm`:
+4. **Re-record** (fiks, not the agent): for every trace or fixture the fixed code no longer applies to, run `fiks rerecord`. Commit only `*.rerecorded.json` files as `test: re-record changed upstream calls (fiks)`.
+5. **Local gate** (C20, C21): P gate, then `pnpm typecheck && pnpm lint && pnpm test`. That last command includes the full contract suite, all stored traces and the v1 fixtures. Commit 2 is `fix: <summary> (fiks)`, containing agent edits only.
+6. If any gate fails, retry at most 2 times with the failure log appended, then try the fallback runner once. Otherwise record `status: gate_failed` with the reason. Never hand-fix and report the result as the agent's.
+7. **Green-CI gate.** Push the branch. Wait for the push-triggered run with `gh run watch <id> --exit-status` (15-minute timeout). Only when it is green run `gh pr create`. If CI is red or times out, no PR is opened, the branch stays for inspection, and the status is `ci_red` or `ci_timeout`. This is how "never open a PR with failing CI" is enforced in code.
+8. **PR body sections:** `## What broke`, `## Trace`, `## Reproduction test`, `## Fix`, `## Before / after`, `## Gates`. Before/after shows the F output, the P output and the CI run URL. Add the label `fiks`. **Never** call `gh pr merge` or enable auto-merge.
+9. `fiks confirm`:
    - Polls `gh pr view --json state,mergedAt` and appends `pr_merged`.
    - Then fast-forwards `.work/shop-mcp` to `origin/main`, replays all traces through the proxy, and checks that the violation count for each `contractId` is 0.
    - It appends `confirmed` only if that holds.
@@ -425,7 +434,7 @@ Then run **claims-auditor**, which must PASS. The final verifier PASS covers the
 | 4 | Streamable HTTP is flaky | Ship stdio first (all of M2–M5 use stdio). HTTP gets one acceptance line and is item 4 on the cut list. |
 | 5 | Repro is non-deterministic (time, ordering, unmatched requests) | Clock frozen at `capturedAt`. The strict replay server returns 599 `UNMATCHED_REQUEST`, which the gate classifies as a wrong failure. The F gate runs 3 times. |
 | 6 | False positives on v1 | Tune contracts on the v1 fixtures in M2. FP = 0 is a hard gate before M3. If a contract can't reach 0, drop that invariant and log it. |
-| 7 | Drifts hide each other in v2 | Each drift is on its own endpoint, and `VENDOR_DRIFTS` isolates them for tests and repro. |
+| 7 | Drifts hide each other in v2 | D1 and D4 share `GET /products`. `VENDOR_DRIFTS` isolates drifts for detection tests only. Stored traces use the full v2 profile with `target`/`outOfScope`, so each PR is scoped to its own property. |
 | 8 | A fix breaks v1, or parallel PRs conflict | The local gate includes the v1 fixtures, and the version header allows compatible fixes. One file per tool. If a conflict happens after a merge, re-run `fiks repair` on the new base. |
 | 9 | Tap correlation is wrong under concurrency | A mutex serializes calls per upstream, and the bench is sequential. Stated in Limitations. |
 | 10 | Node 22.5.1 is below the vitest/vite engine floor | Upgrade Node in M0. Otherwise use the fallback stack in §2. |

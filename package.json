@@ -12,11 +12,11 @@
     "format": "biome check --write .",
     "pretest": "node scripts/ensure-shop-mcp.mjs",
     "test": "vitest run",
-    "fiks": "tsx packages/cli/src/index.ts",
+    "fiks": "tsx packages/cli/src/main.ts",
     "predemo": "node scripts/ensure-shop-mcp.mjs",
-    "demo": "tsx packages/cli/src/index.ts demo",
-    "demo:confirm": "tsx packages/cli/src/index.ts confirm",
-    "bench": "tsx packages/cli/src/index.ts bench",
+    "demo": "tsx packages/cli/src/main.ts demo",
+    "demo:confirm": "tsx packages/cli/src/main.ts confirm",
+    "bench": "tsx packages/cli/src/main.ts bench",
     "dashboard": "pnpm --filter @fiks/dashboard dev"
   },
   "devDependencies": {
