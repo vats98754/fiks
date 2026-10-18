@@ -51,5 +51,5 @@ test('take() returns only exchanges since the last take', async () => {
   await fetch(`${tap.url}/b`);
   expect(tap.take().map((e) => e.request.url)).toEqual(['/a', '/b']);
   expect(tap.take()).toEqual([]);
-  expect(tap.exchanges.length).toBeGreaterThanOrEqual(3);
+  expect(tap.exchanges).toEqual([]);
 });

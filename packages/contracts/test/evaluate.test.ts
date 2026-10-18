@@ -58,7 +58,7 @@ describe('search_products', () => {
       now: NOW,
     });
     expect(r.violations.map((v) => v.propertyId)).toEqual(['shop.search_products/countMatchesTotal']);
-    expect(r.violations[0]?.message).toBe('returned 5 of 7 matching items');
+    expect(r.violations[0]?.message).toBe('list is incomplete, 5 of 7 matches returned');
   });
   test('a /100 on dollar prices is out of range too', () => {
     const r = evaluate(c('search_products'), {
@@ -166,7 +166,7 @@ describe('create_order read-after-write', () => {
       probe: { tool: 'get_order', args: { order_id: 'o-5002' }, result: { isError: true } },
     });
     expect(r.violations[0]?.propertyId).toBe('shop.create_order/readAfterWrite');
-    expect(r.violations[0]?.message).toMatch(/write not readable/);
+    expect(r.violations[0]?.message).toMatch(/not found on read-back/);
   });
   test('missing probe -> violated, mismatched total -> violated', () => {
     expect(evaluate(contract, { args: {}, result: written, now: NOW }).verdict).toBe('violated');
@@ -290,4 +290,17 @@ describe('readAfterWrite needs upstream confirmation', () => {
   test('unknown upstream (no tap): only the tool-level read-back is checked', () => {
     expect(run(undefined).verdict).toBe('verified');
   });
+});
+
+test('a declared outputSchema with no structuredContent is an outputSchema violation', () => {
+  const r = evaluate(c('get_product'), {
+    args: { id: 'p-1001' },
+    result: { content: [{ type: 'text', text: '{}' }] },
+    now: NOW,
+    declaredOutputSchema: { type: 'object' },
+  });
+  expect(r.violations.map((v) => v.propertyId)).toEqual(['shop.get_product/outputSchema']);
+  expect(evaluate(c('get_product'), { args: {}, result: { content: [] }, now: NOW }).verdict).toBe(
+    'unverifiable',
+  );
 });

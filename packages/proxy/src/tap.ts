@@ -18,7 +18,7 @@ function cleanHeaders(h: IncomingHttpHeaders): Record<string, string> {
 export interface Tap {
   /** Base URL to hand to the upstream server instead of the real one. */
   url: string;
-  /** Every exchange recorded so far. */
+  /** Exchanges recorded since the last take() (memory stays bounded in a long-running proxy). */
   readonly exchanges: HttpExchange[];
   /** Returns and forgets the exchanges recorded since the last call. */
   take(): HttpExchange[];
@@ -29,7 +29,6 @@ export interface Tap {
 export async function startTap(target: string): Promise<Tap> {
   const base = new URL(target);
   const exchanges: HttpExchange[] = [];
-  let cursor = 0;
   let seq = 0;
 
   const server = createServer((req, res) => {
@@ -89,9 +88,7 @@ export async function startTap(target: string): Promise<Tap> {
     url: `http://127.0.0.1:${(server.address() as AddressInfo).port}`,
     exchanges,
     take() {
-      const out = exchanges.slice(cursor);
-      cursor = exchanges.length;
-      return out;
+      return exchanges.splice(0, exchanges.length);
     },
     close: () =>
       new Promise((r) => {

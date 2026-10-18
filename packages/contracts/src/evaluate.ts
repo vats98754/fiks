@@ -59,6 +59,45 @@ export function buildProbeArgs(post: ReadAfterWrite, structured: unknown): Recor
   return out;
 }
 
+/** The value at a concrete location such as `items[3].price`. */
+function lookup(root: unknown, at: string): unknown {
+  let cur: unknown = root;
+  for (const part of at.split('.')) {
+    const m = /^([^[]*)((?:\[\d+\])*)$/.exec(part);
+    if (!m) return undefined;
+    if (m[1])
+      cur = cur !== null && typeof cur === 'object' ? (cur as Record<string, unknown>)[m[1]] : undefined;
+    for (const idx of (m[2] ?? '').match(/\d+/g) ?? [])
+      cur = Array.isArray(cur) ? cur[Number(idx)] : undefined;
+  }
+  return cur;
+}
+
+/** `items[3].price` -> the item's id when it has one (`p-1001`), else the location itself. */
+function label(root: unknown, at: string): string {
+  const dot = at.lastIndexOf('.');
+  if (dot === -1) return at;
+  const parent = lookup(root, at.slice(0, dot));
+  const id =
+    parent !== null && typeof parent === 'object' ? (parent as Record<string, unknown>).id : undefined;
+  return typeof id === 'string' || typeof id === 'number' ? String(id) : at;
+}
+
+const dateOnly = (v: unknown) => {
+  const t = toTime(v);
+  return t === null ? show(v) : new Date(t).toISOString().slice(0, 10);
+};
+const toMinute = (v: unknown) => {
+  const t = toTime(v);
+  return t === null ? show(v) : `${new Date(t).toISOString().slice(0, 16)}Z`;
+};
+
+/** Arguments as plain words: `{"id":"p-1001"}` -> `p-1001`. */
+const argText = (args: unknown) =>
+  args !== null && typeof args === 'object'
+    ? Object.values(args).map(show).join(', ').replace(/"/g, '')
+    : show(args);
+
 function show(v: unknown): string {
   return v === undefined ? 'undefined' : JSON.stringify(v);
 }
@@ -133,24 +172,42 @@ function checkInvariant(
   switch (inv.kind) {
     case 'range': {
       const unit = inv.unit ? ` ${inv.unit}` : '';
-      const expected = `${inv.min ?? '-inf'}..${inv.max ?? 'inf'}${unit}`;
-      for (const { at, value } of select(data, inv.path)) {
-        if (typeof value !== 'number') continue; // null/missing is notNull's job
-        if ((inv.min !== undefined && value < inv.min) || (inv.max !== undefined && value > inv.max)) {
-          return v(at, expected, value, `${at} = ${value} is outside ${expected}`);
-        }
-      }
-      return null;
+      const expected =
+        inv.max === undefined ? `at least ${inv.min}${unit}` : `${inv.min ?? '-inf'}-${inv.max}${unit}`;
+      const values = select(data, inv.path).filter((x) => typeof x.value === 'number'); // null is notNull's job
+      const bad = values.filter(
+        ({ value }) =>
+          (inv.min !== undefined && (value as number) < inv.min) ||
+          (inv.max !== undefined && (value as number) > inv.max),
+      );
+      const first = bad[0];
+      if (!first) return null;
+      const field = inv.path.split('.').pop() ?? inv.path;
+      const message =
+        values.length === 1
+          ? `${first.at} = ${first.value} is outside ${expected}`
+          : `${bad.length} of ${values.length} ${field}s outside ${expected} (${label(data, first.at)} = ${first.value})`;
+      return v(first.at, expected, first.value, message);
     }
     case 'notNull':
     case 'nonEmpty': {
       if (inv.onlyKnownGood && !isKnownGood(c, input.args)) return 'skip';
       for (const { at, value } of select(data, inv.path)) {
         if (inv.kind === 'notNull' && (value === null || value === undefined)) {
-          return v(at, 'not null', value ?? null, `${at} is ${show(value ?? null)} for a known-good input`);
+          return v(
+            at,
+            'not null',
+            value ?? null,
+            `${at} is null, but ${argText(input.args)} should have one`,
+          );
         }
         if (inv.kind === 'nonEmpty' && (!Array.isArray(value) || value.length === 0)) {
-          return v(at, 'non-empty array', value, `${at} is empty for a known-good input`);
+          return v(
+            at,
+            'non-empty array',
+            value,
+            `${at} is empty, but ${argText(input.args)} should have results`,
+          );
         }
       }
       return null;
@@ -164,7 +221,7 @@ function checkInvariant(
         inv.itemsPath,
         `${inv.itemsPath}.length == ${inv.totalPath} (${total})`,
         items.length,
-        `returned ${items.length} of ${total} matching items`,
+        `list is incomplete, ${items.length} of ${total} matches returned`,
       );
     }
     case 'equalsUpstream': {
@@ -188,7 +245,9 @@ function checkInvariant(
         inv.path,
         `${show(want)} (upstream ${inv.upstreamPath})`,
         got,
-        `${inv.path} = ${show(got)} but upstream ${inv.upstreamPath} = ${show(want)}`,
+        inv.compare === 'instant'
+          ? `${inv.path} shows ${dateOnly(got)} but upstream sent ${toMinute(want)}`
+          : `${inv.path} = ${show(got)} but upstream sent ${show(want)}`,
       );
     }
     case 'unique': {
@@ -212,7 +271,8 @@ function checkInvariant(
         if (t === null) return v(at, expected, value, `${at} = ${show(value)} is not a timestamp`);
         if (t < lo || t > hi) {
           const days = Math.round((now - t) / DAY_MS);
-          return v(at, expected, value, `${at} = ${show(value)} is ${days} days old (max ${inv.maxAgeDays})`);
+          const when = days >= 0 ? `${days} days old` : `${-days} days in the future`;
+          return v(at, expected, value, `${at} shows ${dateOnly(value)}, ${when}`);
         }
       }
       return null;
@@ -232,13 +292,15 @@ function checkReadAfterWrite(
   if (!probe || probe.tool !== post.probeTool) {
     return { ...base, expected: 'probe result', actual: null, message: `no ${post.probeTool} probe ran` };
   }
-  const args = JSON.stringify(probe.args);
+  const args = Object.values((probe.args ?? {}) as Record<string, unknown>)
+    .map(String)
+    .join(', ');
   if (probe.result.isError || !probe.result.structuredContent) {
     return {
       ...base,
       expected: 'probe reads back the write',
       actual: probe.result.isError ? 'error' : 'no structuredContent',
-      message: `write not readable: ${post.probeTool}(${args}) returned ${probe.result.isError ? 'an error' : 'no data'}`,
+      message: `not found on read-back: ${post.probeTool} ${args} returned ${probe.result.isError ? 'an error' : 'no data'}`,
     };
   }
   if (post.upstream && probe.upstream) {
@@ -259,7 +321,7 @@ function checkReadAfterWrite(
         path: idPath,
         expected: `upstream 2xx with ${idPath} = ${show(want)}`,
         actual: statuses,
-        message: `write not confirmed by upstream: ${post.probeTool}(${args}) upstream status ${statuses}`,
+        message: `write not confirmed by upstream: ${post.probeTool} ${args} got upstream status ${statuses}`,
       };
     }
   }
@@ -272,7 +334,7 @@ function checkReadAfterWrite(
         path: e.probePath,
         expected: show(want),
         actual: got,
-        message: `${post.probeTool}(${args}).${e.probePath} = ${show(got)}, write returned ${show(want)}`,
+        message: `${post.probeTool} ${args} read back ${e.probePath} = ${show(got)}, write returned ${show(want)}`,
       };
     }
   }
@@ -286,7 +348,28 @@ export function evaluate(contract: ToolContract | undefined, input: EvalInput): 
   // An explicit tool error is not a silent failure; the agent already sees it.
   if (input.result.isError) return empty;
   const data = input.result.structuredContent;
-  if (!data) return empty;
+  if (!data) {
+    // MCP: a tool that declares an outputSchema must return structuredContent.
+    if (contract.outputSchema ?? input.declaredOutputSchema) {
+      const propertyId = `${contract.id}/outputSchema`;
+      return {
+        verdict: 'violated',
+        contractId: contract.id,
+        checked: [propertyId],
+        violations: [
+          {
+            propertyId,
+            kind: 'outputSchema',
+            path: '$',
+            expected: 'structuredContent',
+            actual: null,
+            message: 'no structured result, though the tool declares an output schema',
+          },
+        ],
+      };
+    }
+    return empty;
+  }
 
   const checked: string[] = [];
   const violations: Violation[] = [];

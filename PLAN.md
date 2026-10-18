@@ -12,6 +12,7 @@ Date written: 2026-10-18. Version pins must be published on or before **2026-10-
   - `shop-mcp` lives at `https://github.com/vats98754/shop-mcp`. Develop it locally as a separate git clone at `/Users/anvayvats/fiks/.work/shop-mcp`. `.work/` is gitignored in fiks and excluded from the fiks pnpm workspace. shop-mcp has its own `package.json`, lockfile and CI. Fix worktrees go in `.work/wt/<branch>`.
 - **Clean-clone story.** `scripts/ensure-shop-mcp.mjs` runs as `pretest` and `predemo`. If `.work/shop-mcp` is missing, it clones it over https (read-only works without auth) and runs `pnpm i --frozen-lockfile` inside it. Pushes and PRs go through `gh`, which is authenticated as vats98754 over ssh. `GITHUB_TOKEN` is optional.
 - **The seed is frozen.** The unfixed shop-mcp code is tagged `seed-v1` and pushed. After that tag, nothing is pushed directly to shop-mcp `main`. The only changes allowed are human-merged Fiks PRs. Fiks never merges anything.
+- **Credentials (updated 2026-10-18).** The user has a Claude Code OAuth token, not an API key. Both LLM parts therefore run through the Claude Agent SDK (which runs Claude Code and accepts `CLAUDE_CODE_OAUTH_TOKEN`): the repair agent (unchanged) and the bench agent (changed from `@anthropic-ai/sdk` to an Agent SDK `query()` with fiks-proxy as its MCP server, built-in tools disabled). Wherever this plan says `ANTHROPIC_API_KEY`, read "the Claude credential". Runs count against the user's plan limits: smoke on Haiku first, and report run counts. The README must say the bench agent is a Claude Agent SDK agent.
 - **API key timing.** M0–M3 need no `ANTHROPIC_API_KEY`. Every test in those milestones runs with `env -u ANTHROPIC_API_KEY`. The key is first needed in **M4** (the real repair run) and in **M5** (the bench). If the key is missing at that point, stop and ask for it (hard rule).
 - **Models.** Update `.env.example`: change `BENCH_MODEL=claude-sonnet-4-6` to `BENCH_MODEL=claude-sonnet-5-5`, and add `REPAIR_MODEL=claude-opus-5-5` and `SMOKE_MODEL=claude-haiku-5-5`.
   - Bench agent: **claude-sonnet-5-5**. It is realistic for agent traffic and costs $2/$10 per MTok.
@@ -154,17 +155,17 @@ node scripts/sync-contracts.mjs --check   # exit 0 (vendored evaluator identical
 **HTTP tap.** `--tap VENDOR_BASE_URL`: the proxy starts a recording reverse proxy, rewrites that env var for the upstream child process, and forwards traffic to the real URL. Calls are serialized per upstream with a mutex, so every exchange belongs to exactly one call (limitation recorded in the README). Sensitive headers are redacted: `authorization`, `cookie`, `x-api-key`.
 
 **Receipt text.** Status goes on the first line, the next action is named, and the whole block is under 60 tokens (agent-ux-tester grades this). Format:
-`[fiks] VIOLATED shop.get_product/price.notNull: price is null for a known-good product. Do not rely on this value; tell the user or retry later. trace=tr_…`
+`[fiks] VIOLATED get_product: price is null, but p-1001 should have one. Do not treat the missing price as meaningful; tell the user it is unavailable right now.` (tool name first, one plain fact per field, one action per problem kind). Property ids, the trace id and `upstreamObserved` are in `_meta` only, since the agent cannot act on them. Tool errors get `NOT CHECKED`. Budget: 60 tokens, enforced in receipt.test.ts with an estimator that reads slightly low, so the limit there is 54.
 
 **Files:**
-- `packages/proxy/src/{index.ts,proxy.ts,receipt.ts,tap.ts,transports.ts,config.ts}` plus tests.
+- `packages/proxy/src/{index.ts,proxy.ts,receipt.ts,tap.ts,http.ts,bin.ts}` plus tests. (Deviation: upstream transports live in `proxy.ts` and CLI config in `bin.ts`; there is no separate `transports.ts`/`config.ts`.)
 - `packages/cli/src/commands/{call.ts,scenario.ts,vendor-diff.ts}`.
 - `packages/cli/src/harness.ts`: starts vendor, shop-mcp and proxy on ephemeral ports and tears them down.
 
 **Interfaces:**
 ```ts
 interface Receipt { v: 1; verdict: Verdict; contractId: string | null; checked: string[];
-  violations: Violation[]; traceId?: string; at: string }
+  violations: Violation[]; upstreamObserved: boolean; traceId?: string; at: string }
 interface HttpExchange { seq: number; startedAt: string; durationMs: number;
   request: { method: string; url: string; headers: Record<string, string>; body: string | null };
   response: { status: number; headers: Record<string, string>; body: string } }
