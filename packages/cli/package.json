@@ -11,6 +11,7 @@
   "dependencies": {
     "@fiks/contracts": "workspace:*",
     "@fiks/proxy": "workspace:*",
+    "@fiks/repro": "workspace:*",
     "@fiks/vendor-api": "workspace:*",
     "@modelcontextprotocol/sdk": "1.32.0",
     "zod": "4.6.5"

@@ -1,7 +1,9 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { buildProbeArgs, findContract, type Recording, SHOP_CONTRACTS } from '@fiks/contracts';
+import { formatFiles } from '@fiks/repro';
 import { VERSION_DATES, type VendorVersion } from '@fiks/vendor-api';
 import { startHarness } from '../harness.ts';
+import { shopDir as defaultShopDir } from '../paths.ts';
 
 export function vendorVersionOf(rec: Recording): VendorVersion {
   if (rec.upstream?.version === 'v1' || rec.upstream?.version === 'v2') return rec.upstream.version;
@@ -45,6 +47,7 @@ export async function rerecord(file: string, opts: { shopDir?: string } = {}) {
     }
     const target = file.replace(/\.json$/, '.rerecorded.json');
     writeFileSync(target, `${JSON.stringify(out, null, 2)}\n`);
+    formatFiles(opts.shopDir ?? defaultShopDir(), [target]);
     return { file: target, vendor };
   } finally {
     await h.close();

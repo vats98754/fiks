@@ -2,6 +2,7 @@
 import { parseArgs } from 'node:util';
 import { callOnce } from './commands/call.ts';
 import { recordFixtures } from './commands/record-fixtures.ts';
+import { repro } from './commands/repro.ts';
 import { rerecord } from './commands/rerecord.ts';
 import { runScenario, SCENARIOS } from './commands/scenario.ts';
 import { vendorDiff } from './commands/vendor-diff.ts';
@@ -14,7 +15,9 @@ commands:
   rerecord <recording.json>...             re-record calls through the current shop-mcp code
   scenario <id> [--transport stdio|http]   run a scripted scenario through fiks-proxy (ids: v1-all, D1..D5)
   call <tool> '<json args>' [--vendor v2] [--drifts D2] [--compare-direct]
-                                           one call through fiks-proxy`;
+                                           one call through fiks-proxy
+  repro --scenario D2 [--target seed-v1] [--runs 3] [--keep]
+                                           capture a trace, generate its repro test, run the F gate`;
 
 const [command, ...rest] = process.argv.slice(2);
 const { values, positionals } = parseArgs({
@@ -27,6 +30,10 @@ const { values, positionals } = parseArgs({
     drifts: { type: 'string' },
     transport: { type: 'string', default: 'stdio' },
     'compare-direct': { type: 'boolean', default: false },
+    scenario: { type: 'string' },
+    target: { type: 'string', default: 'seed-v1' },
+    runs: { type: 'string', default: '3' },
+    keep: { type: 'boolean', default: false },
   },
 });
 
@@ -105,6 +112,28 @@ switch (command) {
         lines.push(`upstream result identical to a direct call: ${r.upstreamIdentical}`);
       return lines.join('\n');
     });
+    break;
+  }
+  case 'repro': {
+    if (!values.scenario) {
+      console.error(USAGE);
+      process.exit(2);
+    }
+    const r = await repro({
+      scenario: values.scenario,
+      ref: values.target,
+      runs: Number(values.runs),
+      keep: values.keep,
+    });
+    print(r, () =>
+      [
+        `trace ${r.trace.id}: ${r.trace.tool} ${JSON.stringify(r.trace.args)} violated ${r.trace.violated.join(', ')}`,
+        `repro test ${r.spec.testPath} (target ${r.spec.propertyIds.join(', ')})`,
+        `F gate on ${values.target}: ${r.gateF.ok ? 'PASS' : 'FAIL'}: ${r.gateF.reason}`,
+        ...r.gateF.evidence.failed.map((f) => `  failing: ${f.test}\n    ${f.message.split('\n')[0]}`),
+      ].join('\n'),
+    );
+    if (!r.gateF.ok) process.exitCode = 1;
     break;
   }
   default:

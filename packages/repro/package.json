@@ -7,5 +7,10 @@
   },
   "scripts": {
     "test": "vitest run"
+  },
+  "dependencies": {
+    "@fiks/contracts": "workspace:*",
+    "@fiks/proxy": "workspace:*",
+    "@fiks/vendor-api": "workspace:*"
   }
 }

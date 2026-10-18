@@ -209,12 +209,13 @@ Then run **agent-ux-tester** (scripted transcripts only; it does not need the AP
   - (c) there are no `UNMATCHED_REQUEST` responses and no setup errors.
 
   The test is run 3 times and must give the same result each time.
-- **P side.** The P side is proven in fiks's own test suite with human-written **oracle patches**. They live in `packages/repro/test/oracles/D{1..5}.patch` and are used only by tests, never by the demo or by PRs.
+- **P side.** The P side is proven in fiks's own test suite with human-written **oracle patches**. They live in `packages/cli/test/oracles/D{1..5}.patch` and are used only by tests, never by the demo or by PRs.
 
 **Files:**
-- `packages/repro/src/{trace-store.ts,generate.ts,gate.ts,templates/repro.test.ts.tmpl}` plus tests.
+- `packages/repro/src/{trace-store.ts,generate.ts,gate.ts,worktree.ts,events.ts,format.ts}` plus tests.
+- Deviations (recorded after the M3 verifier): the repro template is inline in `generate.ts`; the trace is stored next to its test as `test/repro/<id>.json` (not `test/traces/`, so the stored-trace suite and the repro test never fail twice for one trace); `ReproSpec.propertyIds` is a list (D5 targets two properties); `failGate`/`passGate` are synchronous; files fiks writes into shop-mcp are formatted with shop-mcp's Biome so its CI lint passes. The F gate's stated-reason check is `classifyFailure`: the first failure line must name exactly the target properties. The P gate requires the repro test to have run with every assertion passed.
 - `packages/cli/src/commands/repro.ts`.
-- `packages/repro/test/oracles/*.patch`.
+- `packages/cli/test/oracles/*.patch` (deviation: the oracle and negative tests drive the shop-mcp harness, which lives in `@fiks/cli`, so they run there; `@fiks/repro` stays free of the harness).
 
 **Interfaces:**
 ```ts
@@ -235,10 +236,10 @@ rm -rf .fiks/traces && pnpm fiks scenario D2 --json >/dev/null && ls .fiks/trace
 jq -e '(.http | length) >= 1 and .violated[0].propertyId == "shop.get_product/price.notNull"' .fiks/traces/*.json
 for D in D1 D2 D3; do pnpm fiks repro --scenario $D --target seed-v1 --runs 3 --json | jq -e '.gateF.ok == true and (.gateF.evidence.failed | length) == 1'; done
 pnpm fiks repro --scenario D2 --target seed-v1 --json | jq -r '.gateF.evidence.failed[0].message'   # contains shop.get_product/price.notNull
-pnpm --filter @fiks/repro test -- oracle      # per drift: F fails for the property; after oracle patch, P passes AND full shop-mcp suite passes
-pnpm --filter @fiks/repro test -- negative    # (1) trace whose test passes on unfixed code -> gateF.ok=false "passed on unfixed code";
+pnpm --filter @fiks/cli test -- oracle        # per drift: F fails for the property; after oracle patch, P passes AND full shop-mcp suite passes
+pnpm --filter @fiks/cli test -- negative      # (1) trace whose test passes on unfixed code -> gateF.ok=false "passed on unfixed code";
                                               # (2) fixture tampered -> gateF.ok=false "wrong failure reason"
-grep -rn "oracles" packages --include=*.ts | grep -v '/test/' ; test $? -eq 1 && echo ORACLE_ISOLATED
+grep -rn "oracles" packages --include='*.ts' | grep -v '/test/' ; test $? -eq 1 && echo ORACLE_ISOLATED
 env -u ANTHROPIC_API_KEY pnpm test
 ```
 `--target seed-v1` makes a throwaway worktree at tag `seed-v1` under `.work/wt/`, and deletes it afterwards.

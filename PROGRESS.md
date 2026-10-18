@@ -8,7 +8,7 @@ Status per milestone in PLAN.md. Every PASS here is a verifier PASS with a commi
 | M0 scaffold + repos | PASS | (this commit) | verifier PASS on re-run after .gitignore fix |
 | M1 vendor-api + shop-mcp seed | PASS | (this commit) | verifier PASS on round 6; rounds 1-5 found gate holes (re-record fallback, D1/D4 overlap, weak contracts, trace scope, golden after re-record, error-result golden, lazy now(), refusal-as-fix, cached read-back); fixed, seed-v1 re-tagged at bb037cf, guarded by packages/cli/test/seed-integrity.test.ts (14 real/fake-fix cases) |
 | M2 proxy + contracts + receipts | PASS | (this commit) | round 1 FAIL (lint, receipt length, probe/outputSchema rewrote results, no-tap silence, bin EOF); round 2 FAIL (upstream env dropped); round 3 PASS; agent-ux-tester: 0 v1 false positives in 51 calls |
-| M3 traces + repro (F→P gate) | not started | | |
+| M3 traces + repro (F→P gate) | PASS | (this commit) | round 1 FAIL (F gate substring match, P gate did not require the repro ran, empty target); fixed; round 2 PASS after a lint fix. All 5 drifts: F 3/3 on seed-v1, P after oracle fix |
 | M4 repair + PR (green-CI gate) | not started | | needs `ANTHROPIC_API_KEY` for the live run |
 | M5 bench + summary.json | not started | | needs `ANTHROPIC_API_KEY` |
 | M6 dashboard | not started | | |

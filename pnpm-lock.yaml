@@ -36,6 +36,9 @@ importers:
       '@fiks/proxy':
         specifier: workspace:*
         version: link:../proxy
+      '@fiks/repro':
+        specifier: workspace:*
+        version: link:../repro
       '@fiks/vendor-api':
         specifier: workspace:*
         version: link:../vendor-api
@@ -62,7 +65,17 @@ importers:
 
   packages/repair: {}
 
-  packages/repro: {}
+  packages/repro:
+    dependencies:
+      '@fiks/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@fiks/proxy':
+        specifier: workspace:*
+        version: link:../proxy
+      '@fiks/vendor-api':
+        specifier: workspace:*
+        version: link:../vendor-api
 
   packages/vendor-api: {}
 

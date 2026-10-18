@@ -2,7 +2,8 @@ import { join } from 'node:path';
 
 export const ROOT = new URL('../../../', import.meta.url).pathname.replace(/\/$/, '');
 export const WORK_DIR = join(ROOT, '.work');
-export const FIKS_DIR = join(ROOT, '.fiks');
+/** Scratch output: traces and the event log. Tests point FIKS_DIR at a temp folder. */
+export const FIKS_DIR = process.env.FIKS_DIR ?? join(ROOT, '.fiks');
 
 /** The shop-mcp checkout the harness runs (override with FIKS_SHOP_DIR). */
 export function shopDir(): string {
