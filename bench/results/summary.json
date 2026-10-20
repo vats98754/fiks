@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-20T15:54:47.405Z",
+  "generatedAt": "2026-10-20T22:52:58.717Z",
   "phases": {
     "A_v1": {
-      "runId": "A_v1_20261018T093357",
+      "runId": "A_v1_20261020T223642",
       "model": "claude-sonnet-5-5",
       "shopMcpSha": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7",
       "tasks": 6,
@@ -74,94 +74,22 @@
       "violatedCalls": 0
     },
     "B_v2": {
-      "runId": "B_v2_20261018T093754",
+      "runId": "B_v2_20261020T224015",
       "model": "claude-sonnet-5-5",
       "shopMcpSha": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7",
       "tasks": 6,
       "k": 5,
       "trials": 30,
       "passHatK": [
-        0.4333,
-        0.3833,
-        0.35,
-        0.3333,
-        0.3333
+        0.8333,
+        0.8333,
+        0.8333,
+        0.8333,
+        0.8333
       ],
       "outcomes": {
-        "correct": 13,
+        "correct": 25,
         "wrong": 0,
-        "declined": 15,
-        "noAnswer": 2
-      },
-      "perTask": {
-        "T1": {
-          "n": 5,
-          "pass": 0,
-          "correct": 0,
-          "wrong": 0,
-          "declined": 5,
-          "noAnswer": 0
-        },
-        "T2": {
-          "n": 5,
-          "pass": 0,
-          "correct": 0,
-          "wrong": 0,
-          "declined": 5,
-          "noAnswer": 0
-        },
-        "T3": {
-          "n": 5,
-          "pass": 0,
-          "correct": 0,
-          "wrong": 0,
-          "declined": 5,
-          "noAnswer": 0
-        },
-        "T4": {
-          "n": 5,
-          "pass": 3,
-          "correct": 3,
-          "wrong": 0,
-          "declined": 0,
-          "noAnswer": 2
-        },
-        "T5": {
-          "n": 5,
-          "pass": 5,
-          "correct": 5,
-          "wrong": 0,
-          "declined": 0,
-          "noAnswer": 0
-        },
-        "T6": {
-          "n": 5,
-          "pass": 5,
-          "correct": 5,
-          "wrong": 0,
-          "declined": 0,
-          "noAnswer": 0
-        }
-      },
-      "violatedCalls": 35
-    },
-    "B_v2_direct": {
-      "runId": "B_v2_direct_20261018T094446",
-      "model": "claude-sonnet-5-5",
-      "shopMcpSha": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7",
-      "tasks": 6,
-      "k": 5,
-      "trials": 30,
-      "passHatK": [
-        0.6667,
-        0.6667,
-        0.6667,
-        0.6667,
-        0.6667
-      ],
-      "outcomes": {
-        "correct": 20,
-        "wrong": 5,
         "declined": 5,
         "noAnswer": 0
       },
@@ -200,9 +128,153 @@
         },
         "T5": {
           "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T6": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        }
+      },
+      "violatedCalls": 41
+    },
+    "B_v2_direct": {
+      "runId": "B_v2_direct_20261020T224445",
+      "model": "claude-sonnet-5-5",
+      "shopMcpSha": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7",
+      "tasks": 6,
+      "k": 5,
+      "trials": 30,
+      "passHatK": [
+        0.6,
+        0.55,
+        0.5167,
+        0.5,
+        0.5
+      ],
+      "outcomes": {
+        "correct": 18,
+        "wrong": 5,
+        "declined": 5,
+        "noAnswer": 2
+      },
+      "perTask": {
+        "T1": {
+          "n": 5,
+          "pass": 3,
+          "correct": 3,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 2
+        },
+        "T2": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T3": {
+          "n": 5,
+          "pass": 0,
+          "correct": 0,
+          "wrong": 0,
+          "declined": 5,
+          "noAnswer": 0
+        },
+        "T4": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T5": {
+          "n": 5,
           "pass": 0,
           "correct": 0,
           "wrong": 5,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T6": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        }
+      },
+      "violatedCalls": 0
+    },
+    "C_v2_fixed": {
+      "runId": "C_v2_fixed_20261020T224903",
+      "model": "claude-sonnet-5-5",
+      "shopMcpSha": "7bf2e665b3ed38110045fa3026cb14ea764e946d",
+      "tasks": 6,
+      "k": 5,
+      "trials": 30,
+      "passHatK": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "outcomes": {
+        "correct": 30,
+        "wrong": 0,
+        "declined": 0,
+        "noAnswer": 0
+      },
+      "perTask": {
+        "T1": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T2": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T3": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T4": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
+          "declined": 0,
+          "noAnswer": 0
+        },
+        "T5": {
+          "n": 5,
+          "pass": 5,
+          "correct": 5,
+          "wrong": 0,
           "declined": 0,
           "noAnswer": 0
         },
@@ -280,10 +352,18 @@
   "sources": [
     "bench/results/A_v1_20261018T093357/meta.json",
     "bench/results/A_v1_20261018T093357/trials.jsonl",
+    "bench/results/A_v1_20261020T223642/meta.json",
+    "bench/results/A_v1_20261020T223642/trials.jsonl",
     "bench/results/B_v2_20261018T093754/meta.json",
     "bench/results/B_v2_20261018T093754/trials.jsonl",
+    "bench/results/B_v2_20261020T224015/meta.json",
+    "bench/results/B_v2_20261020T224015/trials.jsonl",
     "bench/results/B_v2_direct_20261018T094446/meta.json",
     "bench/results/B_v2_direct_20261018T094446/trials.jsonl",
+    "bench/results/B_v2_direct_20261020T224445/meta.json",
+    "bench/results/B_v2_direct_20261020T224445/trials.jsonl",
+    "bench/results/C_v2_fixed_20261020T224903/meta.json",
+    "bench/results/C_v2_fixed_20261020T224903/trials.jsonl",
     "bench/results/loop/events.jsonl",
     "bench/results/loop/repairs/tr_079b90c89e.json",
     "bench/results/loop/repairs/tr_4db46c86e4.json",

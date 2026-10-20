@@ -1,0 +1,30 @@
+{
+  "runId": "C_v2_fixed_20261020T224903",
+  "phase": "C_v2_fixed",
+  "fiksSha": "705e989be6243b86fe56c04ab75a8519629ca232",
+  "fiksDirty": true,
+  "proxy": true,
+  "receiptField": true,
+  "model": "claude-sonnet-5-5",
+  "k": 5,
+  "tasks": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+  ],
+  "shopRef": "origin/main",
+  "shopMcpSha": "7bf2e665b3ed38110045fa3026cb14ea764e946d",
+  "vendor": "v2",
+  "vendorDrifts": [
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    "D5"
+  ],
+  "startedAt": "2026-10-20T22:49:03.981Z",
+  "finishedAt": "2026-10-20T22:52:24.663Z"
+}

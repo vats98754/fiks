@@ -23,20 +23,28 @@
 <circle cx="696" cy="24" r="4" fill="#fcfcfb" stroke="#2a78d6" stroke-width="2"/>
 <rect x="56" y="274" width="12" height="12" rx="3" fill="#2a78d6"/>
 <text x="74" y="284" fill="#0b0b0b">Before the vendor change: pass^5 = 100% (30 trials)</text>
-<polyline fill="none" stroke="#eb6834" stroke-width="2" points="56,95.9928 216,95.9928 376,95.9928 536,95.9928 696,95.9928"/>
-<circle cx="56" cy="95.9928" r="4" fill="#fcfcfb" stroke="#eb6834" stroke-width="2"/>
-<circle cx="216" cy="95.9928" r="4" fill="#fcfcfb" stroke="#eb6834" stroke-width="2"/>
-<circle cx="376" cy="95.9928" r="4" fill="#fcfcfb" stroke="#eb6834" stroke-width="2"/>
-<circle cx="536" cy="95.9928" r="4" fill="#fcfcfb" stroke="#eb6834" stroke-width="2"/>
-<circle cx="696" cy="95.9928" r="4" fill="#fcfcfb" stroke="#eb6834" stroke-width="2"/>
+<polyline fill="none" stroke="#eb6834" stroke-width="2" points="56,110.4 216,121.19999999999999 376,128.3928 536,132 696,132"/>
+<circle cx="56" cy="110.4" r="4" fill="#fcfcfb" stroke="#eb6834" stroke-width="2"/>
+<circle cx="216" cy="121.19999999999999" r="4" fill="#fcfcfb" stroke="#eb6834" stroke-width="2"/>
+<circle cx="376" cy="128.3928" r="4" fill="#fcfcfb" stroke="#eb6834" stroke-width="2"/>
+<circle cx="536" cy="132" r="4" fill="#fcfcfb" stroke="#eb6834" stroke-width="2"/>
+<circle cx="696" cy="132" r="4" fill="#fcfcfb" stroke="#eb6834" stroke-width="2"/>
 <rect x="56" y="292" width="12" height="12" rx="3" fill="#eb6834"/>
-<text x="74" y="302" fill="#0b0b0b">After the change, without fiks: pass^5 = 67% (30 trials)</text>
-<polyline fill="none" stroke="#1baf7a" stroke-width="2" points="56,146.4072 216,157.2072 376,164.4 536,168.0072 696,168.0072"/>
-<circle cx="56" cy="146.4072" r="4" fill="#fcfcfb" stroke="#1baf7a" stroke-width="2"/>
-<circle cx="216" cy="157.2072" r="4" fill="#fcfcfb" stroke="#1baf7a" stroke-width="2"/>
-<circle cx="376" cy="164.4" r="4" fill="#fcfcfb" stroke="#1baf7a" stroke-width="2"/>
-<circle cx="536" cy="168.0072" r="4" fill="#fcfcfb" stroke="#1baf7a" stroke-width="2"/>
-<circle cx="696" cy="168.0072" r="4" fill="#fcfcfb" stroke="#1baf7a" stroke-width="2"/>
+<text x="74" y="302" fill="#0b0b0b">After the change, without fiks: pass^5 = 50% (30 trials)</text>
+<polyline fill="none" stroke="#1baf7a" stroke-width="2" points="56,60.00719999999999 216,60.00719999999999 376,60.00719999999999 536,60.00719999999999 696,60.00719999999999"/>
+<circle cx="56" cy="60.00719999999999" r="4" fill="#fcfcfb" stroke="#1baf7a" stroke-width="2"/>
+<circle cx="216" cy="60.00719999999999" r="4" fill="#fcfcfb" stroke="#1baf7a" stroke-width="2"/>
+<circle cx="376" cy="60.00719999999999" r="4" fill="#fcfcfb" stroke="#1baf7a" stroke-width="2"/>
+<circle cx="536" cy="60.00719999999999" r="4" fill="#fcfcfb" stroke="#1baf7a" stroke-width="2"/>
+<circle cx="696" cy="60.00719999999999" r="4" fill="#fcfcfb" stroke="#1baf7a" stroke-width="2"/>
 <rect x="56" y="310" width="12" height="12" rx="3" fill="#1baf7a"/>
-<text x="74" y="320" fill="#0b0b0b">After the change, with fiks receipts: pass^5 = 33% (30 trials)</text>
+<text x="74" y="320" fill="#0b0b0b">After the change, with fiks receipts: pass^5 = 83% (30 trials)</text>
+<polyline fill="none" stroke="#c98500" stroke-width="2" points="56,24 216,24 376,24 536,24 696,24"/>
+<circle cx="56" cy="24" r="4" fill="#fcfcfb" stroke="#c98500" stroke-width="2"/>
+<circle cx="216" cy="24" r="4" fill="#fcfcfb" stroke="#c98500" stroke-width="2"/>
+<circle cx="376" cy="24" r="4" fill="#fcfcfb" stroke="#c98500" stroke-width="2"/>
+<circle cx="536" cy="24" r="4" fill="#fcfcfb" stroke="#c98500" stroke-width="2"/>
+<circle cx="696" cy="24" r="4" fill="#fcfcfb" stroke="#c98500" stroke-width="2"/>
+<rect x="56" y="328" width="12" height="12" rx="3" fill="#c98500"/>
+<text x="74" y="338" fill="#0b0b0b">After the fiks PRs were merged: pass^5 = 100% (30 trials)</text>
 </svg>

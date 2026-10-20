@@ -50,3 +50,8 @@ test('timeline: steps in loop order with offsets from the violation', () => {
   ]);
   expect(steps[2]?.ok).toBe(true); // the passing attempt is the one shown
 });
+
+test('long offsets read as hours or days', () => {
+  expect(formatOffset(3 * 3600 + 120)).toBe('+3h 02m');
+  expect(formatOffset(3264 * 60)).toBe('+2d 6h');
+});

@@ -1,0 +1,5 @@
+tool_use mcp__shop__get_order {"order_id":"o-5001"}
+tool_result "{\"order_id\":\"o-5001\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1005\",\"quantity\":2,\"unit_price\":329}],\"total\":658,\"created_at\":\"1970-01-01T00:00:00.000Z\"}"
+tool_use mcp__bench__submit_answer {"answer":"1970-01-01"}
+tool_result [{"type":"text","text":"Submitted."}]
+assistant: Order o-5001 was placed on 1970-01-01. That date is the Unix epoch, so it is probably a placeholder timestamp in the shop data rather than the real order date.

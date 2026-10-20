@@ -55,10 +55,10 @@ Say:
 ## 2:10 – 2:50 What it changed
 
 Switch to the dashboard.
-- **Headline:** before the vendor change, 100% pass^5. After it, 67% without fiks and 33% with receipts (bench).
+- **Headline:** before the vendor change, 100% pass^5. After it, 50% without fiks and 83% with fiks receipts. With the fiks PRs merged, back to 100% (bench).
 - **"What the agent told the user":**
-  > "With receipts the agent gave no wrong answers, but it also declined more. That's why the receipt isn't the product. The fix is."
-- **Loop table:** four drifts, each from violation to green PR in under two minutes, in one agent attempt (bench).
+  > "Without fiks, the agent told the user the order was placed in 1970. With fiks receipts: no wrong answers, and the only declines are the order that really was lost. Then the fixes land, and it's 100% without needing receipts at all" (bench).
+- **Loop table:** all five drifts, each from violation to green PR in under two minutes, in one agent attempt, merged and confirmed (bench).
 - **Timeline:** click D1 and walk it from violation to PR, with every step linked to evidence.
 
 ## 2:50 – 3:00 Close
@@ -69,4 +69,4 @@ Say:
 ## If something breaks on stage
 
 - **No network or no model:** run `pnpm demo --drifts D1,D2,D3 --until-f-gate`. It still shows trace → test → fails for the stated reason, offline.
-- **CI is slow:** say "fiks won't open the PR until this is green", then show an existing PR (#1–#4).
+- **CI is slow:** say "fiks won't open the PR until this is green", then show an existing PR (#1–#4 or #7).

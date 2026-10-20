@@ -10,9 +10,9 @@ Status per milestone in PLAN.md. Every PASS here is a verifier PASS with a commi
 | M2 proxy + contracts + receipts | PASS | (this commit) | round 1 FAIL (lint, receipt length, probe/outputSchema rewrote results, no-tap silence, bin EOF); round 2 FAIL (upstream env dropped); round 3 PASS; agent-ux-tester: 0 v1 false positives in 51 calls |
 | M3 traces + repro (F→P gate) | PASS | (this commit) | round 1 FAIL (F gate substring match, P gate did not require the repro ran, empty target); fixed; round 2 PASS after a lint fix. All 5 drifts: F 3/3 on seed-v1, P after oracle fix |
 | M4 repair + PR (green-CI gate) | PASS | (this commit) | live, real Claude agent (claude-opus-5-5 via Agent SDK + OAuth token), 1 attempt each, green CI before PR: D2 vats98754/shop-mcp#1, D1 #2, D3 #3 (with fiks re-record commit), D5 #4. D4 waits for #2 to merge (same file). |
-| M5 bench + summary.json | PASS except phase C | (this commit) | phases A, B, B_v2_direct run live (claude-sonnet-5-5 via Agent SDK + OAuth); phase C waits for the fix PRs to be merged |
+| M5 bench + summary.json | PASS; phase C run | (this commit) | phases A, B, B_v2_direct run live (claude-sonnet-5-5 via Agent SDK + OAuth); phase C waits for the fix PRs to be merged |
 | M6 dashboard | PASS | (this commit) | built from summary.json + loop events only; designer pass done |
-| M7 README / DEMO / claims audit | drafting | | README.md, DEMO.md, docs/chart.svg, scripts/check-claims.mjs; claims-auditor not yet run |
+| M7 README / DEMO / claims audit | in progress | | README.md, DEMO.md, docs/chart.svg, scripts/check-claims.mjs; claims-auditor not yet run |
 
 ## Environment decisions
 - Node: the machine default was v22.5.1, which is below the Vitest 5 / Vite 8 floor (22.12). Installed v22.23.3 via nvm; `.nvmrc` = 22, `engines.node` = `>=22.12`, `engine-strict=true`. The login shell PATH still pins v22.5.1, so run commands with `export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH` (or `nvm use`).
@@ -34,6 +34,11 @@ Status per milestone in PLAN.md. Every PASS here is a verifier PASS with a commi
 
 ## Incidents
 - 2026-10-18: while testing `fiks demo`'s no-credential path, `env -u CLAUDE_CODE_OAUTH_TOKEN` did not remove the token (the CLI loads `.env` itself), so a real D2 repair ran and opened vats98754/shop-mcp#5, a duplicate of #1 (all gates and CI green). Closed with a comment; its records went to a temp FIKS_DIR and are not in bench/results. Fix: `fiks demo --until-f-gate` is the explicit offline mode.
+
+## Final bench (2026-10-20, fiks 705e989, claude-sonnet-5-5, 6 tasks x 5)
+- A_v1 100% pass^5, 0 violated receipts; B_v2_direct (no fiks) 50%, 5 wrong (T5 1970) + 2 no answer; B_v2 (fiks receipts v2) 83.3%, 0 wrong, 5 declined (all T3: the vendor really lost the order); C_v2_fixed (all fix PRs merged) 100%, 0 violations.
+- shop-mcp PRs #1-#4, #6, #7 merged by the user's request (2026-10-20); `fiks confirm`: D1-D5 confirmed on main 7bf2e66.
+- Earlier runs (2026-10-18, receipts v1 and the older harness) stay in bench/results as history; summary uses the latest full run per phase.
 
 ## M4 verification history
 Six rounds. The verifier attacked the repair gates as an adversarial agent and found, in order: the guard could be bypassed by committing; agent code could rewrite fiks's re-recordings during the gates; a detached helper could doctor them before fiks hashed them; the re-record input (vendor profile) was read from disk; a planted symlink could redirect which committed recording was read. Each is fixed and each attack is now a permanent test in `packages/cli/test/repair.test.ts`. Round 6 re-ran all four PoCs: each ends in `gate_failed` with no PR. Extra hardening: git hooks disabled for fiks's git calls, refused re-records end as `gate_failed`, and the PR head must equal the commit that passed CI (else the PR is closed). shop-mcp PR #6 adds the same re-record rule to the tool's own suite (open, for human review).

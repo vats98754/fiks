@@ -28,9 +28,9 @@ function Comparison({ rows }: { rows: PhaseRow[] }) {
     <p className="lede">
       After the vendor change, with fiks receipts the agent gave <strong>{withFiks.wrong}</strong> wrong
       answers instead of <strong>{without.wrong}</strong>, and declined <strong>{withFiks.declined}</strong>{' '}
-      times instead of <strong>{without.declined}</strong>. <strong>{withFiks.noAnswer ?? 0}</strong> trials
-      with receipts ended without submitting an answer (<strong>{without.noAnswer ?? 0}</strong> without).
-      Declines and missing answers count as failed trials in pass^k.
+      times (<strong>{without.declined}</strong> without fiks). <strong>{withFiks.noAnswer ?? 0}</strong>{' '}
+      trials with receipts ended without submitting an answer (<strong>{without.noAnswer ?? 0}</strong>{' '}
+      without). Declines and missing answers count as failed trials in pass^k.
     </p>
   );
 }

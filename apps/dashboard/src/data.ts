@@ -145,7 +145,7 @@ const str = (v: unknown) => (typeof v === 'string' ? v : undefined);
  */
 function evidence(e: LoopEvent, mine: LoopEvent[]): { url: string; linkText: string } | undefined {
   const own = str(e.data?.url);
-  if (own) return { url: own, linkText: e.type === 'pr_opened' ? prLabel(own) : 'CI run' };
+  if (own) return { url: own, linkText: own.includes('/pull/') ? prLabel(own) : 'CI run' };
   const pr = str(mine.find((m) => m.type === 'pr_opened')?.data?.url);
   const repo = pr?.match(/^https:\/\/github\.com\/[^/]+\/[^/]+/)?.[0];
   if (!repo) return undefined;
@@ -231,5 +231,9 @@ export function parseEvents(text: string): LoopEvent[] {
 export function formatOffset(s: number): string {
   if (s < 60) return `+${s}s`;
   const m = Math.floor(s / 60);
-  return `+${m}m ${String(s - m * 60).padStart(2, '0')}s`;
+  if (m < 60) return `+${m}m ${String(s - m * 60).padStart(2, '0')}s`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `+${h}h ${String(m - h * 60).padStart(2, '0')}m`;
+  const d = Math.floor(h / 24);
+  return `+${d}d ${h - d * 24}h`;
 }
