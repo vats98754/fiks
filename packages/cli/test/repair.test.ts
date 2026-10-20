@@ -20,6 +20,8 @@ beforeAll(() => {
   tmp = mkdtempSync(join(tmpdir(), 'fiks-repair-'));
   const remote = join(tmp, 'remote.git');
   execFileSync('git', ['clone', '-q', '--bare', realShop, remote]);
+  // The remote's main starts at the unfixed seed, like shop-mcp did before any fiks PR.
+  execFileSync('git', ['--git-dir', remote, 'update-ref', 'refs/heads/main', 'seed-v1^{commit}']);
   const clone = join(tmp, 'shop');
   execFileSync('git', ['clone', '-q', remote, clone]);
   symlinkSync(join(realShop, 'node_modules'), join(clone, 'node_modules'));

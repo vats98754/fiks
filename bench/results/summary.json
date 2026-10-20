@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-18T10:47:51.767Z",
+  "generatedAt": "2026-10-20T15:54:47.405Z",
   "phases": {
     "A_v1": {
       "runId": "A_v1_20261018T093357",
@@ -225,8 +225,8 @@
       "prGreen": true,
       "prUrl": "https://github.com/vats98754/shop-mcp/pull/2",
       "minutesDriftToPr": 1.4,
-      "merged": false,
-      "confirmed": false,
+      "merged": true,
+      "confirmed": true,
       "repairAttempts": 1,
       "repairTurns": 13
     },
@@ -236,8 +236,8 @@
       "prGreen": true,
       "prUrl": "https://github.com/vats98754/shop-mcp/pull/1",
       "minutesDriftToPr": 1.4,
-      "merged": false,
-      "confirmed": false,
+      "merged": true,
+      "confirmed": true,
       "repairAttempts": 1,
       "repairTurns": 10
     },
@@ -247,21 +247,21 @@
       "prGreen": true,
       "prUrl": "https://github.com/vats98754/shop-mcp/pull/3",
       "minutesDriftToPr": 1.6,
-      "merged": false,
-      "confirmed": false,
+      "merged": true,
+      "confirmed": true,
       "repairAttempts": 1,
       "repairTurns": 14
     },
     "D4": {
       "detected": true,
-      "reproValid": false,
-      "prGreen": false,
-      "prUrl": null,
-      "minutesDriftToPr": null,
-      "merged": false,
-      "confirmed": false,
-      "repairAttempts": null,
-      "repairTurns": null
+      "reproValid": true,
+      "prGreen": true,
+      "prUrl": "https://github.com/vats98754/shop-mcp/pull/7",
+      "minutesDriftToPr": 1.5,
+      "merged": true,
+      "confirmed": true,
+      "repairAttempts": 1,
+      "repairTurns": 11
     },
     "D5": {
       "detected": true,
@@ -269,8 +269,8 @@
       "prGreen": true,
       "prUrl": "https://github.com/vats98754/shop-mcp/pull/4",
       "minutesDriftToPr": 1.4,
-      "merged": false,
-      "confirmed": false,
+      "merged": true,
+      "confirmed": true,
       "repairAttempts": 1,
       "repairTurns": 12
     }
@@ -288,6 +288,7 @@
     "bench/results/loop/repairs/tr_079b90c89e.json",
     "bench/results/loop/repairs/tr_4db46c86e4.json",
     "bench/results/loop/repairs/tr_7280855590.json",
-    "bench/results/loop/repairs/tr_b47c5b77c6.json"
+    "bench/results/loop/repairs/tr_b47c5b77c6.json",
+    "bench/results/loop/repairs/tr_d02358451e.json"
   ]
 }

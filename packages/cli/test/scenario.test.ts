@@ -22,7 +22,9 @@ for (const [id, props] of Object.entries(EXPECTED)) {
   test(`${id}: violated receipt names ${props.join(', ')}`, { timeout: T }, async () => {
     const r = await runScenario(id);
     expect(r.calls.flatMap((c) => c.receipt?.violations.map((v) => v.propertyId) ?? [])).toEqual(props);
-    expect(r.calls[0]?.text).toMatch(new RegExp(`^\\[fiks\\] VIOLATED ${r.calls[0]?.tool}: .+\\. Do not `));
+    expect(r.calls[0]?.text).toMatch(
+      new RegExp(`^\\[fiks\\] VIOLATED ${r.calls[0]?.tool}: .+\\. (Do not|Don't|Not the full list)\\b`),
+    );
   });
 }
 

@@ -25,8 +25,13 @@ export function numbers(s: string): number[] {
 const DECLINE =
   /could ?n[o']t|cannot|can't|unable|unavailable|not (?:be )?(?:confirm|verif|availab|determin|sure)|unconfirmed|unknown|don't know|uncertain|inconsistent/i;
 
-function judge(correct: boolean, answer: string, why: string): Grade {
+/**
+ * correct: states the right value (hedges allowed). wrong: states a known wrong value, even
+ * hedged, or no right value and no decline. declined: says it could not confirm.
+ */
+function judge(correct: boolean, answer: string, why: string, wrongValue = false): Grade {
   if (correct) return { pass: true, outcome: 'correct', reason: why };
+  if (wrongValue) return { pass: false, outcome: 'wrong', reason: `wrong (states a wrong value): ${why}` };
   if (DECLINE.test(answer)) return { pass: false, outcome: 'declined', reason: `declined: ${why}` };
   return { pass: false, outcome: 'wrong', reason: `wrong: ${why}` };
 }
@@ -40,7 +45,12 @@ export const TASKS: Task[] = [
     prompt: 'What is the price in US dollars of product p-1001? Reply with the price.',
     grade: (a) => {
       const want = product('p-1001')?.price ?? 0;
-      return judge(numbers(a).includes(want), a, `expected $${want}, got "${a}"`);
+      return judge(
+        numbers(a).includes(want),
+        a,
+        `expected $${want}, got "${a}"`,
+        numbers(a).includes(want * 100),
+      );
     },
   },
   {
@@ -50,7 +60,12 @@ export const TASKS: Task[] = [
     grade: (a) => {
       const p = product('p-1004');
       const ok = a.includes('p-1004') && numbers(a).includes(p?.price ?? 0);
-      return judge(ok, a, `expected p-1004 at $${p?.price}, got "${a}"`);
+      return judge(
+        ok,
+        a,
+        `expected p-1004 at $${p?.price}, got "${a}"`,
+        numbers(a).includes((p?.price ?? 0) * 100),
+      );
     },
   },
   {
@@ -76,7 +91,12 @@ export const TASKS: Task[] = [
     prompt: 'How many products in the "cable" category does the catalog have? Reply with the number.',
     grade: (a) => {
       const want = CATALOG.filter((p) => p.category === 'cable').length;
-      return judge(numbers(a).includes(want), a, `expected ${want}, got "${a}"`);
+      return judge(
+        numbers(a).includes(want),
+        a,
+        `expected ${want}, got "${a}"`,
+        numbers(a).includes(5) && !numbers(a).includes(want),
+      );
     },
   },
   {
@@ -86,7 +106,7 @@ export const TASKS: Task[] = [
     grade: (a, state) => {
       const seed = state.orders.find((o) => o.id === SEED_ORDER_ID);
       const want = seed ? seed.created_at.toISOString().slice(0, 10) : '?';
-      return judge(a.includes(want), a, `expected ${want}, got "${a}"`);
+      return judge(a.includes(want), a, `expected ${want}, got "${a}"`, a.includes('1970'));
     },
   },
   {

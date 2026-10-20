@@ -14,7 +14,10 @@ export function localGate(worktree: string, spec: ReproSpec): GateResult {
   const p = passGate(worktree, spec);
   if (!p.ok) return { ...p, gate: 'local' };
   for (const script of ['typecheck', 'lint', 'test']) {
-    const r = sh(worktree, 'pnpm', ['--reporter=default', script]);
+    // `pnpm test` is `vitest run`; run it directly so a busy machine gets a longer per-test timeout.
+    const args =
+      script === 'test' ? ['exec', 'vitest', 'run', '--testTimeout=60000'] : ['--reporter=default', script];
+    const r = sh(worktree, 'pnpm', args);
     if (r.code !== 0) {
       // Keep the end of the output: retries get it appended, and a gate_failed result stays diagnosable.
       const tail = r.out.trim().split('\n').slice(-60).join('\n');

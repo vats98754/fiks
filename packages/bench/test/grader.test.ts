@@ -38,3 +38,15 @@ test('T4, T5, T6', () => {
   expect(t('T5').grade('1970-01-01', vendor.state).outcome).toBe('wrong');
   expect(t('T6').grade('Thunderbolt 5 Cable 1m', vendor.state).pass).toBe(true);
 });
+
+test('a hedged wrong value counts as wrong, not declined', () => {
+  expect(t('T1').grade("I can't confirm it, but it may be $119,900.", vendor.state).outcome).toBe('wrong');
+  expect(t('T2').grade('Possibly none; the listed price 74950 is unconfirmed.', vendor.state).outcome).toBe(
+    'wrong',
+  );
+  expect(t('T5').grade('It shows 1970-01-01, which is unconfirmed.', vendor.state).outcome).toBe('wrong');
+  expect(t('T5').grade('2026-10-16 (unconfirmed; the tool showed 1970-01-01)', vendor.state).outcome).toBe(
+    'correct',
+  );
+  expect(t('T1').grade('The price is unavailable right now.', vendor.state).outcome).toBe('declined');
+});

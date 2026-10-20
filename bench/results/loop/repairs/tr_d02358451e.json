@@ -1,0 +1,93 @@
+{
+  "status": "pr_opened",
+  "reason": "PR https://github.com/vats98754/shop-mcp/pull/7",
+  "scenario": "D4",
+  "traceId": "tr_d02358451e",
+  "propertyIds": [
+    "shop.search_products/countMatchesTotal"
+  ],
+  "branch": "fiks/search-products-countmatchestotal-tr_d02358451e",
+  "base": "main",
+  "model": "claude-opus-5-5",
+  "attempts": 1,
+  "costUsd": 0.1922672,
+  "turns": 11,
+  "gates": [
+    {
+      "gate": "F",
+      "ok": true,
+      "reason": "fails for the stated reason on 3/3 runs",
+      "evidence": {
+        "command": "vitest run --reporter=json --outputFile=/var/folders/s_/y1_hxfjs6d704wyr6clkvdp80000gn/T/fiks-gate-mHz8O7/vitest.json",
+        "exitCode": 1,
+        "failed": [
+          {
+            "file": "test/repro/tr_d02358451e.test.ts",
+            "test": "shop.search_products/countMatchesTotal holds for search_products [fiks tr_d02358451e]",
+            "message": "AssertionError: shop.search_products/countMatchesTotal violated (/Users/anvayvats/fiks/.work/wt/fiks/search-products-countmatchestotal-tr_d02358451e/test/repro/tr_d02358451e.json): expected [ Array(1) ] to deeply equal []\n    at expectRecordingHolds (/Users/anvayvats/fiks/.work/wt/fiks/search-products-countmatchestotal-tr_d02358451e/test/fiks/check.ts:87:53)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at /Users/anvayvats/fiks/.work/wt/fiks/search-products-countmatchestotal-tr_d02358451e/test/repro/tr_d02358451e.test.ts:12:3\n    at async file:///Users/anvayvats/fiks/.work/shop-mcp/node_modules/.pnpm/vitest@5.0.3_@types+node@22.20.5_vite@8.3.4_@types+node@22.20.5_esbuild@0.28.2_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BTlFXlnv.js:2783:20"
+          }
+        ],
+        "logPath": "/var/folders/s_/y1_hxfjs6d704wyr6clkvdp80000gn/T/fiks-gate-mHz8O7/vitest.json",
+        "runs": 3
+      }
+    },
+    {
+      "gate": "P",
+      "ok": true,
+      "reason": "repro test ran and passed; full suite passes",
+      "evidence": {
+        "command": "vitest run --reporter=json --outputFile=/var/folders/s_/y1_hxfjs6d704wyr6clkvdp80000gn/T/fiks-gate-2fDtg3/vitest.json",
+        "exitCode": 0,
+        "failed": [],
+        "logPath": "/var/folders/s_/y1_hxfjs6d704wyr6clkvdp80000gn/T/fiks-gate-2fDtg3/vitest.json"
+      }
+    },
+    {
+      "gate": "local",
+      "ok": true,
+      "reason": "repro test, full contract suite, all traces, typecheck and lint pass",
+      "evidence": {
+        "command": "pnpm typecheck && pnpm lint && pnpm test",
+        "exitCode": 0,
+        "failed": [],
+        "logPath": ""
+      }
+    },
+    {
+      "gate": "ci",
+      "evidence": {
+        "command": "gh run view 39452158575",
+        "exitCode": 0,
+        "failed": [],
+        "logPath": "",
+        "url": "https://github.com/vats98754/shop-mcp/actions/runs/39452158575"
+      },
+      "ok": true,
+      "status": "green",
+      "reason": "CI success on 2ccff44"
+    }
+  ],
+  "fixCommitFiles": [
+    "src/tools/search_products.ts"
+  ],
+  "rerecorded": [
+    "test/repro/tr_d02358451e.rerecorded.json"
+  ],
+  "commits": [
+    "0d0d3b59fe30ba604c94853f018f20973705d24d",
+    "88ed79111cf765d997ae4365d46564183b92daa3",
+    "2ccff44fbada47a9d4eb57ab0a89b8ef0546a033"
+  ],
+  "startedAt": "2026-10-20T15:49:58.041Z",
+  "finishedAt": "2026-10-20T15:51:27.594Z",
+  "runner": "agent-sdk",
+  "owned": {
+    "src/tools/search_products.ts": "ebb06e3a375a7740a34600322e4ea46e0c2f348d3cb3d49f7978e562399bfba1",
+    "test/repro/tr_d02358451e.rerecorded.json": "6d16725b06c6fa1bb906e9074fdc576f11f0c2a8065518ee5f274c204826068e"
+  },
+  "ciRunUrl": "https://github.com/vats98754/shop-mcp/actions/runs/39452158575",
+  "pr": {
+    "number": 7,
+    "url": "https://github.com/vats98754/shop-mcp/pull/7"
+  }
+}

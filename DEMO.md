@@ -19,7 +19,7 @@ pnpm fiks vendor-diff
 
 ## 0:30 – 1:10 Catch it
 
-Run one drift through the proxy:
+Run one drift through the proxy, against the tool as it was when the vendor changed (`seed-v1`):
 
 ```bash
 pnpm fiks scenario D2
@@ -42,6 +42,15 @@ While it runs, narrate the gates:
 > "The trace becomes a test in the tool's repo. It has to fail on today's code for exactly this reason, on repeated runs. A coding agent then fixes `src/` in its own worktree. It can't touch tests, and fiks checks every byte it commits. The fix has to pass the repro, the whole contract suite, every stored trace, typecheck and lint. Then fiks pushes and waits for CI on that exact commit, and opens the PR only if it's green. It never merges."
 
 Open the new PR when the URL prints. If time is short, open [#1](https://github.com/vats98754/shop-mcp/pull/1) instead: the same D2 fix, made earlier in this repo. Show "What broke", the failing assertion, the small diff and the green check.
+
+Then show the same call on today's `main`, after the merged fix:
+
+```bash
+pnpm fiks scenario D2 --shop-ref main
+```
+
+Say:
+> "Same vendor, same call: verified."
 
 ## 2:10 – 2:50 What it changed
 

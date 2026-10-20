@@ -3,7 +3,7 @@ import type { Receipt } from '@fiks/proxy';
 import { appendEvent, saveTrace, traceFromCall } from '@fiks/repro';
 import type { VendorVersion } from '@fiks/vendor-api';
 import { type HarnessOptions, startHarness } from '../harness.ts';
-import { FIKS_DIR } from '../paths.ts';
+import { FIKS_DIR, shopAt } from '../paths.ts';
 import { FIXTURE_CALLS } from './record-fixtures.ts';
 
 export interface ScenarioCall {
@@ -76,6 +76,8 @@ export interface ScenarioOptions extends Partial<HarnessOptions> {
   traceDir?: string | false;
   eventsPath?: string;
   runId?: string;
+  /** shop-mcp version to run (default seed-v1, the unfixed tool; `main` for the fixed one). */
+  shopRef?: string;
 }
 
 export async function runScenario(id: string, opts: ScenarioOptions = {}) {
@@ -95,6 +97,7 @@ export async function runScenario(id: string, opts: ScenarioOptions = {}) {
     via: 'proxy',
     clock,
     ...opts,
+    shopDir: opts.shopDir ?? shopAt(opts.shopRef),
     onCall: async (rec) => {
       const extra = await opts.onCall?.(rec);
       if (!traceDir || rec.receipt.verdict !== 'violated') return extra;

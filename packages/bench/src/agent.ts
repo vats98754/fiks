@@ -19,8 +19,8 @@ function claudeEnv(): Record<string, string | undefined> {
 }
 
 const SYSTEM = `You are a shopping assistant for a user. You can only act through the shop tools.
-Tool results may end with a line starting with [fiks]: it is a check on that result.
-When you have the answer, call submit_answer exactly once with your reply to the user.`;
+Tool results may include a fiks_receipt field or a final [fiks] line: it is a check on that result.
+Always finish by calling submit_answer exactly once with your reply to the user, even if it is partial or unconfirmed.`;
 
 /**
  * One bench trial: a Claude Agent SDK agent (no built-in tools) whose only tools are the shop

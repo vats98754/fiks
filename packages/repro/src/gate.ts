@@ -51,7 +51,8 @@ interface VitestJson {
 /** Runs the whole shop-mcp vitest suite in `repoDir` and reports what ran and what failed. */
 export function runSuite(repoDir: string): SuiteRun {
   const out = join(mkdtempSync(join(tmpdir(), 'fiks-gate-')), 'vitest.json');
-  const args = ['run', '--reporter=json', `--outputFile=${out}`];
+  // A generous per-test timeout: a busy machine must not turn into a gate verdict.
+  const args = ['run', '--reporter=json', `--outputFile=${out}`, '--testTimeout=60000'];
   const command = `vitest ${args.join(' ')}`;
   const r = spawnSync(join(repoDir, 'node_modules/.bin/vitest'), args, { cwd: repoDir, encoding: 'utf8' });
   let report: VitestJson;

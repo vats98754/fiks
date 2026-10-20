@@ -107,7 +107,10 @@ switch (command) {
       console.error(`unknown scenario ${JSON.stringify(id)}; known: ${Object.keys(SCENARIOS).join(', ')}`);
       process.exit(2);
     }
-    const r = await runScenario(id, { transport: values.transport === 'http' ? 'http' : 'stdio' });
+    const r = await runScenario(id, {
+      transport: values.transport === 'http' ? 'http' : 'stdio',
+      shopRef: values['shop-ref'],
+    });
     print(r, () =>
       [
         `scenario ${r.scenario} (vendor ${r.vendor} drifts=[${r.drifts.join(',')}], ${r.transport})`,
@@ -136,6 +139,7 @@ switch (command) {
       drifts: values.drifts,
       transport: values.transport === 'http' ? 'http' : 'stdio',
       compareDirect: values['compare-direct'],
+      shopRef: values['shop-ref'],
     });
     print(r, () => {
       const last = r.result.content?.at(-1) as { text?: string } | undefined;

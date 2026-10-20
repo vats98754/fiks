@@ -3,6 +3,7 @@ import { DEFAULT_RECEIPT_FIELD, RECEIPT_META_KEY, type Receipt } from '@fiks/pro
 import type { VendorVersion } from '@fiks/vendor-api';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { startHarness } from '../harness.ts';
+import { shopAt } from '../paths.ts';
 
 /** The proxied result with fiks's additions removed: _meta receipt, trailing text block, receipt field. */
 export function stripReceipt(r: CallToolResult, field = DEFAULT_RECEIPT_FIELD): CallToolResult {
@@ -25,12 +26,16 @@ export async function callOnce(opts: {
   drifts?: string;
   transport?: 'stdio' | 'http';
   compareDirect?: boolean;
+  /** shop-mcp version to run (default seed-v1, the unfixed tool; `main` for the fixed one). */
+  shopRef?: string;
 }) {
+  const dir = shopAt(opts.shopRef);
   const h = await startHarness({
     vendor: opts.vendor,
     drifts: opts.drifts,
     via: 'proxy',
     transport: opts.transport,
+    shopDir: dir,
   });
   let result: CallToolResult;
   try {
@@ -42,7 +47,12 @@ export async function callOnce(opts: {
   let upstreamIdentical: boolean | undefined;
   let direct: CallToolResult | undefined;
   if (opts.compareDirect) {
-    const d = await startHarness({ vendor: opts.vendor, drifts: opts.drifts, transport: opts.transport });
+    const d = await startHarness({
+      vendor: opts.vendor,
+      drifts: opts.drifts,
+      transport: opts.transport,
+      shopDir: dir,
+    });
     try {
       direct = (await d.call(opts.tool, opts.args)).result;
     } finally {

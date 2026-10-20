@@ -21,6 +21,7 @@ import {
   ResultSchema,
   type Tool,
 } from '@modelcontextprotocol/sdk/types.js';
+import { receiptHints } from './hints.ts';
 import { makeReceipt, RECEIPT_META_KEY, type Receipt, receiptText } from './receipt.ts';
 import { startTap, type Tap } from './tap.ts';
 
@@ -204,11 +205,18 @@ export async function startProxy(opts: ProxyOptions): Promise<FiksProxy> {
         upstream: tap ? http : undefined,
       });
       const observed = Boolean(tap);
-      let receipt = makeReceipt(evaluation, at, observed);
+      const hints = receiptHints({
+        contract,
+        evaluation,
+        structured: result.structuredContent as Record<string, unknown> | undefined,
+        upstream: tap ? http : undefined,
+        probeUpstream: tap ? probe?.http : undefined,
+      });
+      let receipt = makeReceipt(evaluation, at, observed, undefined, hints);
       const record: CallRecord = { tool: name, args, result, receipt, http, probe, at: at.toISOString() };
       try {
         const extra = await opts.onCall?.(record);
-        if (extra?.traceId) receipt = makeReceipt(evaluation, at, observed, extra.traceId);
+        if (extra?.traceId) receipt = makeReceipt(evaluation, at, observed, extra.traceId, hints);
       } catch (e) {
         // Recording problems (e.g. a full disk) must not break the agent's call.
         console.error(`[fiks-proxy] onCall failed: ${e instanceof Error ? e.message : String(e)}`);

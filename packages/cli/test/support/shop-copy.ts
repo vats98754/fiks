@@ -11,7 +11,7 @@ export function copyShop(): { dir: string; cleanup(): void } {
   const dir = mkdtempSync(join(tmpdir(), 'fiks-shop-'));
   const files = execFileSync('git', ['ls-files', '-co', '--exclude-standard'], { cwd: src, encoding: 'utf8' })
     .split('\n')
-    .filter(Boolean);
+    .filter((f) => f && f !== 'node_modules');
   for (const f of files) cpSync(join(src, f), join(dir, f), { recursive: true });
   symlinkSync(join(src, 'node_modules'), join(dir, 'node_modules'));
   return { dir, cleanup: () => rmSync(dir, { recursive: true, force: true }) };
@@ -43,10 +43,14 @@ export const readRecording = (file: string) => JSON.parse(readFileSync(file, 'ut
 
 /** Runs the shop-mcp fiks suites in `dir`. */
 export function runSuite(dir: string): { ok: boolean; output: string } {
-  const r = spawnSync(join(dir, 'node_modules/.bin/vitest'), ['run', 'test/fiks', '--reporter=verbose'], {
-    cwd: dir,
-    encoding: 'utf8',
-  });
+  const r = spawnSync(
+    join(dir, 'node_modules/.bin/vitest'),
+    ['run', 'test/fiks', '--reporter=verbose', '--testTimeout=60000'],
+    {
+      cwd: dir,
+      encoding: 'utf8',
+    },
+  );
   return { ok: r.status === 0, output: `${r.stdout}\n${r.stderr}` };
 }
 

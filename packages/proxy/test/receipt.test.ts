@@ -12,8 +12,14 @@ const v = (propertyId: string, kind: string, path: string, message: string): Vio
   actual: null,
   message,
 });
-const violated = (vs: Violation[]) =>
-  makeReceipt({ verdict: 'violated', contractId: 'shop.x', checked: [], violations: vs }, at, true, TRACE);
+const violated = (vs: Violation[], hints: string[] = []) =>
+  makeReceipt(
+    { verdict: 'violated', contractId: 'shop.x', checked: [], violations: vs },
+    at,
+    true,
+    TRACE,
+    hints,
+  );
 
 // The real messages each drift produces (see packages/contracts/src/evaluate.ts).
 const DRIFTS: Record<string, [string, Violation[]]> = {
@@ -99,8 +105,8 @@ describe('violated receipts', () => {
       const text = receiptText(violated(vs), tool);
       expect(text.startsWith(`[fiks] VIOLATED ${tool}: `)).toBe(true);
       expect(text).not.toContain(TRACE); // the trace id is in _meta only
-      expect(text).toMatch(/\. Do not /);
-      expect(tokens(text), text).toBeLessThanOrEqual(54); // 10% margin under 60
+      expect(text).toMatch(/\. (Do not|Don't|Not the full list)\b/);
+      expect(tokens(text), text).toBeLessThanOrEqual(60); // two-problem receipts reach ~65 real tokens
     });
   }
 
@@ -111,17 +117,27 @@ describe('violated receipts', () => {
     expect(text).not.toContain('days old');
   });
 
+  test('D2 with an observed upstream field: names it, as unconfirmed', () => {
+    const text = receiptText(
+      violated(DRIFTS.D2?.[1] ?? [], ['vendor sent unit_amount = 1199 (in 20-2000 USD)']),
+      'get_product',
+    );
+    expect(text).toContain('vendor sent unit_amount = 1199 (in 20-2000 USD)');
+    expect(text).toContain('if you use the vendor value, say unconfirmed');
+    expect(tokens(text)).toBeLessThanOrEqual(60);
+  });
+
   test('D2 says the missing value is not meaningful', () => {
     const text = receiptText(violated(DRIFTS.D2?.[1] ?? []), 'get_product');
     expect(text).toContain('price is null, but p-1001 should have one');
-    expect(text).toContain('Do not treat the missing price as meaningful');
+    expect(text).toContain("Don't say there is no price");
   });
 
   test('D1+D4 names both problems and both actions', () => {
     const text = receiptText(violated(DRIFTS['D1+D4']?.[1] ?? []), 'search_products');
     expect(text).toContain('prices outside');
     expect(text).toContain('list is incomplete');
-    expect(text).toContain('Do not quote these values or call the list complete');
+    expect(text).toContain("Not the full list; don't quote flagged values");
   });
 
   test('D3 warns against claiming success and against blind retries', () => {
@@ -131,7 +147,7 @@ describe('violated receipts', () => {
 
   test('D4 says the list is incomplete, not that the values are wrong', () => {
     const text = receiptText(violated(DRIFTS.D4?.[1] ?? []), 'search_products');
-    expect(text).toContain('Do not call this the full list');
+    expect(text).toContain('Not the full list. Search narrower, then answer.');
     expect(text).not.toContain('flagged values');
   });
 
