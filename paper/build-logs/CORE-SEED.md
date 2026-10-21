@@ -56,3 +56,16 @@ under `paper/research/*` (100) or `paper/WORKSTREAMS.json` (1); `biome check` ov
 owned paths exits 0 ("Checked 25 files"); full `vitest run --reporter=json` 158/158 passed (47
 files); `packages/cli/test/seed` 25/25; `domain-hooks.test.ts` 3/3; `--selftest` 22 checks
 passed; `git diff --name-only 312ae5c HEAD` lists only owned paths. No code change this round.
+
+Round 4 (2026-10-21): `git rebase --autostash main` reports "Current branch ws/CORE-SEED is up
+to date"; main is still `312ae5c` (`git merge-base HEAD main` = `312ae5c`), so the orchestrator
+lint fix (format the paper JSON, or exclude `paper/research` and `paper/WORKSTREAMS.json` in
+`biome.json`) has still not landed. Re-ran SETUP (`apply-dep-fragments.mjs`: "nothing to apply";
+`pnpm install --no-frozen-lockfile` exit 0; lockfile edit left uncommitted) and every acceptance
+item: typecheck exit 0; `pnpm lint` exit 1, "Found 100 errors. Found 1 warning.", 100 in
+`paper/research/*` and 1 in `paper/WORKSTREAMS.json`, none elsewhere; `biome check` over the
+owned paths exits 0 ("Checked 25 files"), and over every other tracked ts/js/json file also
+exits 0; full `vitest run --reporter=json` under `with-lock suite`: 158/158 passed, 0 failed;
+`packages/cli/test/seed` 25/25 (exit 0); `domain-hooks.test.ts` 3/3 (exit 0); `--selftest` 22
+checks passed (exit 0); `git diff --name-only 312ae5c HEAD` lists only owned paths. No code
+change this round.
