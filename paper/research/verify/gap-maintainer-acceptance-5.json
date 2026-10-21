@@ -1,0 +1,8 @@
+[
+  {
+    "key": "gentoo-ai-policy",
+    "status": "VERIFIED",
+    "evidence": "wiki.gentoo.org/wiki/Project:Council/AI_policy loaded on 2026-10-21. It says the Council voted on 2024-04-14 and states: \"It is expressly forbidden to contribute to Gentoo any content that has been created with the assistance of\" NLP AI tools.",
+    "correction": "Optional: describe the source as a Gentoo Council policy on the Gentoo wiki, voted 2024-04-14. The quoted phrase is accurate (it begins with \"It is\")."
+  }
+]

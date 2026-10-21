@@ -1,0 +1,8 @@
+[
+  {
+    "key": "flaky-tests-luo",
+    "status": "VERIFIED",
+    "evidence": "PDF opened (Luo, Hariri, Eloussi, Marinov; FSE'14, Hong Kong). Table 1 F.1: 'The top three categories of flaky tests are Async Wait, Concurrency, and Test Order Dependency.' Sec 3.1.1-3.1.3: 74/161 (45%), 32/161 (20%), 19/161 (12%) commits.",
+    "correction": "Precise wording: of the 161 commits (out of 201 likely flaky-test-fixing commits in 51 projects) whose root cause could be classified, 45% Async Wait, 20% Concurrency, 12% Test Order Dependency (Sec 3.1.1-3.1.3; Table 1 F.1). Venue: FSE 2014."
+  }
+]

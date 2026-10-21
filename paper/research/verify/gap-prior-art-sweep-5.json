@@ -1,0 +1,26 @@
+[
+  {
+    "key": "babu2026selfhealingorch",
+    "status": "VERIFIED",
+    "evidence": "arXiv:2606.01416, Rahul Suresh Babu & Adarsh Agrawal, 31 May 2026. Abstract verbatim: 'Under a controlled semantic silent-failure setting, verifier-guided self-healing reduces silent failures to 0.0%'. Full text: recovery actions are 'retry, argument repair, tool substitution, retrieval refresh, replanning, graceful degradation, and escalation' (Sec 1 contributions).",
+    "correction": "'Without repairing tools' is our inference, not stated: support it by citing the recovery-action list (Sec 1/Table 3), which contains no tool-code repair. Results are on a 100-task controlled fault-injection benchmark with deterministic local tools."
+  },
+  {
+    "key": "weng2026callsite",
+    "status": "VERIFIED",
+    "evidence": "arXiv:2610.24545, Weng, Wang, Feng, Cheng, Liu, Shen, Ye, Sarro, Xie, 17 Oct 2026, cs.SE. Abstract: 'Although 82% of call sites are checked before and after the call, 63% of the expected constraints are unmet and only 5.3% of call sites satisfy their whole contract'.",
+    "correction": "Scope note: study is of LLM call sites (496 sites, 40 open-source agentic systems), not tool call sites; phrase as 'LLM call sites in agentic systems'."
+  },
+  {
+    "key": "yamagishi2025dcfix",
+    "status": "VERIFIED",
+    "evidence": "arXiv:2510.25148, Katsuki Yamagishi, Norihiro Yoshida, Erina Makihara, Katsuro Inoue, 29 Oct 2025, cs.SE preprint (no venue listed). Abstract quote matches verbatim; dcFix detects and repairs 'REST API misuses in client programs'.",
+    "correction": "Venue: arXiv preprint only. Claim fine; note repair targets client code violating a static spec, not drift where the API behaves differently from its spec."
+  },
+  {
+    "key": "fu2026incidentarena",
+    "status": "VERIFIED",
+    "evidence": "arXiv:2610.00648, Andre Fu, Malik Drabla, Leon Liu, Meji Abidoye, Marek Suppa, Lata Mishra, Adnan El Assadi, Yiyuan Li, 30 Sep 2026, cs.AI. Abstract quote verbatim: 'frontier models score below 64.3%, with failures extending from diagnosis/localization errors, through incomplete repairs and unsafe regressions.'",
+    "correction": "Benchmark is production incident response (agentic SRE) on Kubernetes with injected faults; 20 tasks."
+  }
+]

@@ -1,0 +1,4 @@
+[
+ {"key":"he2023dependabot","status":"VERIFIED","evidence":"arXiv:2206.07230 abstract: \"its compatibility scores are too scarce to be effective in reducing update suspicion\". Authors Runzhi He, Hao He, Yuxia Zhang, Minghui Zhou; IEEE TSE (v3 May 2023).","correction":"Metadata: He, He, Zhang, Zhou; IEEE Transactions on Software Engineering, 2023 (arXiv v1 2022)."},
+ {"key":"rombaut2024compatscore","status":"VERIFIED","evidence":"Abstract: \"a compatibility score cannot be calculated for 83% of the dependency updates due to the lack of data from the crowd.\"","correction":"Full title: Leveraging the Crowd for Dependency Management: An Empirical Study on the Dependabot Compatibility Score; Rombaut, Cogo, Hassan; arXiv preprint 2024."}
+]

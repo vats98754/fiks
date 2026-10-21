@@ -1,0 +1,8 @@
+[
+  {
+    "key": "raj2026breakguard",
+    "status": "VERIFIED",
+    "evidence": "arXiv:2608.20167 v1 (20 Aug 2026), 'BreakGuard: Towards Detecting Dependency Breaking Changes with LLM-Generated Tests', Raj, Baudry, Costa. Abstract: BreakGuard 'detects 30.3% of breaking changes (27 of 89)' from BUMP; LLM tests more reliable for crash-type than behavioural BCs.",
+    "correction": "Metadata: full title 'BreakGuard: Towards Detecting Dependency Breaking Changes with LLM-Generated Tests'; authors Rachna Raj, Benoit Baudry, Diego Elias Costa; arXiv preprint 2026. Claim precision: 30.3% (27/89) is the best configuration across 3 LLMs x 3 context levels, on BUMP dataset BCs (Java dependency updates). Exact quote wording [verify]."
+  }
+]

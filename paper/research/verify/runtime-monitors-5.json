@@ -1,0 +1,20 @@
+[
+  {
+    "key": "bartocci-rv",
+    "status": "UNREACHABLE",
+    "evidence": "Crossref confirms: 'Introduction to Runtime Verification', Bartocci, Falcone, Francalanza, Reger, Lectures on Runtime Verification (LNCS), 2018, pp. 1-33. Springer page redirects to auth wall; abstract not in Crossref/Semantic Scholar, so quote and 'monitorability' coverage not re-checked.",
+    "correction": "Metadata OK (add authors Bartocci, Falcone, Francalanza, Reger; LNCS 10457, pp. 1-33). Mark the abstract quote and the monitorability part of the claim [verify] until the chapter text is read."
+  },
+  {
+    "key": "eiffel-dbc",
+    "status": "VERIFIED",
+    "evidence": "Sec. 7 'Testing, debugging, quality assurance': 'Assertion monitoring is a way to check what the software does against what its author thinks it does.' Sec. 3 'The notion of contract' lists supplier obligations, e.g. 'Bring customer to Chicago.'",
+    "correction": "Sec. 3 shows supplier obligations as the postcondition side of a contract table; cite Sec. 3 as an illustration, not as a verbatim statement that the supplier 'owns' the postcondition."
+  },
+  {
+    "key": "daikon",
+    "status": "VERIFIED",
+    "evidence": "Abstract opens: 'Daikon is an implementation of dynamic detection of likely invariants'; it runs a program, observes computed values, and reports properties that held over those executions.",
+    "correction": "Full metadata: Ernst, Perkins, Guo, McCamant, Pacheco, Tschantz, Xiao. Science of Computer Programming 69(1-3):35-45, Dec 2007."
+  }
+]

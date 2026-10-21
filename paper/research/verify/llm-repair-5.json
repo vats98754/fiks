@@ -1,0 +1,14 @@
+[
+  {
+    "key": "failure-oblivious",
+    "status": "VERIFIED",
+    "evidence": "USENIX OSDI '04 page; Rinard, Cadar, Dumitran, Roy, Leu, Beebee (MIT). Abstract: failure-oblivious computing \"enables servers to execute through memory errors without memory corruption\"; invalid writes discarded, values manufactured for invalid reads.",
+    "correction": "Optional: add authors Rinard et al. and venue OSDI 2004 (San Francisco, Dec 2004)."
+  },
+  {
+    "key": "monperrus-bibliography",
+    "status": "VERIFIED",
+    "evidence": "arXiv 1807.00515, Martin Monperrus. Abstract discusses \"behavioral repair where test suites, contracts, models, and crashing inputs are taken as oracle\" and \"state repair, also known as runtime repair or runtime recovery\".",
+    "correction": "Metadata note: published in ACM Computing Surveys 51(1), 2018 (arXiv journal-ref says 2017); arXiv posted 2 Jul 2018. Use the behavioral/state repair quote rather than the generic definition sentence."
+  }
+]

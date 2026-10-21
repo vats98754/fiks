@@ -1,0 +1,14 @@
+[
+  {
+    "key": "cai2025modelsubstitution",
+    "status": "VERIFIED",
+    "evidence": "arXiv:2504.04715v2 (29 Sep 2025) abstract: 'statistical tests on text outputs are query-intensive and fail against subtle substitutions, methods using log probabilities are defeated by inherent inference nondeterminism in production environments.' Authors: Will Cai, Tianneng Shi, Xuandong Zhao, Dawn Song.",
+    "correction": "Cite v2 explicitly; the v1 abstract (Apr 2025) words this differently (log-prob analysis 'offers stronger guarantees when available' but access is limited) and lacks the nondeterminism claim. Venue: arXiv preprint (cs.CL)."
+  },
+  {
+    "key": "rabanser2019failingloudly",
+    "status": "VERIFIED",
+    "evidence": "Abstract: 'across the dataset shifts that we explore, a two-sample-testing-based approach, using pre-trained classifiers for dimensionality reduction, performs best.' Rabanser, Günnemann, Lipton; NeurIPS 2019.",
+    "correction": "Add venue NeurIPS 2019; scope the claim to 'across the dataset shifts they explore' (image datasets, synthetic perturbations)."
+  }
+]
