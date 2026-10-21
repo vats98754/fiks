@@ -47,3 +47,12 @@ Round 2 (rebase onto main: main still at `312ae5c`, no-op): unchanged. `pnpm lin
 `biome check packages scripts` exits 0. The fix belongs to the orchestrator on main (format the
 paper JSON, or add `!paper/research` and `!paper/WORKSTREAMS.json` to `biome.json`
 `files.includes`). Until then the acceptance item `pnpm typecheck && pnpm lint` fails as written.
+
+Round 3 (2026-10-21): `git rebase main` reports "Current branch ws/CORE-SEED is up to date";
+main is still `312ae5c` and `biome.json`, `paper/research` and `paper/WORKSTREAMS.json` are
+unchanged on main, so the orchestrator fix has not landed. Re-ran SETUP and every acceptance item:
+typecheck exit 0; `pnpm lint` exit 1 with "Found 100 errors. Found 1 warning.", every diagnostic
+under `paper/research/*` (100) or `paper/WORKSTREAMS.json` (1); `biome check` over this stream's
+owned paths exits 0 ("Checked 25 files"); full `vitest run --reporter=json` 158/158 passed (47
+files); `packages/cli/test/seed` 25/25; `domain-hooks.test.ts` 3/3; `--selftest` 22 checks
+passed; `git diff --name-only 312ae5c HEAD` lists only owned paths. No code change this round.
