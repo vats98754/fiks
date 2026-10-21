@@ -1,0 +1,100 @@
+[
+  {
+    "key": "chen2026bbcfixer",
+    "status": "WRONG_CLAIM",
+    "evidence": "arXiv:2610.09267v1 (7 Oct 2026; Chen, Bi, Wang, Thongtanunam; 21 pp). Abstract: BBCFixer 'runs the failing test under the old and new library versions' and 'ranks the calls whose return value differs to identify a candidate root API'. Sec. 3.1.1: 'BBCFixer ranks these divergences to select the one most likely to be relevant to the downstream failure' (ranking prefers downstream calls, then calls from files in the failing stack trace, then execution order). Sec. 3.1.2: diff reduced 'using the candidate root API as the primary filter key'. Table 4: qwen3-coder 58.0 vs Pure Agent 49.7; GLM-4.5-Air 67.3 vs 60.0. BBCBench = 100 behavioural dependency breaks in Python and JavaScript. No 'first'/'to the best of our knowledge' claim. The quote 'the interface remains intact, but the run-time behavior changes' is in Sec. 1 (Introduction), not Sec. 2.1 as the round-2 verifier said.",
+    "correction": "Replace 'find the first diverging call' with: BBCFixer runs the failing test under the old and new library versions, ranks calls whose return values differ (the top-ranked one is its 'first divergence') to pick a candidate root API, and filters the library diff by that API. On BBCBench (100 Python/JS behavioural breaks) it reaches 58.0 vs 49.7 for a pure agent (qwen3-coder) and 67.3 vs 60.0 (GLM-4.5-Air), Table 4. Do not say 'first'. Quote location: Sec. 1.",
+    "location": "Abstract; Sec. 1; Sec. 3.1.1; Sec. 3.1.2; Sec. 3.2.1; Table 4"
+  },
+  {
+    "key": "liu2026mcpevolbench",
+    "status": "VERIFIED",
+    "evidence": "arXiv:2607.14642v1 (16 Jul 2026), 9 authors (Huanxi Liu, Kun Hu, Jiaqi Liao, Qiang Wang, Pengfei Qian, YuanZhao Zhai, Dawei Feng, Bo Ding, Huaimin Wang). Abstract: 'we propose 11 mutation operators to simulate realistic tool evolution within 123 MCP servers' and 'GPT-5.4 and Claude-Sonnet-4-6 exhibit performance declines of 13.7% and 14.4% in evolved MCP servers, respectively.' Sec. 5.2 'MCP Server Evolution': operators at TOOL (4), PARAM (4), DESC (3) levels. Sec. 6.1: 'a 1-10 scale with two dimensions: Task Fulfillment and Planning Effectiveness', rubric-based LLM judge (default DeepSeek-Chat). Sec. 6.2 'Main Results': Task Fulfillment 7.23 -> 6.24 (GPT-5.4) and 7.22 -> 6.18 (Claude-Sonnet-4-6). Neither 'interface-level' nor 'backward-compatible' appears in the abstract.",
+    "correction": "The Appendix B corrected claim stands. Add: 123 MCP servers; metric defined in Sec. 6.1, results in Sec. 6.2; judge is an LLM (DeepSeek-Chat by default); the declines are early-stage vs late-stage Task Fulfillment. Full author list has 9 names.",
+    "location": "Abstract; Sec. 5.2; Sec. 6.1; Sec. 6.2"
+  },
+  {
+    "key": "sethi2026fabrication",
+    "status": "WRONG_METADATA",
+    "evidence": "arXiv:2609.14758v1 (13 Sep 2026), 6 authors (Arham Sethi, Arsen Kenzhebayev, Saanvi Paturi, Vatsal Raina, Vyas Raina, Ivaxi Sheth); arXiv comment is only '11 pages, 4 tables'; subjects cs.SE, cs.CL. Abstract: 'When the tool returns status:error, dishonesty is absent (0.0%)'; with status:ok and a redacted, corrupted, stale, malformed, empty or truncated value, dishonesty 'reaches 45.3%'; 'none of the nine frameworks we audit specifies what the model should do when a tool fails.' A NeurIPS 2026 virtual-site URL (neurips.cc/virtual/2026/159088) appears in a search index with this title, but the page returned HTTP 404 on 2026-10-21, so the 'NewInML workshop' venue could not be confirmed.",
+    "correction": "Claim (as corrected in round 1) is verified: 0.0% dishonesty with status:error vs up to 45.3% with status:ok carrying a redacted/corrupted/stale/malformed/empty/truncated value; 9 frameworks audited. Metadata: cite as arXiv preprint 2609.14758 (2026). Drop 'NewInML workshop (NeurIPS 2026 listing)' unless the workshop page is confirmed.",
+    "location": "Abstract (arXiv:2609.14758v1); arXiv comments field"
+  },
+  {
+    "key": "connor1987paired",
+    "status": "WRONG_METADATA",
+    "evidence": "PubMed (efetch, PMID 3567305): 'Biometrics. 1987 Mar;43(1):207-11. ... Connor RJ.' Abstract: 'A simple alternative approximation that is more conservative is presented here.' Crossref (10.2307/2531961) and Semantic Scholar give the author as 'Robert J. Connor', not 'Roger J. Connor'. Primary full text (JSTOR) is closed and was not read. The formula is taken from the Stata PSS manual ('power pairedproportions', Methods and formulas, p. 21), which states 'See Connor (1987) for details': n = [ (z_alpha*sqrt(p_disc) + z_{1-beta}*sqrt(p_disc - p_diff^2)) / p_diff ]^2, with p_disc = p12 + p21 (discordant proportion) and p_diff = p21 - p12; for a two-sided test use alpha/2 (Stata then iterates on the exact two-sided power equation).",
+    "correction": "Author is Robert J. Connor (Biometrics 43(1):207-211, March 1987). Claim: Connor gives a simple, more conservative approximation than Miettinen (1968) for the paired-proportions sample size; n = [z_{1-alpha(/2)} sqrt(psi) + z_{1-beta} sqrt(psi - delta^2)]^2 / delta^2, psi = p10 + p01, delta = p10 - p01. Mark the formula as 'as given in the Stata PSS manual, attributed to Connor (1987)' unless the JSTOR text is read. The dependence on discordant probabilities (not marginals alone) is supported by this formula.",
+    "location": "PubMed abstract; Stata PSS-2 manual 'power pairedproportions', Methods and formulas, eq. (3), p. 21"
+  },
+  {
+    "key": "silva2024gitbugjava",
+    "status": "VERIFIED",
+    "evidence": "PDF of arXiv:2402.02961 (pdftotext), Sec. 2.4: '5 times without internet access. The bug-fixes that yield the exact same test results across all 5 executions are kept in the benchmark.' (The HTML rendering shows '55', an artefact.) Funnel: 51,276 commits -> 508 candidates -> 348 (Sec. 2.2) -> 341 with offline environments (Sec. 2.3) -> 228 reproducible (Sec. 2.4) -> 199 after manual curation (Sec. 2.5); 55 repositories. Authors Silva, Saavedra, Monperrus; MSR '24.",
+    "correction": "The round-1 corrected claim stands (5 offline runs, not 55; 508 -> 348 -> 341 -> 228 -> 199; 55 repositories). Use the PDF, not the HTML, when quoting the run count.",
+    "location": "Sec. 2.2-2.5 (PDF)"
+  },
+  {
+    "key": "tan2026agentchaos",
+    "status": "VERIFIED",
+    "evidence": "arXiv:2608.06790v1 (7 Aug 2026), 13 authors (Tan ... Shar, Lo); comment: 'Accepted at ... ASE 2026'. Abstract: faults are injected by intercepting and modifying 'LLM API responses at runtime' at a shared layer 'without modifying source code'; 'pass@1 dropping by up to 50 percentage points'; 'Existing fault diagnosis methods achieve below 53% accuracy on fault type' (below 56% on fault step).",
+    "correction": "The Appendix B corrected claim stands: HTTP-layer fault injection into LLM-provider responses (not tool results) degrades agents by up to 50 pp pass@1 across fault types; diagnosis <53% (type), <56% (step). Venue: ASE 2026.",
+    "location": "Abstract; arXiv comments field"
+  },
+  {
+    "key": "cheng2026agentbugsmith",
+    "status": "VERIFIED",
+    "evidence": "arXiv:2609.37864v1 (29 Sep 2026). arXiv API lists 6 authors: Yiming Cheng, Alfin Wijaya Rahardja, Mengshi Zhang, Zihao Chen, Zhenpeng Chen, Yiling Lou (the earlier verifier's 'Yiming Cheng + 10 others' is wrong). Abstract: Live-Harness-Bench 'currently contains 200 reproducible harness bugs'; '10.67% - 27.56% higher success rates of reproducing harness bugs'. Sec. 3: 'we use GitHub issues as the source of real-world agent failures'; Sec. 3.1 requires each issue to form a valid issue-PR pair with a merged PR.",
+    "correction": "'From issues' is now confirmed (Sec. 3, 3.1). Claim: real harness bugs mined from GitHub issues (with merged fixing PRs) in open-source agentic systems are reproduced as executable instances (Live-Harness-Bench, 200 bugs), 10.67-27.56% higher reproduction success than general techniques. Six authors.",
+    "location": "Abstract; Sec. 3; Sec. 3.1"
+  },
+  {
+    "key": "metr2025rewardhacking",
+    "status": "VERIFIED",
+    "evidence": "metr.org/blog/2025-06-05-recent-reward-hacking: results table row 'RE-Bench Total' 39 / 128 / 30.4%; footnote 4: 'These specific numbers are for an earlier version of o3'. Examples: 'o3 monkey-patches the evaluator to always return a perfect score' (Rust CodeContests example) and 'o3 overwrites the PyTorch equality operator'.",
+    "correction": "The Appendix B corrected claim stands. The two hacks are illustrative examples, not the definition of the 30.4%.",
+    "location": "Results table ('RE-Bench Total'); footnote 4; example captions"
+  },
+  {
+    "key": "bettenburg2008goodbugreport",
+    "status": "VERIFIED",
+    "evidence": "PDF (thomas-zimmermann.com), SIGSOFT 2008/FSE-16, Atlanta. Authors: Nicolas Bettenburg, Sascha Just, Adrian Schroeter, Cathrin Weiss, Rahul Premraj, Thomas Zimmermann. Table 2 (130 consistent developer responses), 'importance of item': steps to reproduce (83%), stack traces (57%), test cases (51%). Sec. 3.2: 'capture/replay tools which record test cases [16, 25, 38] should be integrated into bug tracking systems.'",
+    "correction": "The Appendix B corrected claim stands. Author list confirmed (remove [verify]). Note the 83/57/51% are from 130 consistent developer responses.",
+    "location": "Table 2; Sec. 3.2"
+  },
+  {
+    "key": "he2023dependabot",
+    "status": "VERIFIED",
+    "evidence": "PDF arXiv:2206.07230 (IEEE TSE 2023). Table 5: regular group 502,752 PRs, merge rate 70.13% (sec/conf 13,406 at 73.71%; sec/nconf 23,907 at 76.01%); 1,823 projects. Table 6 (Compatibility Score and PR Merge Rate): unknown 485,501 / 69.96%; <80% 1,321 / 30.20%; [80,90) 1,605 / 67.48%; [90,95) 1,794 / 73.19%; [95,100) 2,228 / 84.43%; ==100% 10,303 / 80.30%. Sec. 5.3.2: 'Only 3.4% of the PRs ... have a compatibility score other than unknown'; 'if the score is lower than 80%, developers become very unlikely (30.20%) to merge'; Spearman rho = 0.37 (p < 0.001), 'a weak correlation'.",
+    "correction": "Appendix B claim stands, with additions: the 100% bucket has n = 10,303 (80.30%); only 3.4% of PRs carry a score; score-merge correlation is weak (Spearman 0.37). Do not present 30.2% vs 84.4% as a strong effect.",
+    "location": "Sec. 5.2 Table 5; Sec. 5.3.2; Table 6"
+  },
+  {
+    "key": "stainless-bcd",
+    "status": "VERIFIED",
+    "evidence": "Page 'Breaking change detection | Stainless': 'Stainless can automatically identify and flag unintentional breaking changes during your continuous integration (CI) process'; 'We currently support breaking change detection inside GitHub, with Stainless Studio support coming in the future.' MCP appears only in the site navigation, not in the page body.",
+    "correction": "The Appendix B corrected claim stands (provider-side CI flagging of unintentional breaking changes; not about MCP). Add: GitHub only at time of reading.",
+    "location": "Page body"
+  },
+  {
+    "key": "github-copilot-autofix-docs",
+    "status": "VERIFIED",
+    "evidence": "docs.github.com '.../autofix-for-code-scanning', under heading 'Using agentic autofix': 'Copilot validates fixes by re-running CodeQL with the code scanning query suite.' Also: 'Agentic Autofix works on a best-effort basis'; it cannot confirm fixes for 'custom CodeQL queries, the security-extended CodeQL query suite' or third-party tools; 'Always review and test the generated changes before you merge the pull request.'",
+    "correction": "Scope to agentic Autofix: the alerting detector (CodeQL default query suite) re-validates the fix, best-effort, with stated exclusions; humans must review and test before merge. The page does not describe validation for non-agentic Autofix.",
+    "location": "Section 'Using agentic autofix'"
+  },
+  {
+    "key": "xavier2017apibreak",
+    "status": "VERIFIED",
+    "evidence": "Second verifier. PDF homepages.dcc.ufmg.br/~mtov/pub/2017-saner-breaking-apis.pdf; footer 'SANER 2017, Klagenfurt, Austria'; authors Xavier, Brito, Hora, Valente. Sec. IV: 'Considering all of them, 501,645 changes were identified, from which 27.99% are breaking changes'; Table: All 501,645 / 140,460 (27.99%). Sec. V and Sec. VIII: 'We show that 27.99% of all API changes break backward compatibility.' Abstract: 317 libraries, 9K releases, 260K clients; '14.78% of the API changes break compatibility' (the per-library median, per Sec. IV summary) and '2.54% of their clients are impacted' (Intro: 'potentially impacted').",
+    "correction": "Claim verified. Location fix: the exact quote is in Sec. V ('Summary and Findings', item 1) and Sec. VIII (Conclusion), not the abstract; the abstract headlines 14.78% (median), which readers may confuse with the 27.99% aggregate. Say 'potentially impacted' for 2.54%.",
+    "location": "Abstract; Sec. IV (RQ1 table and summary); Sec. V item 1; Sec. VIII"
+  },
+  {
+    "key": "mcp-healer",
+    "status": "VERIFIED",
+    "evidence": "Second verifier. github.com/AAH20/mcp-healer README: tagline 'Self-Healing Runtime Middleware & Schema Mutation Adapter for Model Context Protocol (MCP) Tools'; 'Intercepts schema validation errors, 400 Bad Requests, and signature drifts in autonomous agent swarms'; MIT License. Sequence diagram passes 'Success Result (200 OK)' straight back; pipeline mutates the agent's input payload (fuzzy key matching, type coercion, structural wrapping, cached patches). No test generation or PR features described.",
+    "correction": "Bibliography claim stands. The README's performance figures (sub-0.1 ms, 'up to 14% of tool calls fail') are author claims; do not cite them.",
+    "location": "README header, flow diagram, sequence diagram"
+  }
+]
