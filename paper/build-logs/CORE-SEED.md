@@ -69,3 +69,20 @@ exits 0; full `vitest run --reporter=json` under `with-lock suite`: 158/158 pass
 `packages/cli/test/seed` 25/25 (exit 0); `domain-hooks.test.ts` 3/3 (exit 0); `--selftest` 22
 checks passed (exit 0); `git diff --name-only 312ae5c HEAD` lists only owned paths. No code
 change this round.
+
+Round 5 (2026-10-21): `git rebase main` replayed the 4 stream commits onto main `7a1d2cf`
+("biome: exclude paper/research data and run outputs from lint; format WORKSTREAMS.json"), the
+orchestrator lint fix; merge base is now `7a1d2cf`. The stale uncommitted lockfile edit was
+discarded before the rebase. Re-ran SETUP (`apply-dep-fragments.mjs`: "nothing to apply", no
+`deps-fragments/`; `pnpm install --no-frozen-lockfile` exit 0; lockfile edit left uncommitted)
+and every acceptance item:
+- `pnpm typecheck` exit 0; `pnpm lint` exit 0 ("Checked 136 files ... No fixes applied."). The
+  lint blocker of rounds 1-4 is resolved.
+- `with-lock suite pnpm test -- --reporter=json`: exit 0, 158 passed, 0 failed, 47 files (>= 147).
+- `pnpm vitest run packages/cli/test/seed`: 4 files, 25/25 passed.
+- `pnpm vitest run packages/cli/test/seed/domain-hooks.test.ts`: 3/3 passed (ok fixture compiles,
+  stripped negative control fails, unused-directive check).
+- `node scripts/apply-dep-fragments.mjs --selftest`: "selftest: 22 checks passed", exit 0.
+- `git diff --name-only 7a1d2cf HEAD`: 27 paths, all in the owns list.
+Interfaces re-checked against the round-7 Appendix (DetectorVerdictRow `at`/`elementIndex`,
+MonitorOptions `perElement`, FrozenTrace `violated[]` + `target[]`): present. No code change.
