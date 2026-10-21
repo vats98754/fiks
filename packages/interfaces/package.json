@@ -1,0 +1,11 @@
+{
+  "name": "@fiks/interfaces",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@fiks/contracts": "workspace:*"
+  }
+}

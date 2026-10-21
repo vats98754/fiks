@@ -1,0 +1,7 @@
+{
+  "extends": "../../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": []
+  },
+  "files": ["all-types.ts", "hooks-ok.ts", "hooks-missing.ts"]
+}
