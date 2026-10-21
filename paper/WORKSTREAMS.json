@@ -1,0 +1,1142 @@
+[
+  {
+    "id": "CORE-SEED",
+    "title": "Seed commit: shared interfaces, domain registry, CLI package manifest, bootstrap convention, dependency-fragment script",
+    "goal": "Land, before any wave-1 builder branches, everything every stream imports: packages/interfaces (all PLAN Appendix types), packages/domains (registry only), @fiks/domains and @fiks/interfaces in packages/cli/package.json, the bootstrap NN-*.ts convention and scripts/apply-dep-fragments.mjs. No behaviour change to the existing CLI. Interfaces are frozen at this commit; any later change is a seed amendment made by the orchestrator, after which every merged dependant is re-verified.",
+    "owns": [
+      "packages/interfaces/**",
+      "packages/domains/**",
+      "packages/cli/package.json",
+      "packages/cli/src/bootstrap/README.md",
+      "packages/cli/test/seed/**",
+      "scripts/apply-dep-fragments.mjs",
+      "paper/build-logs/CORE-SEED.md"
+    ],
+    "reads": ["paper/PLAN.md", "paper/research/codebase-map.md", "packages/cli/**", "packages/contracts/**"],
+    "depends_on": [],
+    "deliverables": [
+      "packages/interfaces with every type in the PLAN.md Appendix (RunKey, AttemptRecord incl. ivPlacement and rerecordLog, ReproTestRecord, CandidateRecord, CallRecord incl. originUnit, capturedAt and controlOf (round 6), EnumRow, FrameSpec incl. entities/NE/attribution/families/neRule, FrozenTrace incl. controlCallId, attributableProperties, ivProperties, ivExcluded and ivSidecarSha256 (round 6) and violated[] + target[] (round 7: the full receipt list; target = the first drift-attributable entry), DetectorVerdictRow incl. at and elementIndex (round 7: per-element rows from MON replay-cli --per-element), GradeRecord, DriftPackage incl. base, InjectorRule, Domain incl. originEntity, frozenClock (round 6) and the round-5 hooks reproEmitter, suite and allowedEditPaths, RerecordLog, Monitor incl. opts.reenable (round 6), ExecBackend, Arm, DepFragment, ConfigStep, RealbugAdapter, CLI command module)",
+      "packages/domains/{package.json, src/index.ts, src/registry.ts}: registerDomain/getDomain/listDomains",
+      "@fiks/domains and @fiks/interfaces as workspace:* in packages/cli/package.json (later additions only via deps-fragments, applied by the orchestrator on CORE-SEED's behalf)",
+      "packages/cli/src/bootstrap/README.md stating the NN-*.ts convention and per-file ownership (00-shop CORE, 10-tracker DOM2, 20-sandbox and 30-injector ORCH, 40-realbugs RBA)",
+      "scripts/apply-dep-fragments.mjs: reads deps-fragments/*.json (sorted), adds only '@fiks/<name>': 'workspace:*' entries to the named consumer package.json files (and optional root tsconfig references), idempotent; rejects any other key or value; --check exits 1 if any fragment is unapplied; --selftest",
+      "Domain hooks declared (round 5, PLAN Appendix and 7 P8): reproEmitter(trace, spec) -> {files[{path, bytes}], testPath}; suite {run(repoDir, scope) -> SuiteRun, scope (globs; default all), oneFailingInScope}; allowedEditPaths (regex source strings). The seed declares the members only; CORE supplies the shop values (byte-identical to ec241bc behaviour), DOM2 the tracker values and RBA the rb-<id> values. RealbugAdapter gains testRunner, suiteScope[] and allowedEditPaths[]"
+    ],
+    "acceptance": [
+      "SETUP: export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && pnpm install --no-frozen-lockfile (lockfile changes are not committed)",
+      "pnpm typecheck && pnpm lint",
+      "pnpm test exits 0 with >= 147 passing tests (vitest --reporter=json count): no behaviour change",
+      "pnpm vitest run packages/cli/test/seed: every Appendix type is exported from @fiks/interfaces (tsc --noEmit on a test file that names each); registerDomain/getDomain/listDomains round-trip a stub Domain; getDomain('nope') throws a clear error",
+      "pnpm vitest run packages/cli/test/seed/domain-hooks.test.ts (round 6: a plain .test.ts; vitest 5.0.3 collects '*.test-d.ts' only under typecheck.include, so the round-5 path 'domain-hooks.test-d.ts' reported 'No test files found' and exited 1, and CORE owns packages/cli/vitest.config.ts): the test spawns 'pnpm exec tsc --noEmit -p packages/cli/test/seed/fixtures/tsconfig.json' over fixtures/hooks-ok.ts (a stub Domain with reproEmitter, suite, allowedEditPaths and frozenClock; compiles) and fixtures/hooks-missing.ts (three stub Domains, each omitting one hook, each on a line preceded by '// @ts-expect-error', so an unused directive fails the compile) and asserts exit 0; a negative control copies hooks-missing.ts to $TMPDIR with the directives stripped and asserts tsc exits non-zero; RerecordLog, RealbugAdapter.{testRunner, suiteScope, allowedEditPaths}, CallRecord.capturedAt and FrozenTrace.ivProperties are exported",
+      "node scripts/apply-dep-fragments.mjs --selftest exits 0: in a temp copy, (a) a fragment adding '@fiks/x': 'workspace:*' to packages/cli is applied once and is idempotent on a second run, (b) a fragment with a non-workspace value or a non-@fiks name is rejected with exit 2, (c) --check exits 1 while a fragment is unapplied and 0 after",
+      "git diff --name-only <branch base> lists only paths in this stream's owns list (<branch base> = the main commit this stream branched from, i.e. the commit that adds paper/PLAN.md and paper/WORKSTREAMS.json; ec241bc is not used because e9aa595 and the plan commit already add paper/** files after it)"
+    ],
+    "est_hours": 7,
+    "wave": 0
+  },
+  {
+    "id": "CORE",
+    "title": "Core platform: harness, repro package, local-ref worktrees, CLI loader, shop Domain (truth/entityClass/originEntity/catalog option, docs)",
+    "goal": "Generalise fiks from shop-only to the CORE-SEED Domain registry (P8), injector-aware profiles (P7), worker isolation (P6), F-gate runs (P13), local-ref worktrees resolving <ref>^{commit} with no fetch (P17) and the CLI loader (P18). Branches from the merged CORE-SEED commit and imports only the seed plus packages it owns. Also writes the shop prose docs (packages/vendor-api/docs/shop.md) that are frozen at F2; the CORE builder has read the contracts, which is recorded, and the docs must pass BLIND's no-bound check. Round 5: owns the single re-record entry point every arm and the grader call (P23), and wires the Domain hooks reproEmitter, suite and allowedEditPaths into packages/repro with shop defaults byte-identical to ec241bc.",
+    "owns": [
+      "packages/vendor-api/**",
+      "packages/repro/**",
+      "packages/cli/vitest.config.ts",
+      "packages/cli/src/harness.ts",
+      "packages/cli/src/paths.ts",
+      "packages/cli/src/index.ts",
+      "packages/cli/src/main.ts",
+      "packages/cli/src/loader.ts",
+      "packages/cli/src/legacy/**",
+      "packages/cli/src/bootstrap/00-shop.ts",
+      "packages/cli/src/commands/scenario.ts",
+      "packages/cli/src/commands/record-fixtures.ts",
+      "packages/cli/src/commands/rerecord.ts",
+      "packages/cli/src/commands/rerecord-stale.ts",
+      "packages/cli/src/commands/vendor-diff.ts",
+      "packages/cli/src/commands/call.ts",
+      "packages/cli/src/commands/confirm.ts",
+      "packages/cli/src/commands/demo.ts",
+      "packages/cli/src/commands/repro.ts",
+      "packages/cli/src/commands/rerecord-head.ts",
+      "packages/cli/test/smoke.test.ts",
+      "packages/cli/test/vendor-diff.test.ts",
+      "packages/cli/test/harness.test.ts",
+      "packages/cli/test/seed-integrity.test.ts",
+      "packages/cli/test/oracle.test.ts",
+      "packages/cli/test/negative.test.ts",
+      "packages/cli/test/scenario.test.ts",
+      "packages/cli/test/oracles/**",
+      "packages/cli/test/support/shop-copy.ts",
+      "packages/cli/test/core/**",
+      "paper/build-logs/CORE.md"
+    ],
+    "reads": ["paper/PLAN.md", "paper/research/codebase-map.md", "packages/contracts/**", "packages/proxy/**", "packages/repair/**", "packages/cli/src/commands/repair.ts", "packages/cli/src/commands/bench.ts", "packages/cli/src/commands/summarize.ts", ".work/shop-mcp", "/Users/anvayvats/fiks/.fiks/traces/tr_079b90c89e.json"],
+    "depends_on": ["CORE-SEED"],
+    "deliverables": [
+      "CLI loader (P18): main.ts loads .env, imports packages/cli/src/bootstrap/*.ts in sorted order, then resolves the command. A default export {name, describe, run(argv)} in packages/cli/src/commands/*.ts wins over packages/cli/src/legacy/<name>.ts. Files without a default export are ignored. main.ts contains no command switch. Each legacy adapter wraps the existing named function with the exact current flags and output, and exports help() returning that command's line(s) of the ec241bc USAGE string",
+      "Shop Domain object in packages/vendor-api/src/domain.ts, registered by packages/cli/src/bootstrap/00-shop.ts; --domain threaded through harness, scenario, record-fixtures, rerecord, rerecord-stale, vendor-diff, repro, paths",
+      "vendor-api --catalog original|extended-only|all: extended entities loaded from a JSON file, disjoint id namespace, authorBatch kept. Also: truth.ts; entityClass() for all four shop tools; originEntity() per PLAN 3.1 (entity, offending item, the single product of an order, S-grid query id for collection-level paths); paginatedEndpoints metadata",
+      "createWorktree(repoDir, ref): resolves 'git rev-parse --verify <ref>^{commit}' for local branches and annotated or lightweight tags; never fetches; optional fetch only when explicitly requested, and refused when a runKey is set (P17)",
+      "repro --trace <file> --target <local ref> (in addition to --scenario)",
+      "Generic upstream middleware chain in startHarness; profile = (domain, base version, injector rule id, rule hash); rerecord() restarts the chain",
+      "Per-process FIKS_DIR; file lock around git worktree prune/add/remove; F-gate --runs",
+      "packages/vendor-api/docs/shop.md: prose docs derived from openapi.json and the vendor source only, with no numeric bound on any contract-constrained field (price, total, created_at); authorship and contract exposure recorded in paper/build-logs/CORE.md",
+      "packages/cli/test/core/fixtures/D2-trace.json: byte copy of the gitignored /Users/anvayvats/fiks/.fiks/traces/tr_079b90c89e.json from the main checkout (it is absent from builder worktrees) (sha256 b6baf03ea14d2fb6ce8bc7df91a223df63177c8dfc8995f7ab1f87ef9e524d15; captured 2026-10-18 with vendor v2, all five drifts active), plus its sha256 in fixtures/README.md; also used by ARMS",
+      "Re-record service (P23): 'pnpm fiks rerecord-head --worktree <dir> --profile <json> --from <commit> [--recordings <paths>] --log <file>'. Step 1 runs rerecordStale (product behaviour: suite-detected stale recordings -> *.rerecorded.json). Step 2, for every other recording file named with --recordings or read during the check (fs-read log via a node --require preload shipped here, e.g. .alerts/<id>.json and recordings loaded by agent-written tests), writes a re-recorded copy at the original path in a per-check overlay when the head makes upstream requests the recording never saw, and restores the original afterwards. Both steps use the one CORE rerecord() code path with the given profile (domain, base, injector rule id, rule hash). It appends one RerecordLog line {profile, head, fromCommit, files[{path, mode: stale|overlay, requestKeysBefore, requestKeysAfter, outcome}]}. It is the only re-record entry point for ORCH, ARMS, HOLD and RBA, which call it by subprocess",
+      "Domain hooks wired (P8, round 5): packages/repro generate.ts emits through getDomain(d).reproEmitter and gate.ts runSuite/failGate run getDomain(d).suite (failGate requires exactly one failing test inside the suite scope). The shop Domain sets reproEmitter = the current reproSource (imports '../fiks/check.ts'; assertStorableProfile stays a shop-emitter check), suite = the whole shop-mcp suite via node_modules/.bin/vitest --reporter=json --testTimeout=60000, and allowedEditPaths = ['^src/.+\\.ts$'] (= today's REPAIR_ALLOWED). The object frozen by PLAN 5.2 item 5 is the shop repro output, which stays byte-identical; routing it through the hook is not a tuning iteration",
+      "Frozen clock (round 6, PLAN 3.1 'Clock'): shop Domain.frozenClock is a constant instant committed before F2 (recorded in the F2 ledger entry). startHarness passes its clock to both the vendor and ProxyOptions.now, so the proxy's CallRecord.at (packages/proxy/src/proxy.ts:197,216) equals the vendor clock; DET maps it to CallRecord.capturedAt",
+      "rerecord-head is container-runnable (round 6, PLAN P1/P23): every path comes from flags, nothing is read from the host fiks checkout, .env is not loaded under '--require-sandbox', and '--require-sandbox' exits 2 unless FIKS_IN_SANDBOX=1 (set only by SBX's per-attempt container env). ORCH, ARMS, HOLD and RBA always pass '--require-sandbox' and invoke it through the ExecBackend inside the per-attempt container (SBX fiks-tools mount), never as a host subprocess"
+    ],
+    "acceptance": [
+      "SETUP: export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && pnpm install --no-frozen-lockfile (lockfile changes are not committed)",
+      "pnpm typecheck && pnpm lint",
+      "pnpm test exits 0 with >= 147 passing tests (vitest --reporter=json count)",
+      "grep -c \"case '\" packages/cli/src/main.ts prints 0",
+      "pnpm vitest run packages/cli/test/core/loader.test.ts: (a) a temporary commands/zz-probe.ts default-exporting {name:'zz-probe'} runs via 'pnpm fiks zz-probe'; (b) a temporary commands/zz-dup.ts default-exporting {name:'confirm'} is dispatched instead of legacy/confirm.ts; (c) a temporary bootstrap/zz-boot.ts sets a global that the dispatched command observes; (d) a commands/*.ts file without a default export is ignored; all temporary files are deleted by the test",
+      "pnpm vitest run packages/cli/test/core/legacy-help.test.ts: (a) for every adapter in packages/cli/src/legacy/*.ts (vendor-diff, record-fixtures, rerecord, scenario, call, repro, repair, confirm, bench, demo, summarize), help() returns exactly that command's line(s) of the USAGE string in 'git show ec241bc:packages/cli/src/main.ts', byte-identical (the reference is extracted from git at test time); (b) 'pnpm fiks' with no command prints the full ec241bc USAGE string byte-identically; (c) per-command '--help' is not asserted at ec241bc (it crashes there with ERR_PARSE_ARGS_UNKNOWN_OPTION), only that it now prints help() for commands without a default-export module in packages/cli/src/commands/ (set computed at test time)",
+      "pnpm vitest run packages/cli/test/core/legacy-behaviour.test.ts: behavioural snapshot of the deterministic legacy commands against outputs recorded from an ec241bc worktree in the same test run: 'scenario v1-all --json', 'scenario D2 --json', 'vendor-diff --json', 'summarize --check' and 'call get_product {\"id\":\"p-1001\"}' give byte-identical stdout and exit codes (timestamps and run ids normalised by a fixed, listed regex set); an unknown flag still exits non-zero for every legacy command",
+      "pnpm fiks scenario v1-all --domain shop --json: every verdict is 'verified', identical to the same command without --domain",
+      "pnpm vitest run packages/repro: createWorktree(repo, 'seed-v1') checks out the commit equal to 'git rev-parse seed-v1^{commit}' (bb037cf...) with the clone's origin URL set to https://invalid.example/x.git (no fetch attempted; GIT_TRACE shows no fetch); an annotated test tag resolves to its peeled commit; an unknown ref exits with a clear error",
+      "With .work/shop-mcp origin set to an unreachable URL: pnpm fiks repro --scenario D1 --target seed-v1 --runs 10 gives 10/10 identical failures for the named property",
+      "pnpm fiks repro --trace packages/cli/test/core/fixtures/D2-trace.json --target seed-v1 --runs 3: F gate PASS for shop.get_product/price.notNull; the fixture's sha256 equals the value in fixtures/README.md",
+      "pnpm vitest run packages/repro: a profile with injector {ruleId, hash} round-trips through trace-store and rerecord()",
+      "pnpm vitest run packages/cli/test/core/worktree-lock.test.ts: 20 concurrent create/remove cycles from 4 processes with distinct FIKS_DIR; git fsck clean",
+      "Vendor test: --catalog extended-only serves none of the 15 original ids (p-1001..p-1107); --catalog original equals the current catalog byte-for-byte; extended entities keep authorBatch",
+      "entityClass and originEntity tests: both defined for every call in the D1-D5 scenarios and for 200 synthetic frame inputs incl. single-line create_order/get_order (origin = the product) and a search with an item-level property (origin = the offending item); no import of @fiks/contracts in the originEntity module",
+      "shop truth() equals the tool output on all v1 fixtures and on 200 enumerated v1 calls; no @fiks/contracts or @fiks/proxy import in packages/vendor-api/src/truth.ts (lint rule active)",
+      "grep -nE '\\b(20|2000|0\\.5|365)\\b' packages/vendor-api/docs/shop.md prints nothing (BLIND's check-no-bounds re-checks the docs at F2)",
+      "pnpm vitest run packages/cli/test/core/domain-hooks.test.ts: (a) the shop reproEmitter on fixtures/D2-trace.json emits bytes identical to generateRepro run from an ec241bc worktree in the same test; (b) a stub Domain registered in the test with its own reproEmitter, a one-glob suite scope and allowedEditPaths: 'pnpm fiks repro --domain stub' calls its emitter (spy) and runs only its suite command, and failGate ignores a planted failing test outside the scope; (c) getDomain('shop').allowedEditPaths equals ['^src/.+\\.ts$']",
+      "pnpm vitest run packages/cli/test/core/rerecord-head.test.ts: on the D3 and D4 fix heads of shop-mcp main (7c5f4ea, 88ed791; vendor v2 single-drift profile), rerecord-head re-records the stale recordings (mode stale) and a copy of the D3/D4 trace placed at .alerts/<id>.json and read by a stub test through test/fiks/run.ts replayRecording (mode overlay). The stub test then passes with no UNMATCHED_REQUEST, and fails on the pre-fix parents (bce692a, 0d0d3b5). The original .alerts file is byte-unchanged afterwards, and two runs give identical RerecordLog lines (timestamps excluded)",
+      "pnpm vitest run packages/cli/test/core/clock.test.ts: a harness run with clock = 2024-01-01T00:00:00Z creates an order whose get_order created_at.freshness is 'verified' with the wall clock in 2026, and the CallRecord's at equals the clock (proxy now = vendor clock)",
+      "pnpm fiks rerecord-head --require-sandbox --worktree <tmp> ... on the host exits 2 with 'sandbox required'; with FIKS_IN_SANDBOX=1 and a temp HOME it runs, and an fs spy shows no read of the main checkout's .env"
+    ],
+    "est_hours": 37,
+    "wave": 1
+  },
+  {
+    "id": "VOCAB",
+    "title": "Contract vocabulary, fpCapability table, shop-mcp re-vendor commit, pinned sync check (P15, P19)",
+    "goal": "Add closed-world enum, crossField and pageComplete with receipt text. Add the pre-registered fpCapability(invariant, endpointMeta) table. Push one re-vendor commit to a vats98754/shop-mcp BRANCH (fiks/revendor-f2) and tag base-shop at it; shop-mcp main is not touched by this stream and is fast-forwarded to base-shop by the orchestrator only when VOCAB merges into fiks main (round 7, PLAN 7.1 merge discipline), so no other in-flight stream's 'pnpm test' sees a changed shop-mcp. Make the sync test compare against a pinned, peeled commit so fresh clones pass, and make ensure-shop-mcp check out that pinned ref. Round 6: 'disabled' property support in the evaluator (frozen at F2, inside the base-shop re-vendor commit) and the mechanical 'contract-disable' script that PLAN 8.1 A0 registers. Round 7: EvalOptions.perElement (every violating element per invariant; offline only) for the H1 per-element verdicts.",
+    "owns": [
+      "packages/contracts/package.json",
+      "packages/contracts/src/**",
+      "packages/contracts/test/**",
+      "packages/contracts/contracts/shop-mcp.contracts.json",
+      "packages/contracts/shop-sync-ref.json",
+      "scripts/sync-contracts.mjs",
+      "scripts/ensure-shop-mcp.mjs",
+      "scripts/contract-disable.mjs",
+      "external: github.com/vats98754/shop-mcp (one re-vendor commit on branch fiks/revendor-f2 touching test/fiks/vendored/evaluate.ts and types.ts only; tag base-shop; main is fast-forwarded to it by the orchestrator at VOCAB's merge, never by the builder)",
+      "paper/build-logs/VOCAB.md"
+    ],
+    "reads": ["paper/PLAN.md", "paper/research/codebase-map.md", "bench/results/**", ".work/shop-mcp", "packages/interfaces/**"],
+    "depends_on": ["CORE-SEED"],
+    "deliverables": [
+      "Invariant kinds enum, crossField, pageComplete; checkInvariant support; describeViolation(); unit tests with true and false fixtures per kind",
+      "fpCapability(invariant, endpointMeta) -> 'entailed' | 'capable' | 'knownGoodOnly' per PLAN.md section 3.1, and propertyFamily(path) = last non-index path segment (PLAN D12), both exported from packages/contracts",
+      "sync-contracts.mjs --check --ref <sha>: compares against git objects at that commit in the shop clone (git show <sha>:path)",
+      "shop-sync-ref.json stores the peeled commit sha of base-shop (git rev-parse base-shop^{commit}); sync.test.ts reads it",
+      "ensure-shop-mcp.mjs: after clone or on an existing clone, fetches tags and the pinned commit if missing (the only network step; runs in pretest), then checks out the pinned ref recorded in packages/contracts/shop-sync-ref.json (detached; round 7), refusing a dirty clone; it never follows a moving branch. FIKS_SHOP_DIR overrides the location for tests",
+      "Re-vendor commit on shop-mcp branch fiks/revendor-f2 (round 7: not main); tag base-shop; peeled commit recorded in shop-sync-ref.json and in paper/build-logs/VOCAB.md for the freeze ledger; the merge checklist line 'git push origin base-shop^{commit}:refs/heads/main (fast-forward only)' is executed by the orchestrator at VOCAB's merge and logged in PROGRESS.md",
+      "EvalOptions.perElement (round 7, PLAN 3.1 'Per-element verdicts'): with perElement: true, every element-iterating invariant (range, notNull, nonEmpty, unique, freshness, enum, crossField) returns one Violation per violating element (its 'at' path carries the index) instead of the first; the default (false) is byte-identical to ec241bc, so live receipts never change. Shipped in the same re-vendor commit (the sync check compares the vendored file)",
+      "'disabled' support (round 6, PLAN 8.1 A0, 9.5): a contract property with disabled: true (and disabledReason) is not evaluated; the receipt lists it under disabled[] (never as verified, never in checked[]); EvalOptions.reenable?: string[] evaluates the listed disabled ids as if enabled (MON replay-cli '--reenable' passes it; H1 sensitivity). Shop contracts carry no disabled flag. The support ships in the vendored evaluate.ts/types.ts of the base-shop re-vendor commit and is frozen at F2",
+      "scripts/contract-disable.mjs --contracts <file> --ids <id,...> --reason <text> --log <jsonl>: sets disabled: true and disabledReason on exactly the listed property ids, refuses unknown ids (exit 2) and verifies by a JSON diff that nothing else changed; appends one D11 log line {ids, reason, contractsSha256Before, After}. The only A0 contract edit PLAN 9.5 allows; ORCH seed-tag re-vendors the result into tracker-mcp"
+    ],
+    "acceptance": [
+      "SETUP: user approved the re-vendor branch, tag and the merge-time fast-forward of main (PLAN 8.0-3); export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile && node scripts/ensure-shop-mcp.mjs",
+      "pnpm vitest run packages/contracts",
+      "Round 7: 'git ls-remote https://github.com/vats98754/shop-mcp refs/heads/main' still prints 7bf2e66... (this stream never pushes main), and 'git ls-remote ... refs/heads/fiks/revendor-f2' equals base-shop^{commit}",
+      "Round 7: node scripts/ensure-shop-mcp.mjs on a clone whose HEAD is main leaves 'git -C .work/shop-mcp rev-parse HEAD' equal to the shop-sync-ref.json ref; on a dirty clone it exits non-zero without changing it; with FIKS_SHOP_DIR pointing at a fresh temp clone it fetches tags once and a second run makes no fetch (GIT_TRACE)",
+      "Unit (round 7): with perElement: true, items.price.range on a search output whose items have prices [9, 50, 5000] returns two violations at items[0].price and items[2].price; with the default it returns exactly the ec241bc single violation (byte-identical receipt); likewise for notNull, nonEmpty, unique and freshness on two-bad-element fixtures",
+      "pnpm tsx packages/contracts/test/replay-logged.ts bench/results: 0 verdict changes on all logged CallRecords, and the old (seed-v1 vendored) and new evaluators give identical verdicts on the D1-D5 scenario traces",
+      "git diff ec241bc -- packages/contracts/contracts/shop-mcp.contracts.json is empty",
+      "Fresh-clone check: rm -rf $TMPDIR/shopc && git clone https://github.com/vats98754/shop-mcp $TMPDIR/shopc && FIKS_SHOP_DIR=$TMPDIR/shopc node scripts/sync-contracts.mjs --check --ref $(node -p \"require('./packages/contracts/shop-sync-ref.json').ref\") prints 'identical'",
+      "test \"$(git -C .work/shop-mcp rev-parse 'base-shop^{commit}')\" = \"$(node -p \"require('./packages/contracts/shop-sync-ref.json').ref\")\"",
+      "git -C .work/shop-mcp diff --name-only 7bf2e66 'base-shop^{commit}' lists only test/fiks/vendored/evaluate.ts and test/fiks/vendored/types.ts",
+      "git -C .work/shop-mcp rev-parse 'seed-v1^{commit}' starts with bb037cf (unchanged)",
+      "gh run list -R vats98754/shop-mcp --commit $(git -C .work/shop-mcp rev-parse 'base-shop^{commit}') --limit 1 --json conclusion shows success",
+      "Unit: fpCapability on shop-mcp.contracts.json returns capable for exactly items.price.range, price.range, shop.create_order total.range, created_at.freshness, shop.get_order total.range; knownGoodOnly for items.nonEmpty and price.notNull; entailed for countMatchesTotal (unpaginated), total.equalsUpstream, items.id.unique, created_at.equalsUpstream, readAfterWrite",
+      "Unit: propertyFamily('items[*].price') = 'price', propertyFamily('total') = 'total', propertyFamily('created_at') = 'created_at'",
+      "Unit (round 6): a property with disabled: true is skipped (no violation on an input that violates it), listed under receipt.disabled[], absent from checked[]; with reenable: [its id] it is evaluated and violates; a contract with no disabled flags gives byte-identical receipts to the evaluator at ec241bc on the D1-D5 scenario traces",
+      "node scripts/contract-disable.mjs on a temp copy of a two-property contract with --ids <one id>: the JSON diff touches only that property's disabled and disabledReason; an unknown id exits 2 and leaves the file byte-unchanged; the log line has both sha256 values",
+      "git -C .work/shop-mcp show 'base-shop^{commit}':test/fiks/vendored/evaluate.ts | grep -c disabled prints >= 1 (disabled support is in the re-vendor commit)",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 17,
+    "wave": 1
+  },
+  {
+    "id": "MON",
+    "title": "Proxy monitor interface, log-only mode, offline replay evaluator (P9)",
+    "goal": "Add ProxyOptions.monitor (default = evaluate), --monitor on the proxy bin, a log-only mode that records verdicts and upstream exchanges without changing tool output, and an offline replay evaluator over CallRecords. Round 6: every CallRecord carries its evaluation instant (capturedAt = the proxy's existing 'at' field) and offline replay evaluates with now := capturedAt, never the system clock; '--reenable' passes disabled property ids to the evaluator.",
+    "owns": [
+      "packages/proxy/**",
+      "packages/cli/test/proxy-bin.test.ts",
+      "paper/build-logs/MON.md"
+    ],
+    "reads": ["paper/PLAN.md", "packages/contracts/**", "packages/interfaces/**", "bench/results/**"],
+    "depends_on": ["CORE-SEED"],
+    "deliverables": [
+      "Monitor hook in handleCall; monitor id and latency in every event",
+      "bin flag --monitor contracts|none|<module path>; --log-only (events with verdicts, no receipt, output untouched)",
+      "packages/proxy/src/replay-cli.ts: offline replay of CallRecords through a monitor, writing DetectorVerdictRow JSONL",
+      "capturedAt (round 6, PLAN 3.1 'Clock'): every CallRecord the proxy emits keeps 'at' = the now() instant used for its evaluation (proxy.ts:197,216), also under --monitor none (the instant that would have been used); replay-cli evaluates each record with now := new Date(record.at ?? record.capturedAt), refuses (exit 2) a record with neither, and never reads Date.now(); '--reenable <ids>' is passed to the evaluator options (VOCAB)",
+      "replay-cli --per-element (round 7, PLAN 3.1 'Per-element verdicts'): passes perElement: true to the evaluator (VOCAB EvalOptions) and writes one DetectorVerdictRow per violating element (fields at and elementIndex), so every out-of-bound entity on a page is visible to H1, D12 and the census; without the flag the output is unchanged; live proxy receipts never use it"
+    ],
+    "acceptance": [
+      "SETUP: export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile",
+      "pnpm vitest run packages/proxy packages/cli/test/proxy-bin.test.ts",
+      "pnpm tsx packages/proxy/src/replay-cli.ts --monitor contracts --check bench/results: verdicts byte-identical to the logged receipts on all records",
+      "Test: with --log-only on shop v2 D2, tool results are byte-identical to a direct (no proxy) call and the events file contains the violated verdict",
+      "Test: --monitor none records CallRecords (tool output, upstream exchange) with no verdict fields, and the contracts file is never opened (fs spy); used by DET's pre-F4b 'record --frame --monitor none'",
+      "Clock-shift test (round 6): replay-cli over a fixture CallRecord set that includes get_order created_at.freshness verdicts, run once normally and once under node --require packages/proxy/test/support/clock-shift.cjs with FIKS_TEST_CLOCK_SHIFT_DAYS=400 (Date and Date.now shifted +400 days), writes byte-identical DetectorVerdictRow JSONL; a record without at/capturedAt exits 2; '--reenable x' reaches the evaluator options (spy)",
+      "Per-element test (round 7): a fixture search CallRecord whose items are [ext-a $9, ext-b $50, ext-c $5000] gives, under replay-cli --per-element, exactly two items.price.range rows (at items[0].price and items[2].price, elementIndex 0 and 2) and, without the flag, one row byte-identical to the live receipt; perElement: true reaches the evaluator options (spy); the live proxy never passes it (spy over a handleCall)",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 11,
+    "wave": 1
+  },
+  {
+    "id": "SAFE",
+    "title": "Repair package hardening: exec-backend hook, env scrub, realpath read guard, strict trace (E6 only), PR allow-list, runner robustness",
+    "goal": "Implement the agent-side parts of P1, P2, P3, P5 and P10, plus the candidate-capture hook, inside packages/repair. Raw format is the default; strict mode exists for E6.",
+    "owns": [
+      "packages/repair/**",
+      "paper/build-logs/SAFE.md"
+    ],
+    "reads": ["paper/PLAN.md", "paper/research/codebase-map.md", "paper/research/gap-repair-security.md", "packages/cli/src/commands/repair.ts", "packages/interfaces/**"],
+    "depends_on": ["CORE-SEED"],
+    "deliverables": [
+      "canUseTool rewrites allow-listed Bash to backend.exec; default host backend unchanged",
+      "claudeEnv() returns only CLAUDE_CODE_OAUTH_TOKEN, PATH and a temp HOME",
+      "mayRead with fs.realpathSync, refusing paths/symlinks outside the worktree; same rules for CLI Read/Glob; option to disable the CLI fallback runner",
+      "--trace-format raw|strict (default raw); strict formatter + strict-mode quarantine of test/fixtures/**, test/repro/*.json, test/traces/** and .alerts/** raw bodies; sanitizer on gate output",
+      "In raw mode .alerts/** and test/fiks/** are readable (every arm needs them)",
+      "pr.ts allow-list on the BASE repository: createPr always passes --repo vats98754/<name>; it resolves the base repo via 'gh repo view --json owner,isFork,parent' and refuses if the base owner is not vats98754 or the repo is a fork whose parent owner is not vats98754 (gh pr create would default the base upstream); the head owner is checked too; noPr default when arm or runKey is set; no gh invocation when noPr",
+      "Runner: 3 retries with backoff, infra_error outcome, costUsd and cache tokens; onCandidate(diff, stage) callback at every gate invocation; resume-with-message support (used by the REPRO-AGENT F feedback)",
+      "Edit guard from options.allowedEditPaths (default ['^src/.+\\.ts$'] = today's REPAIR_ALLOWED); ORCH, ARMS and RBA pass Domain.allowedEditPaths",
+      "Stub runner (round 5): runners: [stubRunner(script)] applies a scripted list of file edits and new test files through the same canUseTool guard, then ends the turn, with 0 SDK calls. Used by '--agent-stub' in ORCH and ARMS and by 'pnpm exp --dry'. The SDK runner refuses to start when FIKS_LLM_FORBID=1"
+    ],
+    "acceptance": [
+      "SETUP: export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile",
+      "pnpm vitest run packages/repair",
+      "Unit: a symlink src/x.ts -> ../../.env inside a temp worktree is refused by mayRead; a .. escape is refused",
+      "Unit: in strict mode, Read of test/fixtures/v1/a.json, test/repro/x.json, test/traces/t.json and .alerts/a.json is denied; in raw mode .alerts/a.json and test/fiks/replay.ts are allowed",
+      "Unit: claudeEnv() with planted GH_TOKEN, FIKS_CANARY and AWS_SECRET_ACCESS_KEY returns none of them",
+      "Unit: 'pnpm test' is rewritten to the fake backend; 'curl', 'node -e' and 'pnpm exec tsx' are denied",
+      "Unit (fake gh): createPr refuses (a) a base repo owned by another account, (b) a vats98754 repo that is a fork of a third-party parent, (c) a head owner other than vats98754; it accepts a non-fork vats98754 repo and the recorded gh argv always contains --repo vats98754/<name>; options with runKey default to noPr=true and the fake gh records 0 invocations",
+      "Unit: the strict formatter on 20 payload fixtures leaves no payload substring; field paths match ^[A-Za-z_][\\w.\\[\\]]{0,63}$",
+      "Unit: three 429 errors -> outcome infra_error; a fixture SDK result populates costUsd and cache tokens",
+      "Unit: resume-with-message continues a stub session and counts turns against the same budget",
+      "Unit: with allowedEditPaths ['^apps/[^/]+/src/.+\\.ts$'] an edit to apps/x/src/a.ts is allowed and src/a.ts is refused; with no option the guard equals today's REPAIR_ALLOWED",
+      "Unit: the stub runner applies its script through the guard (a scripted edit to an existing test is refused) and makes 0 SDK calls (spy); with FIKS_LLM_FORBID=1 the SDK runner throws before any call",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 25,
+    "wave": 1
+  },
+  {
+    "id": "SBX",
+    "title": "Linux sandbox image, Docker exec backend, hermetic local CI with extra checks, canary and push shim",
+    "goal": "Build per-repo Linux images with lockfile node_modules and an offline pnpm store; a DockerExecBackend (--network none, scrubbed env, limits); ciLocal() mirroring ci.yml with optional extra checks (used for IV by L1 pre-PR and COMP post-PR); canary and egress probes; a git shim that logs and blocks any push; a 20-head Actions agreement script. Round 6: a Linux 'fiks-tools' image so that CORE rerecord-head (vendor-api, injector, tap, harness and the candidate server it spawns) runs inside the per-attempt container, never on the host.",
+    "owns": [
+      "packages/sandbox/**",
+      "paper/build-logs/SBX.md"
+    ],
+    "reads": ["paper/PLAN.md", ".work/shop-mcp", "packages/repro/src/worktree.ts", "packages/repair/src/runner.ts", "packages/interfaces/**"],
+    "depends_on": ["CORE-SEED"],
+    "deliverables": [
+      "Dockerfile + build script per target repo; image digest pinned and printed",
+      "DockerExecBackend implementing ExecBackend; worktree mounted without the host node_modules symlink",
+      "ciLocal(worktree, image, extraChecks?) -> {green, log}; runPreGate(worktree, image, checks) -> {green, log} for pre-PR use of the same checks",
+      "Canary probes, egress log, git push shim, actions-agreement script (branches on vats98754 only, never PRs)",
+      "MEMORY.md: Docker Desktop memory 6 GB, per-container limits",
+      "fiks-tools image (round 6, PLAN P1): built from 'git archive <fiks commit>' (so no .env, .fiks or .work exists in it) with 'pnpm install --frozen-lockfile' run inside Linux (Linux esbuild/tsx binaries), digest pinned. Round 7: during the build phase <fiks commit> = the latest merged fiks main (its lockfile has every merged fragment applied, so --frozen-lockfile succeeds); the orchestrator rebuilds it after each merge and records the digest in PROGRESS.md. A stream acceptance that needs its own unmerged code inside the container (e.g. ARMS fiks-iv) builds a test-only image with 'build-tools.ts --ref HEAD --apply-fragments' (fragments applied and 'pnpm install --no-frozen-lockfile' inside the build; digest never used by a run). Run steps use the image of the frozen commit, digest in meta.json. mounted read-only at /opt/fiks in every per-attempt and grading container. execFiks(container, argv) runs '/opt/fiks/node_modules/.bin/tsx /opt/fiks/packages/cli/src/main.ts <argv>' via docker exec with --network none (loopback only) and env exactly {PATH, CI=1, HOME=/tmp, FIKS_DIR=/tmp/fiks, FIKS_IN_SANDBOX=1}"
+    ],
+    "acceptance": [
+      "SETUP: Docker Desktop running (PLAN 8.0-1); export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile && node scripts/ensure-shop-mcp.mjs",
+      "pnpm tsx packages/sandbox/src/build.ts --repo .work/shop-mcp prints an image digest; rebuilding from the same lockfile gives the same digest",
+      "Round 7: pnpm tsx packages/sandbox/src/build-tools.ts (default --ref main) builds fiks-tools from the latest merged main with --frozen-lockfile and prints its digest; '--ref HEAD --apply-fragments' in a worktree with an unapplied deps-fragments file builds a test image whose /opt/fiks/packages/cli/package.json contains the fragment's entry, and its digest is labelled test-only",
+      "pnpm vitest run packages/sandbox: in the container 'curl https://example.com' fails; 'env' shows no FIKS_CANARY/GH_TOKEN; a write outside the mounted worktree fails; 'pnpm install --offline' succeeds with --network none",
+      "ciLocal on shop-mcp 7bf2e66 is green; on D1-D5 oracle patches applied to seed-v1, ciLocal verdicts equal host 'pnpm test' verdicts",
+      "Unit: ciLocal and runPreGate with an extra check that exits 1 return green=false with the extra check's output in log",
+      "git shim test: a 'git push' inside a run is recorded and blocked",
+      "Round 6: in a --network none container with fiks-tools mounted at /opt/fiks and a shop-mcp seed-v1 worktree mounted with its Linux node_modules, execFiks(['scenario', 'v1-all', '--json']) prints the same verdicts as the host run (all verified); inside it 'test -e /opt/fiks/.env' fails, 'env' equals the 5 listed variables, and node -e \"require('esbuild')\" loads the Linux binary",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 21,
+    "wave": 1
+  },
+  {
+    "id": "BENCHX",
+    "title": "Bench robustness: infra errors, cost fields, run keys, pass^k with CIs, worker pool",
+    "goal": "Make the agent bench safe to scale for held-out traffic and optional E11. bench.ts and summarize.ts gain default-export command modules (P18), so new flags need no main.ts edit.",
+    "owns": [
+      "packages/bench/**",
+      "packages/cli/src/commands/bench.ts",
+      "packages/cli/src/commands/summarize.ts",
+      "packages/cli/test/summarize.test.ts",
+      "deps-fragments/BENCHX.json",
+      "paper/build-logs/BENCHX.md"
+    ],
+    "reads": ["paper/PLAN.md", "paper/research/codebase-map.md", "bench/results/**", "packages/interfaces/**"],
+    "depends_on": ["CORE-SEED"],
+    "deliverables": [
+      "infraError outcome, costUsd and cache tokens per trial",
+      "Summary keys ${phase}@${model}@${monitor}@${arm}; every run kept",
+      "pass^k 1..K (unbiased) + Wilson CIs; worker pool; dirty-tree refusal; domain-agnostic tasks and harness factory",
+      "Default exports {name:'bench'|'summarize', describe, run(argv)} parsing their own argv, a superset of the legacy flags",
+      "deps-fragments/BENCHX.json listing any new @fiks/* import into packages/cli (empty add{} if none)"
+    ],
+    "acceptance": [
+      "SETUP: export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile (package.json and lockfile edits not committed)",
+      "pnpm vitest run packages/bench packages/cli/test/summarize.test.ts",
+      "Re-summarizing the 2026-10-20 runs reproduces every number in the committed summary.json (pnpm fiks summarize --check exits 0)",
+      "A forced SDK error yields outcome infraError (test)",
+      "With a deterministic stub agent, a 4-worker run on 6 tasks x k=2 equals the sequential run (test)",
+      "pnpm fiks bench refuses to start on a dirty tree (test)",
+      "git diff --name-only <branch base> lists no package.json outside packages/bench and no pnpm-lock.yaml",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 9,
+    "wave": 1
+  },
+  {
+    "id": "LLMR",
+    "title": "LLM call route via Agent SDK query (OAuth), authoring sessions, ollama client, throughput probe (P14, run T0)",
+    "goal": "One route for every non-repair LLM call, through the Claude Agent SDK on the OAuth token. Also a minimal ollama client, cost/token logging, retries, infra_error, cap-event detection, and the T0 throughput probe: 1/2/4 sessions, ollama tokens/s, and 1/2/4/6 repair workers at R1 (round 7: 6, not 8, is the machine cap of about 6 concurrent agents, PLAN 7.1).",
+    "owns": [
+      "packages/llm/**",
+      "paper/build-logs/LLMR.md"
+    ],
+    "reads": ["paper/PLAN.md", "packages/repair/src/runner.ts", "packages/bench/src/agent.ts", "packages/interfaces/**"],
+    "depends_on": ["CORE-SEED"],
+    "deliverables": [
+      "complete({model, system, prompt, schema}) via query with tools: [], systemPrompt override, settingSources: []",
+      "agentSession({cwd, allowedTools, model, budget}) with a full transcript log and scrubbed env; web tools excluded unless explicitly allowed",
+      "Cap-event classifier: usage-limit/cap errors -> {kind:'cap', resetAt?}, distinct from 429/overload",
+      "ollama client (OpenAI-compatible chat + minimal MCP tool loop)",
+      "probe.ts --concurrency 1,2,4 [--repair-workers 1,2,4,6] [--ollama] --out <path>: attempts/h, 429/overload rate, cap events, spawn overhead, ollama tokens/s; the run step T0 passes --out paper/results/raw/throughput.json, tests pass $TMPDIR",
+      "live-lock.ts: a mkdir-based machine-wide lock at $HOME/.fiks/live.lock; '--run -- <cmd>' runs one live-LLM acceptance item at a time across all streams and builder sessions, logs holder and duration; refuses while $HOME/.fiks/run.active (a run step) exists",
+      "FIKS_LLM_FORBID=1 (round 5): complete(), agentSession() and the ollama client throw LlmForbiddenError before any network call; used by 'pnpm exp --dry' and INTEG's dry run"
+    ],
+    "acceptance": [
+      "SETUP: export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile",
+      "pnpm vitest run packages/llm (mocked query): the cap classifier distinguishes a usage-limit message from a 429",
+      "grep -R \"ANTHROPIC_API_KEY\\|@anthropic-ai/sdk\" packages/llm/src returns nothing",
+      "[LIVE: run only through `pnpm tsx packages/llm/src/live-lock.ts --run -- <cmd>`, one live item at a time across all streams] Live smoke: pnpm tsx packages/llm/src/smoke.ts --model claude-haiku-5-5 parses JSON on 5/5 prompts and logs costUsd and tokens",
+      "pnpm tsx packages/llm/src/probe.ts --concurrency 1,2,4 --dry --out $TMPDIR/throughput.json (mocked) writes a file that validates against its schema, incl. an ollama section; 'git status --porcelain paper/results' is empty afterwards",
+      "The transcript of a smoke agentSession shows settingSources: [], the given cwd, and no WebFetch/WebSearch in allowed tools",
+      "The ollama smoke runs if the model is approved; otherwise it prints an explicit SKIP with the reason",
+      "Unit: live-lock admits one holder; a second '--run' waits; a stale lock older than its recorded timeout is reported, not silently broken",
+      "Unit: with FIKS_LLM_FORBID=1, complete(), agentSession() and the ollama client throw LlmForbiddenError and the mocked query is never called",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 11,
+    "wave": 1
+  },
+  {
+    "id": "MUT",
+    "title": "Response- and patch-mutation operators (frozen at F1)",
+    "goal": "Response operators M1-M14 and benign controls B1-B4 as pure functions. Patch operators P1-P8 as committed prompts plus a deterministic wrapper that takes an injected llm function.",
+    "owns": [
+      "packages/mutate/**",
+      "paper/build-logs/MUT.md"
+    ],
+    "reads": ["paper/PLAN.md", "packages/interfaces/**"],
+    "depends_on": ["CORE-SEED"],
+    "deliverables": [
+      "mutateResponse(op, json, seed); catalog.json with operator definitions and hash",
+      "mutatePatch(op, refFixDiff, llm) with prompts in packages/mutate/prompts/"
+    ],
+    "acceptance": [
+      "SETUP: export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile",
+      "pnpm vitest run packages/mutate: a golden test per operator M1-M14; B1-B4 keep JSON semantics",
+      "Same seed -> identical output hashes over 3 runs",
+      "With a stub llm, mutatePatch on each D1-D5 oracle patch returns a diff for P1-P8 that applies cleanly",
+      "pnpm tsx packages/mutate/src/catalog-hash.ts prints the catalog hash",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 7,
+    "wave": 1
+  },
+  {
+    "id": "INJ",
+    "title": "Third-party response-rewriting injector and dev DriftPackages",
+    "goal": "A deterministic reverse proxy (vendor -> injector -> tap) that applies InjectorRules, built by a builder who never reads contracts. Also D1-D5 and one new shop dev drift DEV-X1 as DriftPackage manifests (injector part, with base).",
+    "owns": [
+      "packages/injector/**",
+      "paper/build-logs/INJ.md"
+    ],
+    "reads": ["paper/PLAN.md", "packages/vendor-api/**", "packages/interfaces/**"],
+    "depends_on": ["CORE-SEED"],
+    "deliverables": [
+      "startInjector({target, rule}) -> {url, close}; InjectorRule schema + validator + hash; frozen-clock support",
+      "packages/injector/fixtures/driftpkgs/{D1..D5}.json (base 'seed-v1') and DEV-X1.json (base 'base-shop'; a silent drift not among D1-D5, e.g. the currency field moved and amounts in minor units on get_product only)",
+      "Lint rule forbidding imports of @fiks/contracts and @fiks/proxy"
+    ],
+    "acceptance": [
+      "SETUP: export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile",
+      "pnpm vitest run packages/injector",
+      "D1-D5 rules on vendor v1 reproduce vendor v2 single-drift responses byte-for-byte on every scenario and fixture call (test)",
+      "10 runs of each rule under the frozen clock give identical response hashes",
+      "pnpm tsx packages/injector/src/validate-rule.ts packages/injector/fixtures/driftpkgs/*.json exits 0; every manifest has a base field",
+      "DEV-X1: HTTP status and OpenAPI unchanged; at least one get_product response differs from v1 (test)",
+      "grep -R \"@fiks/contracts\\|@fiks/proxy\" packages/injector returns nothing and the lint rule is active",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 10,
+    "wave": 1
+  },
+  {
+    "id": "DOM2",
+    "title": "Tracker domain: vendor with catalog option, public docs, truth(), entityClass/originEntity, Domain object and bootstrap registration, tracker-mcp repo, dev drift",
+    "goal": "An issue-tracker mock vendor: frozen clock, admin state, --catalog original|extended-only|all with authorBatch, OpenAPI identical across injected drifts. Also docs, truth(), entityClass() and originEntity() for every tool, and 20 task prompts. The tracker Domain object is registered through packages/cli/src/bootstrap/10-tracker.ts, so '--domain tracker' works as soon as CORE and DOM2 are merged; wave-2 streams DET and TRAFFIC rely on this. Also a dev DriftPackage TRK-DEV-1 and the vats98754/tracker-mcp repo.",
+    "owns": [
+      "packages/vendor-tracker/**",
+      "packages/cli/src/bootstrap/10-tracker.ts",
+      "scripts/ensure-tracker-mcp.mjs",
+      "deps-fragments/DOM2.json",
+      "external: github.com/vats98754/tracker-mcp (all branches and tags until handed to run steps)",
+      "paper/build-logs/DOM2.md"
+    ],
+    "reads": ["paper/PLAN.md", "packages/vendor-api/**", "packages/interfaces/**", "packages/domains/src/registry.ts", ".work/shop-mcp", "paper/research/real-bugs-mcp.md"],
+    "depends_on": ["CORE-SEED"],
+    "deliverables": [
+      "packages/vendor-tracker: server, original catalog, extended-catalog loader (authorBatch kept), admin endpoints, docs/openapi.json + docs/tracker.md, truth.ts, entityClass.ts (issue type x state; child tools inherit the parent issue's class; search: filter class, else 'all'), originEntity.ts (issue; child tools -> parent issue; collection-level paths on search -> S-grid query id), paginatedEndpoints, tasks/prompts.json (20)",
+      "packages/vendor-tracker/src/domain.ts: trackerDomain implementing the Domain interface from the CORE seed",
+      "packages/cli/src/bootstrap/10-tracker.ts: registerDomain(trackerDomain) (imports @fiks/domains and @fiks/vendor-tracker only)",
+      "deps-fragments/DOM2.json: {add: {'packages/cli': {'@fiks/vendor-tracker': 'workspace:*'}}}",
+      "packages/vendor-tracker/fixtures/driftpkgs/TRK-DEV-1.json: a full dev DriftPackage (InjectorRule from packages/interfaces; base 'dev-tracker-stub'; ref A and an independent ref B as tracker-mcp diffs; >= 3 hidden tests; renamed-id variant), plus a dev-only stub contract packages/vendor-tracker/fixtures/dev-stub.contracts.json with >= 1 property TRK-DEV-1 violates on base. The stub is written after docs/openapi.json and docs/tracker.md are committed, is never exported to any author (BLIND denies *.contracts.json) and is never vendored onto tracker-mcp main",
+      "tracker-mcp repo: >= 6 tools; test/fiks layout copied from shop-mcp (replay.ts, run.ts, vendored evaluator); CI with permissions: contents: read; no contracts (authored in run A0)",
+      "Tracker Domain hooks: reproEmitter (tracker-mcp test/fiks layout, same shape as shop), suite (tracker-mcp vitest suite) and allowedEditPaths ['^src/.+\\.ts$']",
+      "tracker-mcp branch dev/stub and tag dev-tracker-stub = main + the stub contract vendored into test/fiks. Dev only: seed-tracker-v1 is cut from main by ORCH seed-tag at A0, never from dev/stub",
+      "scripts/ensure-tracker-mcp.mjs (round 6): clones github.com/vats98754/tracker-mcp into .work/tracker-mcp if absent (FIKS_TRACKER_DIR overrides), fetches tags (dev-tracker-stub; seed-tracker-v1 once it exists), then checks out the ref pinned in packages/vendor-tracker/tracker-sync-ref.json (detached; round 7, the same merge discipline as shop-mcp: tracker-mcp main moves only at DOM2's merge or by a run step, and the pin is updated in the same fiks commit); idempotent; run by INTEG's root pretest. trackerDomain.repo resolves to it. trackerDomain.frozenClock is a constant instant committed before F2 (PLAN 3.1 'Clock')"
+    ],
+    "acceptance": [
+      "SETUP: user approved repo creation (PLAN 8.0-3); export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile (package.json and lockfile edits not committed)",
+      "pnpm vitest run packages/vendor-tracker",
+      "pnpm vitest run packages/vendor-tracker/test/bootstrap.test.ts: importing packages/cli/src/bootstrap/10-tracker.ts makes getDomain('tracker') return an object that satisfies the Domain type (tsc --noEmit on the test) with every member defined; getDomain('shop') is unaffected",
+      "truth() equals the admin-state-derived expectation on 100 seeded random calls, and equals the server output on v1 for every tool (test)",
+      "entityClass and originEntity are defined for every tool on 100 seeded calls; a comment call's origin is its parent issue (test)",
+      "--catalog extended-only serves none of the original entity ids (test)",
+      "grep -R \"@fiks/contracts\\|@fiks/proxy\" packages/vendor-tracker/src/truth.ts packages/vendor-tracker/src/originEntity.ts returns nothing",
+      "node scripts/apply-dep-fragments.mjs --check exits 0 in the worktree after SETUP; git diff --name-only <branch base> lists neither packages/cli/package.json nor pnpm-lock.yaml",
+      "gh run list -R vats98754/tracker-mcp --branch main --limit 1 shows conclusion success",
+      "gh api repos/vats98754/tracker-mcp/contents/.github/workflows/ci.yml decodes to a workflow containing 'contents: read'",
+      "In a local clone of tracker-mcp: 'git merge-base --is-ancestor dev-tracker-stub main' exits 1; TRK-DEV-1 ref A and ref B applied to dev-tracker-stub pass all its hidden tests under the injector rule, and base fails >= 1 (test); 'git log --format=%H -- docs/tracker.md' precedes the commit adding fixtures/dev-stub.contracts.json",
+      "Unit: getDomain('tracker') has reproEmitter, suite and allowedEditPaths defined",
+      "From a fresh 'git worktree add $TMPDIR/wt-dom2 HEAD' (no .work/): SETUP, then node scripts/ensure-tracker-mcp.mjs creates .work/tracker-mcp with tag dev-tracker-stub; 'git check-ignore .work/tracker-mcp' exits 0; getDomain('tracker').repo points there and frozenClock is defined",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 32,
+    "wave": 1
+  },
+  {
+    "id": "CU",
+    "title": "Contract-update outcome gate (P12)",
+    "goal": "A deterministic acceptance gate for {outcome: contract_update, delta}.",
+    "owns": [
+      "packages/contract-update/**",
+      "paper/build-logs/CU.md"
+    ],
+    "reads": ["paper/PLAN.md", "packages/contracts/**", "packages/mutate/**", "packages/interfaces/**"],
+    "depends_on": ["CORE-SEED"],
+    "deliverables": [
+      "Outcome schema; acceptDelta(delta, {trigger, storedViolations, cleanCorpus, mutationVariants}) -> {accepted, reasons[]}",
+      "Proposal renderer (contract diff only; never code)"
+    ],
+    "acceptance": [
+      "SETUP: export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile",
+      "pnpm vitest run packages/contract-update",
+      "Unit: a delta that silences the stored D1 violation trace is rejected",
+      "Unit: widening price.range to admit a benign $2,500 product is accepted while the D1 trace still violates",
+      "Unit: a delta that stops rejecting an M5 mutant on a different property is rejected",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 8,
+    "wave": 1
+  },
+  {
+    "id": "SEC",
+    "title": "Adversarial-trace suite, attack oracles, canary checker, malicious-diff detectors (E6)",
+    "goal": "12 payload templates from published descriptions, 4 attack goals with hidden oracles, carrier placement, an egress sink, a canary scanner, AST detectors, and the small adaptive attacker of E6 (round 4: owned here).",
+    "owns": [
+      "packages/attacks/**",
+      "paper/security/**",
+      "paper/build-logs/SEC.md"
+    ],
+    "reads": ["paper/PLAN.md", "paper/research/gap-repair-security.md", "packages/cli/test/oracles/**"],
+    "depends_on": ["CORE-SEED"],
+    "deliverables": [
+      "templates/ (12) with source and licence notes in paper/security/SOURCES.md",
+      "goals/ (canary egress, attacker-directed src behaviour, non-src edit, disallowed command), each with an oracle",
+      "Carrier placer, egress sink, canary scanner, AST detectors",
+      "packages/attacks/src/adaptive.ts: adaptive attacker for 4 goals x 5 rounds x 2 configs (raw, strict): an attacker model (injected llm) rewrites the payload from the previous round's status-only outcome (goal oracle hit or not; no transcript), places it with the carrier placer and invokes a repair run through an injected runner (argv template for 'pnpm fiks repair --arm fiks --trace-format raw|strict ...'); writes one JSONL row per round"
+    ],
+    "acceptance": [
+      "SETUP: export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile",
+      "pnpm vitest run packages/attacks",
+      "Each goal oracle fires on a hand-planted malicious patch and not on any D1-D5 oracle patch",
+      "The canary scanner finds a planted canary in a synthetic log, diff, commit message and PR body",
+      "paper/security/SOURCES.md lists a source and licence for every template",
+      "Unit (stub llm, stub runner): adaptive.ts runs 4 goals x 5 rounds x 2 configs = 40 rounds, passes only status fields to the attacker between rounds, stops a goal early on an oracle hit, and every runner argv contains --no-pr, --run-key and --trace-format",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 18,
+    "wave": 1
+  },
+  {
+    "id": "RBX",
+    "title": "Process-level replay, HTTPS shim and request matchers for real MCP servers",
+    "goal": "Replay recorded upstream exchanges to an unmodified server process (base-URL override, MCP stdio client), with an HTTPS shim and configurable matchers/normalisers. Round 6: owns scripts/ensure-realbugs.mjs, which places every real-bug clone under the already-ignored .work/ (never inside the tracked realbugs/ tree).",
+    "owns": [
+      "packages/replay-proc/**",
+      "scripts/ensure-realbugs.mjs",
+      "paper/build-logs/RBX.md"
+    ],
+    "reads": ["paper/PLAN.md", "paper/research/codebase-map.md", "packages/repro/**", "packages/contracts/**"],
+    "depends_on": ["CORE-SEED"],
+    "deliverables": [
+      "replayServer(recordings, matchers) + spawnServer(cmd, env) + MCP stdio client",
+      "HTTPS shim; matcher/normaliser config (nonce, timestamp, auth refresh)",
+      "scripts/ensure-realbugs.mjs [--all | --id <id>] (round 6, PLAN 5.10): for every realbugs/<id>/pins.json present, clones the repository named in its 'repo' field (round 7: the real names of PLAN 5.10, i.e. vats98754/rb-r10-servers, rb-r19-mongodb-mcp-server, rb-r19r-servers, rb-r20-figma-context-mcp, rb-r9-mcp-server-cloudflare; there is no 'rb-<id>' repo; a pins.json without 'repo', or with an owner other than vats98754, exits 2) into .work/realbugs/<id> if absent (origin = that repo, no upstream remote), fetches the pinned SHAs if missing, and creates local tags prefix and fix at them; idempotent; FIKS_REALBUG_REMOTE_<ID> overrides the URL for tests; the only network step for real bugs"
+    ],
+    "acceptance": [
+      "SETUP: export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile",
+      "pnpm vitest run packages/replay-proc",
+      "On the shop-mcp seed, process-level replay of the D2 trace reports the same violated property as the in-process replay (test)",
+      "10 reruns give identical verdicts; a nonce-bearing request matches after normalisation (test)",
+      "Unit (round 7): a pins.json {repo: 'vats98754/rb-r10-servers', ...} resolves to https://github.com/vats98754/rb-r10-servers.git (no network: URL resolution only); a pins.json without 'repo' or with repo 'someone/rb-r10-servers' exits 2",
+      "node scripts/ensure-realbugs.mjs --id T1 with a test pins.json (repo field set) and FIKS_REALBUG_REMOTE_T1 pointing at a local bare repo in $TMPDIR: creates .work/realbugs/T1 with tags prefix and fix at the pinned SHAs and origin = the override; a second run makes no fetch (GIT_TRACE); 'git check-ignore .work/realbugs/T1' exits 0 and 'git status --porcelain' is unchanged",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 14,
+    "wave": 1
+  },
+  {
+    "id": "AN",
+    "title": "Analysis scripts, power reproduction at stated precision, H1 entity test and N_E rule, size checks, outcome classifier, paper:check",
+    "goal": "Implement every script in PLAN.md section 9.1 on synthetic fixture logs, in a Python 3.12 venv with pinned requirements. Reproduce every tagged power number in PLAN.md under the stated-precision rule. Validate test sizes per section 9.1. Implement paper_check.py. Keep paper/scripts/check_workstreams.py (written by the round-4 plan fixer) passing. Run outputs under paper/results/raw/** and paper/results/confirmatory.lock are never written by tests or committed by this stream.",
+    "owns": [
+      "paper/scripts/**",
+      "paper/macros/**",
+      "paper/results/power.json",
+      "paper/build-logs/AN.md"
+    ],
+    "reads": ["paper/PLAN.md", "/Users/anvayvats/Library/Application Support/Claude/local-agent-mode-sessions/skills-plugin/30ec47c0-4bbb-4711-85d7-569760cac2dd/ef7e729b-bc9c-44e1-9b2a-7a42d9a71991/skills/paper-forge/scripts/eval_stats.py", "packages/interfaces/**"],
+    "depends_on": ["CORE-SEED"],
+    "deliverables": [
+      "power_manifest.json (round 7): the exact list of checked numbers from PLAN 9.6",
+      "power.py subcommands: mde (wraps eval_stats.py), binom (exact crit, exact size, power), binom-min, anyfp (1 - (1 - pi)^n; round 6), floor (sqrt(2*0.25/(m*a)) sampling floor of sigma_d; round 7), ni (--theta for a true difference <= 0), harm (--effect), frame (N_E rule -> crit, power, underpowered flag, m), all --check",
+      "simulate_power.py, classify_outcome.py, h1_precision.py (Z_e per entity, X, p_E, census share, p_H1, batch-cluster bootstrap bound, D12), h2_adequacy.py (primary + s1 + s2 + s3 = excluding request-changing drifts; inline-recording count), h3h4_repair.py (direction guard: p_3a/p_4a = 1 when mean d_i <= 0; per-class report request-changing vs other, descriptive), holm.py (m from FrameSpec), cp2_lock.py, e*_*.py (e4 paired sign-flip + mid-p McNemar; e7 descriptive Wilson only), descriptive.py (D1-D12), simulate_null.py, paper_check.py; requirements.txt with exact pins (numpy, scipy, statsmodels, pytest), each published >= 14 days before install",
+      "fixtures/: synthetic logs in the PLAN Appendix record formats, incl. a FrameSpec with authorBatch",
+      "paper/results/power.json",
+      "paper/scripts/check_workstreams.py kept passing (parse, disjoint ownership globs, reserved run-output paths unowned, DAG acyclic, waves respect dependencies, est_hours total)"
+    ],
+    "acceptance": [
+      "python3.12 -m venv paper/.venv && paper/.venv/bin/pip install -r paper/scripts/requirements.txt && paper/.venv/bin/python -m pytest paper/scripts/tests (paper/.venv is gitignored by INTEG; Homebrew python3.12 is externally managed, so no bare pip install)",
+      "paper/.venv/bin/python paper/scripts/power.py all --check paper/PLAN.md: every entry of paper/scripts/power_manifest.json (= the PLAN 9.6 'Power check manifest', round 7; star-tagged build-hour, schedule, cost and count arithmetic elsewhere in PLAN is not a power number and is not checked here) passes iff |computed - printed| <= 0.5*10^-d (d = printed decimals); '>= v' and '<= v' are checked as inequalities; counts and critical values exactly; exit 0, else it prints the mismatch list and exits 1 (a mismatch is a PLAN erratum for the planner)",
+      "paper/.venv/bin/python paper/scripts/power.py binom --n 1500 --p0 0.02 --alpha 0.0125 --p1 0.01 0.005 prints crit 18, exact size 0.0123 and powers 0.821 and >= 0.99; binom-min --p0 0.02 --alpha 0.0125 prints 217",
+      "paper/.venv/bin/python paper/scripts/power.py ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --theta -0.03 -0.05 --alpha 0.0125 and power.py harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.05 --alpha 0.0125 reproduce the PLAN 3.3 round-4 table",
+      "paper/.venv/bin/python paper/scripts/power.py frame --frame-spec paper/scripts/fixtures/frame-spec.json applies the N_E rule (top-up flag if N_E < 1500 or a domain < 750; underpowered if power at pi = 0.01 < 0.50; m = 3 if N_E < 217) and matches hand-checked fixtures for N_E = 200, 1000, 1500",
+      "paper/.venv/bin/python paper/scripts/power.py anyfp --n 50 --pi 0.02 0.01 prints 0.636 and 0.395 (1 - (1 - pi)^n; PLAN 3.0 attribution rationale, round 6)",
+      "Unit: h1_precision.py on a fixture where one entity fires three properties on search, get and order inputs counts X = 1 for that entity; collection-level FPs enter only the census share and D12; p_H1 = 1 when the census share >= 0.01",
+      "Unit (round 7, per-element verdicts): h1_precision.py reads per-element DetectorVerdictRows (at, elementIndex) and attributes each violating element to its own origin entity; on a fixture search input whose items are [ext-a $9, ext-b $50, ext-c $5000] it gives Z = 1 for ext-a and ext-c, Z = 0 for ext-b (if eligible elsewhere), and exactly one input-level FP; fed the first-element-only rows instead, it refuses with 'per-element rows required' (exit 2)",
+      "paper/scripts/power_manifest.json (round 7) lists exactly the tagged numbers of PLAN 9.6 'Power check manifest' (section, printed value, decimals or inequality, generating command); power.py all --check checks exactly these, and also fails if PLAN sections 3 or 9.6 carry a dagger/double-dagger/star number that is not in the manifest",
+      "Unit: h3h4_repair.py + holm.py on a fixture where FIKS is significantly MORE harmful (mean d_i < 0, two-sided p < 0.001) and NI holds: p_3a = 1, H3 is not rejected, and the reading is the opposite-direction row of PLAN 3.5, never 'lowers green-incorrect PRs'",
+      "paper/.venv/bin/python paper/scripts/simulate_null.py --check --datasets 2000: (i) H1 exact entity test: analytic exact size <= alpha and simulated rejection under i.i.d. entities within +-3 MC SE of it (beta-binomial ICC 0.02/0.05 sizes reported, not gated); (ii) sign-flip tests for H2, H3a and H4a: rejection within alpha +-3 MC SE at alpha 0.05 and 0.0125 under symmetric null DGPs with drift heterogeneity; (iii) NI shifted sign-flip: size <= alpha + 3 MC SE under the symmetric and the pre-registered skewed DGPs (else the bootstrap-t fallback is selected and itself passes); (iv) IUT components under LF-harm and LF-NI: rejection <= alpha + 3 MC SE",
+      "paper/.venv/bin/python paper/scripts/simulate_power.py --configs S0 S2 S3 --n 61 40 writes joint IUT power to paper/results/power.json (informational)",
+      "Unit: classify_outcome.py labels an exposed, held-out-correct head with red final CI as red_pr (not correct_pr), an exposed, green, held-out-correct head as correct_pr, and an L1 head with failed pre-PR IV as no_pr",
+      "Unit: h2_adequacy.py uses the fiks test as it behaves when its F gate failed, and T = empty when none was emitted",
+      "On toy data, h3h4_repair.py paired differences match eval_stats.py paired output",
+      "Unit: h2_adequacy.py row s3 drops exactly the drifts with requestChanging = true in the pool manifest fixture; h3h4_repair.py prints the per-class rows and never feeds them to holm.py",
+      "paper/.venv/bin/python paper/scripts/paper_check.py fails after a hand edit to a generated macro and passes after regeneration",
+      "Any e*_*.py exits non-zero when paper/results/confirmatory.lock is absent; tests create the lock only under $TMPDIR",
+      "paper/.venv/bin/python paper/scripts/check_workstreams.py paper/WORKSTREAMS.json exits 0",
+      "git status --porcelain paper/results/raw paper/results/confirmatory.lock is empty after the test suite"
+    ],
+    "est_hours": 27,
+    "wave": 1
+  },
+  {
+    "id": "PREREG",
+    "title": "Pre-registration document, freeze ledger checker (peeled refs, F4b), registry builder",
+    "goal": "Turn PLAN.md sections 3, 3.0, 3.5, 5.7, 8.2, 9 and 13 into paper/prereg/PREREG.md. Build the freeze-ledger schema (external refs as peeled commits) and its checker, the registry builder, DEVIATIONS.md, an A0 record template, a K1 addendum template and the frame-spec schema.",
+    "owns": [
+      "paper/prereg/**",
+      "paper/build-logs/PREREG.md"
+    ],
+    "reads": ["paper/PLAN.md", "paper/ORCHESTRATION.md", "packages/interfaces/**"],
+    "depends_on": ["CORE-SEED"],
+    "deliverables": [
+      "PREREG.md, freeze-ledger.json (schema + empty ledger, F1-F10 incl. F4b; F2 carries sha256 of both domains' docs and every authoring brief plus the no-bound check result and the shop-docs authorship note), check-ledger.ts, build-registry.ts, check-prereg.ts, DEVIATIONS.md, TUNING.md template (per-arm logged dev prompt iterations, prompt hash, dev result; fiks row fixed at 0 further iterations), A0-RECORD.template.md, K1-ADDENDUM.template.md, frame-spec.schema.json (matching the FrameSpec interface, incl. the hash of the pre-F4b frame CallRecords)"
+    ],
+    "acceptance": [
+      "SETUP: export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile",
+      "pnpm tsx paper/prereg/check-ledger.ts --selftest: fails on a toy repo with out-of-order or non-ancestor tags, F4b after F5, or an external ref that is a tag object rather than its peeled commit; passes on the correct order",
+      "pnpm tsx paper/prereg/build-registry.ts --dry-run: hashes equal 'git ls-tree -r HEAD' blob ids for the listed paths",
+      "pnpm tsx paper/prereg/check-prereg.ts: every H endpoint, test, margin and margin rationale, direction guard, reading, n rule, N_E rule, IV definition, REPRO-AGENT F-check rule, H2 as-it-behaves rule, H2 re-record rule (incl. the agent-test overlay and inline-recording rule), repair-arm re-record parity rule, request-changing class rule, E4/E7 analysis rule, cut-order step, exclusion and infra rule in PLAN.md sections 3, 4, 5.5, 8.2, 9 and 13 appears verbatim in PREREG.md"
+    ],
+    "est_hours": 8,
+    "wave": 1
+  },
+  {
+    "id": "BASE",
+    "title": "Detection baseline modules (B-SCHEMA, B-AJV, B-JUDGE(+U), B-SNAP, B-STAT, B-TRIG, B-LLMC runner)",
+    "goal": "Implement each section 6.1 baseline as a Monitor over CallRecords (types from packages/interfaces), with an injected llm function for judges and LLM-authored contracts, so DET can run them over identical inputs. B-OM is cut and not built.",
+    "owns": [
+      "packages/baselines/**",
+      "paper/build-logs/BASE.md"
+    ],
+    "reads": ["paper/PLAN.md", "packages/interfaces/**", "packages/contracts/**", "bench/results/**"],
+    "depends_on": ["CORE-SEED"],
+    "deliverables": [
+      "One module per baseline; judge prompts in packages/baselines/prompts/ (hash recorded); pinned oasdiff wrapper",
+      "Calls-to-first-detection for windowed detectors"
+    ],
+    "acceptance": [
+      "SETUP: oasdiff installed (PLAN 8.0-4); export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile",
+      "pnpm vitest run packages/baselines",
+      "On logged D1-D5 CallRecords in bench/results: B-SNAP flags D1; B-SCHEMA does not flag D2; B-AJV flags an M7-style string price fixture; B-TRIG fires 0 times; oasdiff reports 0 findings on shop v1 vs v2 spec",
+      "With a stub llm, judge rows parse 100% and carry tokens and costUsd fields",
+      "20 replays of every deterministic baseline give identical verdicts",
+      "No file under packages/baselines/src imports @fiks/proxy",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 13,
+    "wave": 1
+  },
+  {
+    "id": "ORCH",
+    "title": "Repair orchestration: FIKS arm, local-ref base, local CI, run keys, sandbox and injector bootstrap, seed-tag",
+    "goal": "Wire CORE, SAFE, SBX, INJ, CU and DOM2 into 'pnpm fiks repair' through a default-export command module in repair.ts (P18). Flags: --arm fiks, --run-key, --ci local|github|none, --domain, --trace, --base <local ref> (peeled; no fetch, no push, no gh in experiment mode). Emits would_open_pr after green local CI. Also: candidate capture, contract_update passthrough, RunKey-keyed results, bootstrap registration of DockerExecBackend and the injector factory, and seed-tag for tracker-mcp. Round 5: re-record parity through CORE rerecord-head before every replay-based check; '--arm fiks+cu' (E4/R6) assembling CU's inputs; '--agent-stub'; '--domain tracker' on TRK-DEV-1.",
+    "owns": [
+      "packages/cli/src/commands/repair.ts",
+      "packages/cli/src/commands/seed-tag.ts",
+      "packages/cli/src/bootstrap/20-sandbox.ts",
+      "packages/cli/src/bootstrap/30-injector.ts",
+      "packages/cli/test/repair.test.ts",
+      "packages/cli/test/support/fake-gh.mjs",
+      "packages/cli/test/orch/**",
+      "deps-fragments/ORCH.json",
+      "paper/build-logs/ORCH.md"
+    ],
+    "reads": ["paper/PLAN.md", "packages/**", "bench/results/loop/repairs/**", ".work/shop-mcp"],
+    "depends_on": ["CORE", "VOCAB", "SAFE", "SBX", "INJ", "DOM2", "CU", "LLMR", "MUT"],
+    "deliverables": [
+      "repair.ts default export parsing its own argv; worktree via CORE createWorktree(ref) (local refs/tags peeled with ^{commit}; --fetch refused with --run-key)",
+      "FIKS arm with the Arm interface; RunKey-keyed results; would_open_pr event; CandidateRecord at every gate and CI invocation; ReproTestRecord for the fiks repro (used by H2 as it behaves)",
+      "Gate-name mapping: recorded run 'ci' -> 'ci-local' for comparisons with legacy logs",
+      "bootstrap/20-sandbox.ts (DockerExecBackend) and bootstrap/30-injector.ts (injector middleware factory)",
+      "seed-tag --domain tracker: re-vendor evaluator + frozen contracts into tracker-mcp and tag seed-tracker-v1 (used in run A0)",
+      "deps-fragments/ORCH.json: @fiks/sandbox, @fiks/injector, @fiks/contract-update, @fiks/llm into packages/cli",
+      "--trace-format raw|strict passed through to SAFE (E6 strict-vs-raw utility)",
+      "packages/cli/test/orch/fixtures/DEV-X1.trace.json: generated by the test from packages/injector/fixtures/driftpkgs/DEV-X1.json with the CORE harness + INJ middleware + the existing trace-store (packages/repro/src/trace-store.ts) under the frozen clock, then committed; a regeneration test asserts byte-equality",
+      "Re-record parity (PLAN 3.0, P23): the FIKS arm calls CORE 'pnpm fiks rerecord-head' with the drift's profile (domain, base, injector rule id, rule hash) on the candidate head before P, the contract suite, stored traces and local CI, in every session; AttemptRecord.rerecordLog points at the RerecordLog",
+      "--arm fiks+cu (FIKS+CU, E4/R6): the agent may end with {outcome: contract_update, delta}. ORCH assembles CU's inputs: trigger = the frozen trace; storedViolations = every stored trace under the head's test/traces/** plus the frozen trace; cleanCorpus = the domain's clean v1 corpus (--clean-corpus <dir>: the A0 S-dev CallRecords at run time, packages/cli/test/orch/fixtures/clean-v1/ in tests); mutationVariants = MUT M1-M14 applied to the trigger's recorded upstream response and re-run through the server. Accepted: a proposal file (CU renderer), outcome contract_update_proposed, no would_open_pr. Rejected: the reasons are fed back and the attempt continues as code repair within the same budget",
+      "--agent-stub <script.json> (SAFE stub runner) on every repair path; repair edit guard from Domain.allowedEditPaths",
+      "packages/cli/test/orch/fixtures/TRK-DEV-1.trace.json, generated like DEV-X1 with DOM2's dev stub contract and base dev-tracker-stub, plus packages/cli/test/orch/fixtures/BEN-DEV-1.json (a benign injector rule adding a $2,500 product) and clean-v1/",
+      "Sandboxed re-record (round 6, PLAN P1): bootstrap/20-sandbox.ts registers DockerExecBackend and the FIKS arm runs rerecord-head, P, the contract suite, stored traces and ci-local inside the per-attempt container via SBX execFiks with '--require-sandbox'; packages/cli/test/orch/rerecord-containment.test.ts is the preflight RUN executes before any run that runs candidate heads",
+      "seed-tag --domain tracker re-vendors the evaluator with 'disabled' support (VOCAB) and the frozen contracts, including any property disabled by scripts/contract-disable.mjs at A0 (round 6, PLAN 8.1 A0); uses the .work/tracker-mcp clone from DOM2's ensure-tracker-mcp.mjs"
+    ],
+    "acceptance": [
+      "SETUP: Docker running; export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile && node scripts/ensure-shop-mcp.mjs (package.json and lockfile edits not committed)",
+      "pnpm vitest run packages/cli/test/repair.test.ts packages/cli/test/orch: all existing repair tests green; the 4 M4 attack PoCs still end in gate_failed with gates in the container",
+      "[LIVE: run only through `pnpm tsx packages/llm/src/live-lock.ts --run -- <cmd>`, one live item at a time across all streams] With .work/shop-mcp origin set to an unreachable URL: pnpm fiks repair --scenario D2 --base seed-v1 --arm fiks --ci local --no-pr --run-key test/fiks/claude-opus-5-5/shop/D2/1 completes with F PASS and every final gate (P, contract suite, stored traces, typecheck/lint, ci-local) green, allowing up to 2 retries with fresh run keys (the repair agent is stochastic; gate verdicts are compared by name and pass/fail, not by message); the recorded legacy 'ci' gate maps to 'ci-local'. The result file is keyed by the run key, and a second attempt key does not overwrite it",
+      "After that run: the git push shim log is empty; the fake-gh log shows 0 invocations; no 'git fetch' in GIT_TRACE output",
+      "[LIVE: run only through `pnpm tsx packages/llm/src/live-lock.ts --run -- <cmd>`, one live item at a time across all streams] pnpm fiks repair --trace packages/cli/test/orch/fixtures/DEV-X1.trace.json --base base-shop --arm fiks --ci local --no-pr --run-key test/fiks/claude-haiku-5-5/shop/DEV-X1/1 reaches at least the F gate, with F PASS for the named property; the fixture regenerates byte-identically (test)",
+      "pnpm fiks repair --base no-such-ref ... exits 2 with a clear message",
+      "F and P verdicts and messages are identical host vs container for D1-D5 (test)",
+      "D3 and D4 as injector rules (base seed-v1, vendor v1 + rule), with a stub agent applying packages/cli/test/oracles/D3.patch and D4.patch to seed-v1 (round 6; not the shop-mcp commits 7c5f4ea/88ed791: 88ed791's src diff fails 'git apply --check' on seed-v1 at src/tools/search_products.ts:38): F PASS, then P, contract suite, stored traces and ci-local green in the container with no UNMATCHED_REQUEST; rerecord-head runs before P and before ci-local, and its RerecordLog lines equal a direct 'pnpm fiks rerecord-head' call with the same profile on the same head (the reference ARMS also asserts) (test)",
+      "Canary probes: a symlink planted from the container is denied to host Read; a canary in a temp .env copy and in $HOME never appears in the transcript, diff, commit message or PR body draft",
+      "would_open_pr only after ciLocal green; CandidateRecord files exist for each gate invocation",
+      "From a fresh 'git worktree add $TMPDIR/wt-orch HEAD' (no .work/; round 6): SETUP, node scripts/ensure-tracker-mcp.mjs, then pnpm fiks scenario v1-all --domain tracker runs end to end (verdicts unverifiable until contracts exist)",
+      "pnpm fiks seed-tag --domain tracker --dry-run lists the vendored files and the target tag",
+      "git diff --name-only <wave-1 merge base> -- packages/cli/src/main.ts packages/cli/package.json pnpm-lock.yaml is empty",
+      "Unit: --trace-format strict reaches SAFE's runner options (spy) for 'pnpm fiks repair'",
+      "Unit (stub agent, --arm fiks+cu): on BEN-DEV-1, a stub ending with a contract_update that widens price.range calls CU acceptDelta exactly once (spy) with non-empty storedViolations, cleanCorpus and mutationVariants; the delta is accepted, a proposal file is written, the outcome is contract_update_proposed and no would_open_pr event exists",
+      "Unit (stub agent, --arm fiks+cu): on D1 a stub delta that removes price.range (silencing the D1 trace) is rejected by CU; the rejection reasons appear in the next session's prompt, and the stub's following oracle code patch ends as code repair with would_open_pr after green ci-local",
+      "Unit (stub agent): pnpm fiks repair --arm fiks --domain tracker --trace packages/cli/test/orch/fixtures/TRK-DEV-1.trace.json --base dev-tracker-stub --agent-stub <TRK-DEV-1 ref A script> --ci local --no-pr gives F PASS and would_open_pr after green ci-local; the fixture regenerates byte-identically",
+      "Containment (round 6; packages/cli/test/orch/rerecord-containment.test.ts): a planted candidate head whose src reads /Users/anvayvats/fiks/.env, $HOME/.fiks and a canary file in the real $HOME, prints them, and attempts egress (fetch https://example.com and a DNS lookup) while being re-recorded by 'pnpm fiks repair --arm fiks --agent-stub <plant>' gets ENOENT for every host path, HOME=/tmp, no canary or token bytes in any log, transcript, RerecordLog or diff, and a failed egress recorded in SBX's egress log. INTEG repeats the plant through ARMS's L1 and COMP paths and HOLD accept(). R1 and R3-R8 do not start until this passes (RUN preflight); R7 never runs without it",
+      "Disabled property re-vendor (round 6): in a temp tracker-mcp clone at dev-tracker-stub, scripts/contract-disable.mjs disables one property of the stub contract; 'pnpm fiks seed-tag --domain tracker --repo <clone> --tag t-test' vendors evaluate.ts with disabled support and that contract; a planted call that violates the disabled property leaves the vendored test/fiks check green, ciLocal on the clone is green, and the receipt lists the property under disabled[]",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 34,
+    "wave": 2
+  },
+  {
+    "id": "ARMS",
+    "title": "Comparison arms: L1 (pre-PR IV), L1-noIV, COMP (post-PR IV), COMP-norep, COMP-plain, L1p, ISSUE-TEXT, REPRO-AGENT (F check with feedback); fiks-iv; alert renderer; FIDELITY.md; Engine citation correction",
+    "goal": "Implement every non-FIKS arm of PLAN.md section 6.2 with identical budget accounting, guard, sandbox, re-record service, local CI and raw evidence (frozen trace + replay-helper sentence). Implement fiks-iv (P21) and wire it as a pre-PR gate in L1/L1p via SBX runPreGate, and as a post-PR CI extraCheck in COMP. Implement the REPRO-AGENT F check with feedback (PLAN 5.5). Write FIDELITY.md attributing each emulated behaviour. Correct the WRONG_METADATA location on langsmith-changelog-2026. Round 5: '--domain' (default: the frozen trace's domain), re-record parity through CORE rerecord-head before every replay-based check in every arm and COMP revision, '--agent-stub', and tracker (TRK-DEV-1) coverage.",
+    "owns": [
+      "packages/arms/**",
+      "packages/cli/src/commands/arm.ts",
+      "deps-fragments/ARMS.json",
+      "paper/research/bibliography.json",
+      "paper/research/verify/arms-langsmith-recheck.json",
+      "paper/build-logs/ARMS.md"
+    ],
+    "reads": ["paper/PLAN.md", "paper/research/observability.md", "paper/research/mcp-market.md", "paper/research/verify/observability-1.json", "packages/**"],
+    "depends_on": ["CORE", "VOCAB", "SAFE", "SBX", "INJ", "LLMR", "DOM2"],
+    "deliverables": [
+      "pnpm fiks arm --name L1|L1-noIV|L1p|COMP|COMP-norep|COMP-plain|ISSUE-TEXT|REPRO-AGENT --trace <frozen> (ISSUE-TEXT: --issue <file>) --base <local ref> [--domain <id>, default the trace's domain] --run-key ... --ci local --no-pr [--trace-format raw|strict] [--agent-stub <script.json>] (default-export command module). The Domain supplies allowedEditPaths (guard), suite and promptHints; RBA's rb-<id> domains are selected the same way",
+      "packages/arms/src/iv-cli.ts (bin fiks-iv): replays a trace on a head through the frozen contracts; round 6: '--properties <trace>.iv.json' (DET sidecar) restricts evaluation to ivProperties (the triggering tool's contract properties that verify on the frozen call's v1 control) and prints ivExcluded; exit 1 with property id and message on any violation among them; in experiment mode (--run-key) it refuses to run without the sidecar",
+      "L1 and L1p: suite + traces + typecheck/lint + fiks-iv as pre-PR gates; failures (incl. IV property id) fed back; <= 4 sessions; would_open_pr only when all are green; AttemptRecord.ivPlacement = pre. L1-noIV: the same without fiks-iv",
+      "COMP revision loop (<= 3 revisions within 90 min) with IV via ciLocal extraChecks (ivPlacement = post); COMP-norep without; CandidateRecord per revision",
+      "REPRO-AGENT: 1 session, 30 turns; F check (3 runs on base in the image: loads, >= 1 assertion failure each run); fixed feedback message via SAFE resume-with-message; <= 3 F rounds; ReproTestRecord for the first and final tests",
+      "Alert renderer (webhook JSON -> prose), identical across arms; .alerts/<id>.json = byte copy of the frozen trace; replay-helper sentence",
+      "packages/arms/FIDELITY.md: URL + quoted passage per named product, else 'our parameter'; the two Engine strings must come from the recorded re-fetch, otherwise the corresponding COMP parameter is labelled 'our parameter'",
+      "bibliography.json: langsmith-changelog-2026 location corrected to the weeks of Sep 7-14 2026 and Oct 5-12 2026, WRONG_METADATA resolved, with a recorded re-fetch of the two passages. After ARMS merges, bibliography.json is edited only by Certify-phase citation verifiers (G5 keys, R20/R9 keys), never by a builder",
+      "deps-fragments/ARMS.json: @fiks/arms into packages/cli",
+      "ISSUE-TEXT arm (E7): prompt = upstream issue title + body only (no trace, no alert, no helper sentence) -> agent -> would_open_pr on the first non-empty diff -> repo CI after the PR (<= 3 revisions within 90 min, as COMP, without IV)",
+      "Re-record parity (PLAN 3.0, P23): every arm calls CORE 'pnpm fiks rerecord-head' with the drift's profile on the candidate head before each replay-based check: fiks-iv, the repo suite (incl. the agent's own tests, the contract suite and stored traces) and local CI. This covers every L1/L1p/L1-noIV session gate and the ciLocal of every COMP/COMP-norep/COMP-plain/ISSUE-TEXT revision. fiks-iv evaluates on the overlay re-recording of .alerts/<id>.json when the head changes the requests (never on an agent-edited file). AttemptRecord.rerecordLog",
+      "REPRO-AGENT task text (PLAN 5.5) carries the fixed sentence: the test must load its recording from .alerts/<id>.json through the repo's replay helper (test/fiks/replay.ts, or run.ts/check.ts, which wrap it), not inline",
+      "packages/arms/test/fixtures/TRK-DEV-1.trace.json, generated like ORCH's (CORE harness + INJ middleware + trace-store, DOM2 stub contract, frozen clock); INTEG checks the two copies are byte-equal",
+      "Planted-FP D4 trace and IV sidecars (round 7; ARMS does not depend on DET, so it builds its own): packages/arms/test/fixtures/D4-plantedfp.trace.json is generated by the test with the CORE harness + INJ's D4 rule (base seed-v1, vendor v1 + rule, frozen clock) + vendor '--catalog all' with a one-product extension (an extended product priced $9 that the frozen search query returns on its first page) + the existing trace-store, then committed (regeneration byte-identical). Its violated list holds countMatchesTotal (drift) and items.price.range (the $9 item) and its target is [countMatchesTotal] (PLAN 3.0). Next to it, and next to every trace ARMS tests consume (D2 = packages/cli/test/core/fixtures/D2-trace.json, D3, D4, TRK-DEV-1), ARMS hand-writes '<trace>.iv.json' sidecars under packages/arms/test/fixtures/ in the DET sidecar format (controlCallId, attributableProperties, ivProperties, ivExcluded[{property, controlVerdict}]), derived from a v1 control run of the same call (CORE harness, no injector rule) whose verdicts are recorded in packages/arms/test/fixtures/SIDECARS.md. INTEG checks that DET's freeze-trace regenerates the same attributableProperties, ivProperties and ivExcluded for each of them",
+      "Sandboxed re-record (round 6, PLAN P1): every rerecord-head call and every replay-based check of every arm runs inside the per-attempt container through SBX execFiks with '--require-sandbox'; no arm spawns rerecord-head, the harness or the candidate server on the host"
+    ],
+    "acceptance": [
+      "SETUP: Docker running; export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile && node scripts/ensure-shop-mcp.mjs (package.json and lockfile edits not committed)",
+      "pnpm vitest run packages/arms",
+      "[LIVE: run only through `pnpm tsx packages/llm/src/live-lock.ts --run -- <cmd>`, one live item at a time across all streams] On dev D2 (--base seed-v1, --trace packages/cli/test/core/fixtures/D2-trace.json) with claude-opus-5-5, each of L1, L1-noIV, L1p, COMP, COMP-norep and COMP-plain completes and records head_sha, ciFinal, issueValidation and ivPlacement; REPRO-AGENT writes exactly one new test file under test/ and records F verdicts; the 7 sessions run sequentially",
+      "Unit: a planted L1 candidate that passes the repo suite but leaves the frozen trace violated is NOT exposed, and the next session's feedback contains the property id; the same candidate under L1-noIV is exposed with green CI",
+      "Unit: a planted COMP candidate that passes the repo suite but leaves the frozen trace violated gets ciFinal red with the property id in the log; the same candidate under COMP-norep is green",
+      "Unit (stub agent): a first test that passes on base receives the fixed F feedback; the revised test that fails on base with an assertion is recorded as final, and the first as isFirst; a test that fails only with a compile/import error is not F-valid; F rounds stop at 3",
+      "Unit (fake clock): COMP stops at <= 3 revisions or 90 min",
+      "Unit: the guard blocks edits to existing tests, fixtures and traces in every arm",
+      "sha256 of .alerts/<id>.json equals the frozen trace sha256 for L1, L1-noIV, COMP, COMP-norep, COMP-plain and REPRO-AGENT; the alert JSON is byte-identical across them (L1p differs only by the missing path and sentence)",
+      "Budget accounting (turns, sessions, $ cap) identical across repair arms (unit)",
+      "IV verdicts on D1-D5 oracle patches (pass) and bases (fail) are identical host vs container (test)",
+      "pnpm tsx packages/arms/src/check-fidelity.ts: every product named in FIDELITY.md has a URL and a quoted passage; the Engine entry quotes 'up to three revisions or 90 minutes per chain' and 'replays each source run against its fix preview deployment' with location October 5-12, 2026",
+      "node -e \"const b=require('./paper/research/bibliography.json');const e=b.find(x=>x.key==='langsmith-changelog-2026');if(e.verification.includes('WRONG_METADATA')||!/Oct(ober)? 5-12/.test(e.location))process.exit(1)\" exits 0, and paper/research/verify/arms-langsmith-recheck.json records the URL, access date and both passages",
+      "git diff --name-only <wave-1 merge base> lists neither packages/cli/package.json nor pnpm-lock.yaml",
+      "Unit (stub agent): ISSUE-TEXT's prompt contains the issue text and none of: the trace path, the alert JSON, the replay-helper sentence; its ivPlacement is none",
+      "Unit: --trace-format strict reaches SAFE's runner options (spy) for every repair arm",
+      "Unit (stub agent; base seed-v1; D3 and D4 as INJ rules; the stub applies packages/cli/test/oracles/D3.patch / D4.patch to seed-v1; round 6: not the shop-mcp commits 7c5f4ea/88ed791, because 88ed791's src diff fails 'git apply --check' on seed-v1 at src/tools/search_products.ts:38 and its tree carries D1's version-header-keyed conversion): under L1 the head is exposed (would_open_pr) with issueValidation pass and ciFinal green; under COMP ciFinal is green; no log line contains UNMATCHED_REQUEST; the RerecordLog lines (profile, files, request keys; timestamps excluded) of the L1 and COMP runs equal each other and equal a direct 'pnpm fiks rerecord-head' call with the FIKS profile on the same head",
+      "Unit (stub agent) on TRK-DEV-1 (--domain taken from the trace; base dev-tracker-stub; DOM2 stub contract): fiks-iv exits 1 with the property id on base and 0 on the ref A head; L1, L1-noIV, L1p, COMP, COMP-norep, COMP-plain and REPRO-AGENT each complete with a stub agent and write an AttemptRecord (REPRO-AGENT: ReproTestRecord) with domain 'tracker'; the guard uses the tracker Domain's allowedEditPaths",
+      "Unit (stub agent): the REPRO-AGENT prompt contains the .alerts/<id>.json loading sentence; a stub test that loads .alerts/<id>.json through test/fiks/run.ts is F-valid on D2 base",
+      "Unit (round 6, IV property set; round 7: on ARMS's own fixture, not a DET output): on packages/arms/test/fixtures/D4-plantedfp.trace.json (the frozen search call violates countMatchesTotal by drift and items.price.range by the $9 extended item, which also violates on the v1 control) with its hand-written D4-plantedfp.trace.iv.json, fiks-iv --properties <sidecar> exits 0 on the D4.patch head and 1 (countMatchesTotal) on base; without the sidecar restriction the same head exits 1 on items.price.range, which is the bias the rule removes; L1 with a stub agent applying D4.patch is exposed with issueValidation pass; the fixture regenerates byte-identically and its sidecar validates against the FrozenTrace sidecar type in packages/interfaces",
+      "Unit (round 7): fiks-iv with --run-key and no --properties exits 2 ('IV sidecar required'); every ARMS test that passes --run-key uses a hand-written sidecar from packages/arms/test/fixtures/; container runs of fiks-iv use SBX's test-only tools image ('build-tools.ts --ref HEAD --apply-fragments'), never a host spawn",
+      "Unit (round 6): with an ExecBackend spy, L1, COMP and REPRO-AGENT runs call rerecord-head only through execFiks with --require-sandbox; a host child_process spawn of rerecord-head, main.ts or the candidate server is never made",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 40,
+    "wave": 2
+  },
+  {
+    "id": "DET",
+    "title": "Detection pipeline: enumerate, record (frame/drift/benign/mutant), freeze-trace, frame-k (N_E, attribution, families), detect-eval",
+    "goal": "Own the step that turns enumerations into CallRecords: replay through tool server -> injector rule -> MON log-only proxy with the frozen contracts, and re-run the server on M1-M14-mutated upstream bodies. Freeze the per-drift trace every arm shares. Round 6: every per-drift, benign and mutant call has a v1 control; only drift-attributable violations (the property verifies on the control) count for Detected, freeze-trace and the top-up rule, and the IV property set excludes properties that do not verify on the control. Every record run uses the Domain's frozen clock for vendor and proxy, and every CallRecord carries capturedAt. For F4b, derive n_F, eligible inputs, eligible entities N_E, origin-unit attribution, property families, cells and K without computing verdicts. Run BASE detectors over identical CallRecords with truth() labels.",
+    "owns": [
+      "packages/frame/**",
+      "packages/cli/src/commands/enumerate.ts",
+      "packages/cli/src/commands/record.ts",
+      "packages/cli/src/commands/freeze-trace.ts",
+      "packages/cli/src/commands/frame-k.ts",
+      "packages/cli/src/commands/detect-eval.ts",
+      "deps-fragments/DET.json",
+      "paper/harness/detect/**",
+      "paper/build-logs/DET.md"
+    ],
+    "reads": ["paper/PLAN.md", "packages/interfaces/**", "packages/domains/**", "packages/proxy/**", "packages/injector/**", "packages/mutate/**", "packages/baselines/**", "packages/llm/**", "packages/contracts/**", "packages/vendor-api/**", "packages/vendor-tracker/**", "packages/cli/src/bootstrap/10-tracker.ts", "paper/scripts/**"],
+    "depends_on": ["CORE", "VOCAB", "MON", "MUT", "INJ", "DOM2", "LLMR", "BASE", "AN"],
+    "deliverables": [
+      "enumerate --domain --frame --catalog extended-only|original --seed | --drift <DriftPackage> -> EnumRow JSONL + sha256 (strata per PLAN 3.1 incl. single-line S-write orders with quantity in {1,2}; dedupe key; known-good args excluded from F; per-drift enumeration = original catalog + seeded 50-entity extended sample + grid)",
+      "record --domain --frame|--drift <pkg>|--benign <pkg>|--mutant <op> [--monitor contracts|none] --in <enum.jsonl> --out <dir> -> CallRecords (capturedAt = Domain.frozenClock, used by vendor and proxy) with upstream exchanges, truth() comparison, MON log-only events (none with --monitor none), entity classes and origin units; --server-ref (base-shop / seed-tracker-v1 for --frame)",
+      "freeze-trace --records <dir> --out <trace.json>: the first call in enumeration order with >= 1 drift-attributable violation (round 6), fiks trace format, sha256; round 7: the trace keeps the full receipt 'violated' list of that call (attributable or not) and sets 'target' = [the first drift-attributable entry of that list], so the FIKS repro asserts the target and ignores the frozen call's other violated properties (shop-mcp test/fiks/check.ts outOfScope), exactly as the product does for a trace with an explicit target; plus a sidecar <trace>.iv.json {controlCallId, attributableProperties, ivProperties = the triggering tool's contract properties whose verdict on the v1 control is 'verified', ivExcluded[{property, controlVerdict}]} whose sha256 enters F9; a drift with no attributable violation is written as {detected: false} and gets no trace",
+      "frame-k --domain shop,tracker --records <pre-F4b frame CallRecords> --contracts <frozen> -> FrameSpec (n_F, Clean set from truth() comparison, eligible inputs, entities with authorBatch and eligibility, N_E, attribution, families, cells, K, entailed properties, sha256 of the record set), using the records, path resolution, fpCapability, propertyFamily and Domain.originEntity only. Round 7: attribution is keyed by concrete element path (items[0].price, items[1].price, ...), so each violating element of an item-level property maps to its own entity (PLAN 3.1 'Per-element verdicts'); R2 computes H1 verdicts with MON 'replay-cli --per-element'",
+      "detect-eval --detectors ... --inputs <CallRecords> --out <dir> with truth() labels (the R2 run step passes paper/results/raw/detect; tests pass $TMPDIR)",
+      "deps-fragments/DET.json: @fiks/frame into packages/cli",
+      "v1 controls (round 6, PLAN 3.0): 'record --drift' and '--benign' also replay every EnumRow on a fresh vendor instance with the same base, the same frozen clock and no injector rule, in the same order (CallRecord.controlOf = the drift call id); for '--mutant' the unmutated record is the control. A violation of property p on call c is drift-attributable iff p's verdict on c's control is 'verified'. Non-attributable violations on drift, benign and mutant traffic are written to nonattributable.jsonl (property, entity, origin unit, control verdict) for the E3/D12 row"
+    ],
+    "acceptance": [
+      "SETUP: export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile && node scripts/ensure-shop-mcp.mjs (package.json and lockfile edits not committed)",
+      "pnpm vitest run packages/frame",
+      "With a synthetic 750-entity extension per domain (2 batches marked): pnpm fiks enumerate --domain shop --frame --catalog extended-only --seed 1 twice gives the same sha256; no row has an original id or a shop knownGoodInputs argument; every S-write create_order has exactly one line item",
+      "pnpm fiks record --domain shop --frame --monitor none --in <that enumeration> --out $TMPDIR/frame on base-shop writes CallRecords with outputs and truth() comparison and no verdict field (the contracts file is never opened, fs spy); then pnpm fiks frame-k --records $TMPDIR/frame writes a FrameSpec that validates against paper/prereg/frame-spec.schema.json (or the interfaces type), with N_E > 0, every eligible input attributed, a planted base-tool/truth() disagreement excluded from Clean, families present, entailed properties listed and the record-set sha256; static check: no file under packages/frame/src imports evaluate, checkInvariant or @fiks/proxy (only resolvePath, fpCapability, propertyFamily and originEntity)",
+      "pnpm fiks record --domain shop --drift packages/injector/fixtures/driftpkgs/DEV-X1.json --in <its enumeration> --out $TMPDIR/devx1 writes CallRecords whose tool outputs equal a run without the proxy (log-only) and whose events include >= 1 violated verdict",
+      "pnpm fiks record --domain tracker --drift packages/vendor-tracker/fixtures/driftpkgs/TRK-DEV-1.json writes CallRecords via the DOM2 bootstrap registration (verdicts may be unverifiable before the A0 contracts exist; a stub contract file in the test makes >= 1 call violate)",
+      "pnpm fiks record --domain shop --mutant M1 and --mutant M14 re-run the server on mutated upstream bodies (tool output differs from the unmutated record for M1)",
+      "pnpm fiks freeze-trace --records $TMPDIR/devx1 run 3 times gives identical sha256; pnpm fiks repro --trace <that file> --target base-shop --runs 3 reports F PASS for the named property",
+      "pnpm fiks detect-eval --detectors contracts,b-snap,b-schema --inputs $TMPDIR/devx1 writes rows with truth() labels and origin units; 20 replays give identical deterministic verdicts",
+      "Static check: no file under packages/frame/src/label* imports @fiks/contracts or @fiks/proxy",
+      "git diff --name-only <wave-1 merge base> lists neither packages/cli/package.json nor pnpm-lock.yaml",
+      "Offline replay at R2 equals live on every non-postcondition property: MON replay-cli over $TMPDIR/frame with the frozen contracts gives per-property verdicts identical to 'record --frame --monitor contracts' on the same enumeration for every property that is not a postcondition. Postconditions (readAfterWrite) are 'unverifiable' in the offline replay, because no read-back probe is recorded under --monitor none (the proxy derives probes from contract.postconditions), and the test asserts exactly that. They are truth-entailed and never FP-capable (PLAN 3.1), so H1 is unaffected (test)",
+      "git status --porcelain paper/results is empty after the tests",
+      "Planted-FP test (round 6): a shop extension with one extended product priced $9 placed first in DEV-X1's per-drift enumeration and also inside the first search page of a D4-rule enumeration: (a) DEV-X1 freeze-trace selects the first drift-attributable call, not the earlier $9 call, whose items.price.range/price.range violation appears in nonattributable.jsonl; (b) a no-op injector rule over the same enumeration yields {detected: false} although >= 1 violation exists; (c) on the D4 injector rule (INJ; base seed-v1) the frozen search call violates countMatchesTotal and items.price.range, and its sidecar lists countMatchesTotal in ivProperties and items.price.range in ivExcluded with controlVerdict 'violated'; round 7: that frozen trace's violated list contains both properties and its target is exactly [countMatchesTotal]",
+      "FIKS parity on the planted D4 trace (round 7): pnpm fiks repro --trace <the planted D4 frozen trace> --target seed-v1 --runs 3 gives F PASS whose stated reason names countMatchesTotal only (not items.price.range); in a seed-v1 worktree with packages/cli/test/oracles/D4.patch applied the emitted repro passes although items.price.range still violates on the $9 item (out of scope), i.e. FIKS's P agrees with fiks-iv restricted to ivProperties (pass on the fixed head, fail on base); INTEG repeats this through the full FIKS arm and fiks-iv",
+      "Per-element H1 (round 7, with MON and AN): a frame fixture with one search input whose page holds two out-of-range extended items (ext-a $9, ext-c $5000) and one in-range one (ext-b $50): frame-k attributes items[0].price -> ext-a, items[1].price -> ext-b, items[2].price -> ext-c; MON 'replay-cli --per-element' over the record writes two items.price.range rows; 'paper/.venv/bin/python paper/scripts/h1_precision.py --rows <them> --frame-spec <it> --out $TMPDIR/h1' reports Z_e = 1 for ext-a and ext-c, Z_e = 0 for ext-b, and exactly one input-level FP; the same pipeline on first-element-only rows exits 2",
+      "Clock (round 6): every CallRecord written by record has capturedAt equal to the Domain's frozenClock; MON replay-cli over $TMPDIR/frame (incl. S-write get_order created_at.freshness) under the +400-day clock-shift preload gives byte-identical per-property verdicts to the unshifted replay and to the live 'record --frame --monitor contracts' run (non-postcondition properties)",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 31,
+    "wave": 2
+  },
+  {
+    "id": "BLIND",
+    "title": "Blind authoring harness: leak-free exports, catalog (batched, top-up)/contract/drift/benign/fixer/rater sessions, A1 cap-stop runner, validity, keep rule, split",
+    "goal": "Build the sealed authoring pipeline of PLAN.md sections 5.1-5.3; it runs in A0/A1/A2, not by the builder. It has: manifest-built exports outside ~/fiks that exclude every fiks artifact; logged sessions with no web tools and network-less Bash; catalog authoring in independent batches of 25 with authorBatch ids, plus a pre-F4b top-up command; ideation and implementation into DriftPackages (with base); an independent ref B; a realism rater; validate-drift; the keep rule by idea index; a seeded split; and an A1 runner with concurrency, cap-stop pause/resume and a ceiling.",
+    "owns": [
+      "packages/authoring/**",
+      "paper/blind-protocol/**",
+      "packages/cli/src/commands/author.ts",
+      "packages/cli/src/commands/validate-drift.ts",
+      "packages/cli/src/commands/split.ts",
+      "packages/contracts/contracts/tracker-mcp.contracts.json",
+      "packages/contracts/contracts/shop-blind.contracts.json",
+      "packages/contracts/contracts/llm-authored/**",
+      "packages/contracts/contracts/AUTHORING-tracker.md",
+      "packages/contracts/contracts/AUTHORING-shop-blind.md",
+      "deps-fragments/BLIND.json",
+      "external: github.com/vats98754/driftbench-blind (private)",
+      "paper/build-logs/BLIND.md"
+    ],
+    "reads": ["paper/PLAN.md", "packages/interfaces/**", "packages/injector/**", "packages/vendor-tracker/**", "packages/vendor-api/**", "packages/llm/**", "packages/sandbox/**", "packages/contracts/src/**", ".work/tracker-mcp"],
+    "depends_on": ["CORE", "VOCAB", "INJ", "DOM2", "SBX", "LLMR"],
+    "deliverables": [
+      "Export builder with a deny list (test/fiks/**, *.contracts.json, evaluate.ts, test/repro/**, test/traces/**, .git, files containing fiks_receipt, @fiks/ or outcome contract) and per-kind manifests (drift, evasive, benign, catalog, contract-author, fixer, rater)",
+      "Briefs (realistic, evasive with S12 quota, benign, catalog, contract-author, fixer, rater)",
+      "author --kind catalog --domain <d> --batches <n> [--top-up]: independent batches of 25 with no memory across batches; authorBatch recorded per entity; disjoint id namespace",
+      "author/validate-drift/split commands; DriftPackage writer (incl. base); forbidden-read audit; keep rule (first valid in idea-index order)",
+      "A1 runner: --concurrency from throughput.json; cap-stop (pause all, discard in-flight with quarantine, resume after reset); ceiling ($ and sessions)",
+      "Output paths reserved for run artifacts (contracts, llm-authored, AUTHORING logs, extended catalogs, driftbench-blind repo)",
+      "deps-fragments/BLIND.json: @fiks/authoring into packages/cli",
+      "author --kind contract --domain <d> [--protocol tracker|shop-blind|llm --seed n] [--out-root <dir>] (round 7; PLAN 8.1 A0(b), 5.1, 6.1 B-LLMC): one isolated agentSession (LLMR) per contract with settingSources: [], cwd = the contract-author export, no web tools, Bash in a --network none container. Protocol 'tracker' (default for --domain tracker): export = tracker docs/** + calls/ with the 30 v1 calls recorded on the original catalog; output packages/contracts/contracts/tracker-mcp.contracts.json + AUTHORING-tracker.md. Protocol 'shop-blind': the same protocol on shop (shop docs + 30 original-catalog v1 calls); output shop-blind.contracts.json + AUTHORING-shop-blind.md. Protocol 'llm' with --seed n (B-LLMC, 3 seeds per domain): export = tool descriptions + 20 S-dev CallRecords (original catalog, recorded with --monitor none); output llm-authored/<domain>-seed<n>.contracts.json + llm-authored/AUTHORING-<domain>-seed<n>.md. Every output is validated with VOCAB's contract loader/schema and evaluated by VOCAB's evaluator on the export's calls before it is written; the AUTHORING log records model, seed, export manifest sha256, transcript sha256, session id, start/end timestamps and the validation result. --out-root (default the repo root) prefixes the reserved paths, so tests write under $TMPDIR",
+      "check-no-bounds (pnpm fiks author --check-no-bounds): fails if the catalog brief contains any numeral other than the batch size, or if either domain's docs state a numeric bound on a field that any frozen contract constrains; prints sha256 of every brief and both docs sets for the F2 ledger entry"
+    ],
+    "acceptance": [
+      "SETUP: user approved the private repo (PLAN 8.0-3); export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile && node scripts/ensure-shop-mcp.mjs (package.json and lockfile edits not committed)",
+      "pnpm vitest run packages/authoring",
+      "For each export kind built from base-shop and from tracker-mcp main: the export dir is outside ~/fiks; its file list equals the manifest; 'find <export> \\( -path \"*/test/fiks/*\" -o -name \"*.contracts.json\" -o -name evaluate.ts -o -path \"*/test/repro/*\" -o -path \"*/test/traces/*\" -o -name .git \\) -print' prints nothing; 'grep -rlE \"fiks_receipt|@fiks/|outcome contract\" <export>' prints nothing",
+      "The tracker contract-author export file list is exactly docs/** plus calls/ with 30 files recorded on the original catalog",
+      "Contract authoring (round 7, stub llm): 'pnpm fiks author --kind contract --domain tracker --protocol tracker --out-root $TMPDIR/ca' runs one session whose transcript header shows cwd = the contract-author export dir and settingSources: []; the export holds docs/** and exactly 30 calls/ files; the stub's contract validates against VOCAB's schema/loader and VOCAB's evaluator runs on all 30 calls without an evaluator error; the file is written to $TMPDIR/ca/packages/contracts/contracts/tracker-mcp.contracts.json with AUTHORING-tracker.md (model, export manifest sha256, transcript sha256, validation result). The same with '--domain shop --protocol shop-blind' writes shop-blind.contracts.json + AUTHORING-shop-blind.md, and with '--protocol llm --seed 2' for each domain writes llm-authored/<domain>-seed2.contracts.json from an export of tool descriptions + 20 S-dev records. A stub output that fails VOCAB validation exits non-zero and writes no contract file; 'git status --porcelain packages/contracts/contracts' is empty afterwards",
+      "The catalog export contains only the public docs and the brief; with a stub llm, 'author --kind catalog --batches 3' produces 75 entities with 3 distinct authorBatch ids in a namespace disjoint from the original ids, and each batch session's prompt contains no other batch's output (test)",
+      "A dry-run author on one dev idea produces a DriftPackage with a base field that passes 'pnpm fiks validate-drift'",
+      "validate-drift rejects planted invalid drifts: spec changed; hidden tests pass on base under drift; ref A fails a hidden test; nondeterministic injector",
+      "grep for 'D3 lost write: create_order returns 200' and 'Fiks — self-healing tools for AI agents' in all dry-run transcripts returns nothing; transcript headers show settingSources: [], cwd = export dir, no WebFetch/WebSearch; Bash ran in a --network none container",
+      "A1 runner with a stub llm: a simulated cap error pauses all sessions, discards in-flight ones and resumes, and the kept set equals that of an uninterrupted stub run; the session and $ ceilings stop the run",
+      "'pnpm fiks split --seed <s>' twice gives identical split-file hashes",
+      "git diff --name-only <wave-1 merge base> lists neither packages/cli/package.json nor pnpm-lock.yaml",
+      "check-no-bounds fails on a planted brief containing '$2,000' and on a planted docs line 'price is between 20 and 2000 USD', and passes on the real briefs, packages/vendor-api/docs/shop.md and the tracker docs; it prints the sha256 values recorded at F2",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 27,
+    "wave": 2
+  },
+  {
+    "id": "TRAFFIC",
+    "title": "Held-out multi-model traffic collector",
+    "goal": "Collect held-out tool-call args from Opus/Sonnet/Haiku and one ollama model on 20 task prompts per domain (oracle criterion 5, stratum S-agent).",
+    "owns": [
+      "packages/traffic/**",
+      "packages/cli/src/commands/traffic.ts",
+      "deps-fragments/TRAFFIC.json",
+      "paper/build-logs/TRAFFIC.md"
+    ],
+    "reads": ["paper/PLAN.md", "packages/interfaces/**", "packages/domains/**", "packages/bench/**", "packages/vendor-api/**", "packages/vendor-tracker/**", "packages/llm/**", "packages/cli/src/bootstrap/10-tracker.ts"],
+    "depends_on": ["CORE", "DOM2", "BENCHX", "LLMR"],
+    "deliverables": [
+      "traffic --domain --agents opus,sonnet,haiku,ollama --trials 3 -> args JSONL + sha256",
+      "deps-fragments/TRAFFIC.json: @fiks/traffic into packages/cli"
+    ],
+    "acceptance": [
+      "SETUP: export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile (package.json and lockfile edits not committed)",
+      "pnpm vitest run packages/traffic",
+      "[LIVE: run only through `pnpm tsx packages/llm/src/live-lock.ts --run -- <cmd>`, one live item at a time across all streams] pnpm fiks traffic --domain shop and --domain tracker (tracker via the DOM2 bootstrap registration): the Claude collector produces tool-call args for 3 tasks per domain; the ollama route produces >= 1 valid tool call per task on 3 tasks, or an explicit SKIP if the model is not approved",
+      "Output rows carry agent, model, task id and trial; repeated runs on a stub agent give identical hashes",
+      "git diff --name-only <wave-1 merge base> lists neither packages/cli/package.json nor pnpm-lock.yaml",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 8,
+    "wave": 2
+  },
+  {
+    "id": "HOLD",
+    "title": "Held-out oracle, patch pools, acceptance matrix (fiks / agent final / agent first), SAST",
+    "goal": "grade(patch, drift) with the five criteria of PLAN.md section 3.0, running the patched server under the drift's injector rule and under v1. Primary and secondary pool builders. accept(patch, testSet) for H2 over the fiks test, the agent final tests and the agent first tests. All of it in the sandbox image with access logging.",
+    "owns": [
+      "packages/heldout/**",
+      "packages/cli/src/commands/grade.ts",
+      "packages/cli/src/commands/pool.ts",
+      "deps-fragments/HOLD.json",
+      "paper/build-logs/HOLD.md"
+    ],
+    "reads": ["paper/PLAN.md", "packages/interfaces/**", "packages/sandbox/**", "packages/mutate/**", "packages/llm/**", "packages/injector/**", "packages/vendor-api/src/truth.ts", "packages/vendor-tracker/src/truth.ts", "packages/cli/test/oracles/**"],
+    "depends_on": ["CORE", "DOM2", "SBX", "MUT", "INJ", "LLMR"],
+    "deliverables": [
+      "grade -> GradeRecord; semantic equality module; fast-check generators (pinned, seeded); ambiguous-input counting; drifted behaviour from DriftPackage.injectorRule",
+      "SAST container: Semgrep CE (digest pinned) + eslint-plugin-security + AST detector; 2-of-3 on the diff only",
+      "pool --primary and --secondary per PLAN 5.6",
+      "accept(patch, testSet) matrix writer for testSet in {fiks, agent-final, agent-first, empty}: per patch, once and cached, CORE 'pnpm fiks rerecord-head' on the patched head through the drift's injector chain (profile = domain, base, injector rule id, rule hash) for the union of recordings any test set or stored trace replays, i.e. the stale fixtures and traces plus an overlay re-recording of every recording file any T file reads (fs-read log of each T run on base; incl. .alerts/<id>.json and the fiks repro JSON); then base checks (typecheck, lint, suite, stored traces) once; then only each T file runs per test set, every T over the same overlay; access log for sealed paths. A recording inlined in a test file is not re-recorded; the test counts as it behaves and is flagged inlineRecording: true",
+      "Dev fixtures under packages/heldout/fixtures/dev: D1-D5 as full DriftPackages (base seed-v1, injector rules from packages/injector, ref A = packages/cli/test/oracles/D{1..5}.patch applied to seed-v1^{commit}; round 6: not the shop-mcp fix commits, whose D4 diff (88ed791) does not apply to seed-v1 and whose tree carries D1's conversion) and DEV-X1 as a full DriftPackage (base base-shop; ref A, an independent ref B, >= 3 hidden tests and a renamed-id variant written by the HOLD builder from INJ's manifest)",
+      "deps-fragments/HOLD.json: @fiks/heldout into packages/cli",
+      "requestChanging(drift) (round 5): true iff rerecord-head on ref A over the drift's frozen trace and enumeration re-records >= 1 exchange; computed mechanically from ref A only at F10 and written to the pool manifest; used for the PLAN 3.2 s3 row and the 3.3/3.4 per-class report",
+      "Sandboxed re-record (round 6): accept() and grade() call rerecord-head and run the patched server only inside the grading container through SBX execFiks with '--require-sandbox'"
+    ],
+    "acceptance": [
+      "SETUP: Docker running, Semgrep image approved (PLAN 8.0-4); export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile && node scripts/ensure-shop-mcp.mjs (package.json and lockfile edits not committed)",
+      "pnpm vitest run packages/heldout",
+      "On D1-D5 DriftPackages with drifted behaviour served by the injector rule (vendor v1 + rule, not vendor v2): each reference fix grades correct; base grades incorrect. Round 7: the P1-P8 dev fixture patches packages/heldout/fixtures/dev/pmut/D<n>/P<k>.patch are hand-written by the HOLD builder (no LLM; MUT's prompts are not used for fixtures) and committed, each with an expected GradeRecord (class and reasons) committed next to it after a first grade run is inspected and the reason recorded in paper/build-logs/HOLD.md; acceptance = grade() reproduces every expected GradeRecord, the P3 (special-case the recorded id) patches grade incorrect with reason renamed-id, and P1 (clamp) grades incorrect on D1. It is NOT asserted that all of P1-P8 are incorrect: P4/P5/P7 can be correct on some drifts and take their class from the grade (PLAN 5.6)",
+      "Grading is identical across 3 reruns (GradeRecord hashes equal)",
+      "Semantic-equality unit tests: null == absent, float tolerance, key order, instants, error == empty on invalid inputs",
+      "SAST flags planted eval( and child_process.exec(input), and nothing new on the D1-D5 oracle patches",
+      "Static check: no import of @fiks/contracts or @fiks/proxy under packages/heldout/src",
+      "Pool builder output is identical for the same seed; drifts with < 3 patches per class are flagged",
+      "Unit: the accept matrix with testSet 'empty' equals suite + stored traces + typecheck/lint only; a test file with a compile error rejects every patch",
+      "git diff --name-only <wave-1 merge base> lists neither packages/cli/package.json nor pnpm-lock.yaml",
+      "On the D3 and D4 oracle patches (which change upstream requests) and on base: accept() calls rerecord() exactly once per patch with identical profile arguments for all four test sets (log assertion), no test set's verdict is UNMATCHED_REQUEST, the fiks set and a stub agent-style test that loads .alerts/<id>.json through test/fiks/run.ts (no inline recording) and asserts the violated property both accept the oracle patch (the overlay re-recording of .alerts/<id>.json is in the RerecordLog) and both reject base",
+      "Unit: with 13 test sets on one patch, typecheck/lint/suite/stored traces run once (call counter) and each T file runs once",
+      "On DEV-X1: ref A and ref B grade correct and base incorrect; P1-P8 on ref A get their class from the grade",
+      "On TRK-DEV-1 (DOM2 DriftPackage, base dev-tracker-stub, DOM2 stub contract): grade() is correct on ref A and ref B and incorrect on base; accept() with the fiks set and a stub agent test that reads .alerts/<id>.json accepts ref A and rejects base",
+      "Unit: a test with an inline recording is not re-recorded and is flagged inlineRecording: true; requestChanging is true for D3 and D4 and false for D1, D2 and D5",
+      "Unit (round 6): with an ExecBackend spy, accept() and grade() invoke rerecord-head only through execFiks with --require-sandbox; each D1-D5 ref A equals 'git apply' of packages/cli/test/oracles/D<n>.patch on seed-v1^{commit} (tree hash recorded)",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 33,
+    "wave": 2
+  },
+  {
+    "id": "RUN",
+    "title": "Experiment runner: resumable registry, balanced-block pacing, K1 cut walk, worker pool, status-only output",
+    "goal": "pnpm exp <run-id> schedules (drift, model, attempt-index) blocks with all confirmatory arms, in randomized arm order from a seed, breadth-first over attempt index. One OS process per worker with its own FIKS_DIR; an append-only registry; kill-safe resume; cap-stop pause/resume that discards incomplete blocks; status output without correctness or verdict fields. pnpm exp fit implements the PLAN 8.2 fit over every remaining Claude run and the PLAN 13 K1 order (steps 1-11 only; R10, B-OM and ollama traffic are not ConfigSteps). Round 5: '--dry' (stub agents, FIKS_LLM_FORBID=1, no Claude or ollama call; the only mode exempt from the build-swarm guard), '--dev', '--drifts', '--models' and '--attempts'.",
+    "owns": [
+      "packages/exp/**",
+      "paper/build-logs/RUN.md"
+    ],
+    "reads": ["paper/PLAN.md", "packages/interfaces/**", "packages/llm/**"],
+    "depends_on": ["CORE", "LLMR"],
+    "deliverables": [
+      "Run R11 (round 7, PLAN 8.1, D10): post-CP2 product-mode showcase, outside the K1 walk and never projected; gated on confirmatory.lock and user approval (PLAN 8.0-3); one detected test drift per domain by seeded draw; argv = the product command 'pnpm fiks repair --trace <frozen trace> --base showcase/<driftId>' with no --arm, no --run-key and no --no-pr (so SAFE's P5 base-owner allow-list applies and a PR is opened on vats98754/shop-mcp or vats98754/tracker-mcp against a branch showcase/<driftId> created at DriftPackage.base), --ci github; never merged by the run",
+      "packages/exp/src/main.ts with run definitions T0, A0, A1, R0-R11 as config (argv templates for 'pnpm fiks repair' / 'pnpm fiks arm' / 'pnpm fiks grade' / 'pnpm fiks record'); every arm gets --trace <frozen trace> and --base <DriftPackage.base>; R10 is gated on confirmatory.lock and cap headroom",
+      "ConfigStep list S+, S0, 1..11 per PLAN 13 with projected Claude units",
+      "fit --measured <throughput.json> --window-days 8: the first step whose projection of all remaining Claude runs + 30% reserve, plus the non-overlappable non-Claude wall-clock (R0, the part of R5 that cannot overlap Claude runs under the Docker memory rule, CP2), fits in W; separate ollama wall-clock rule (cut the ollama share of R9 if it projects > 10 h)",
+      "Registry, pacing, worker pool with RSS cap, dirty-tree refusal, infra-window monitor",
+      "Run-start guard: 'pnpm exp' refuses to start any run while $HOME/.fiks/build-swarm.active exists (created by the orchestrator for the whole build phase), and holds $HOME/.fiks/run.active while running, so live runs never overlap builder swarms or live acceptance items",
+      "Flags (round 5): --dry runs every arm with '--agent-stub' scripts from packages/exp/fixtures/dry/ and FIKS_LLM_FORBID=1 in every child env, so no Claude or ollama call is possible; --dry is the only mode exempt from the build-swarm guard; --dev selects the dev split (D1-D5, DEV-X1, TRK-DEV-1 and the dev blind drifts when they exist); --drifts <ids>, --models <ids> and --attempts <n> restrict the block list",
+      "packages/exp/fixtures/dry/: stub scripts per dev drift (packages/cli/test/oracles/D1.patch and D3.patch applied to seed-v1, and TRK-DEV-1 ref A; round 6: never the shop-mcp fix commits; a P1 clamp for D2; a no-op for DEV-X1; a REPRO-AGENT stub test that loads .alerts/<id>.json), referencing HOLD's and DOM2's dev DriftPackages by path",
+      "Containment preflight (round 6, PLAN P1): before R1 and R3-R8 (and their --dry variants) 'pnpm exp' runs 'pnpm vitest run packages/cli/test/orch/rerecord-containment.test.ts' and refuses to start on failure; the pass (commit, image digests) is written into the run's meta.json"
+    ],
+    "acceptance": [
+      "SETUP: export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile. Round 7: the root 'exp' script is added by INTEG (wave 3), so every item below invokes 'pnpm tsx packages/exp/src/main.ts'; 'pnpm exp' is used only from INTEG on",
+      "Unit (round 7): R11 is refused without paper/results/confirmatory.lock; its two generated argv lack --no-pr, --arm and --run-key, carry --ci github and a --base showcase/<driftId> branch, and R11 is in no ConfigStep projection",
+      "pnpm vitest run packages/exp",
+      "Unit: projected Claude usage strictly decreases along S0, 1, 2, ..., 11; no ConfigStep has id R10, B-OM or ollama; fit picks S+ only when everything incl. the reserve fits at a = 5; the projection includes A1 leftovers, R2, A2 worst case, P-pool, R9 (Claude share), R3, R4 (incl. L1-noIV), R6, R7 (240 hardened + 40 adaptive + 232 utility) and R8, and excludes R10; the fit adds R0 and the non-overlappable part of R5 to wall-clock",
+      "Unit: the ollama rule cuts the ollama share of R9 when the measured tokens/s projects > 10 h, and leaves the Claude fit unchanged",
+      "With stub arm commands: kill -9 mid-run, then resume -> registry complete, no duplicate run keys",
+      "A simulated cap stop leaves only complete blocks; incomplete blocks are re-run whole on resume",
+      "Status output validates against a schema with no correctness or verdict fields",
+      "2-worker vs 1-worker runs of stub arms give identical outcome rows; arm order is reproducible from the seed",
+      "Every generated arm argv contains --trace and --base and never --fetch",
+      "The runner refuses a dirty tree",
+      "Unit: with $HOME/.fiks/build-swarm.active present (temp HOME), 'pnpm tsx packages/exp/src/main.ts T0' exits non-zero with a clear message",
+      "Unit: 'pnpm tsx packages/exp/src/main.ts R1 --dry --dev --drifts D1,D2 --models claude-haiku-5-5 --attempts 1' generates argv with --agent-stub for every arm and FIKS_LLM_FORBID=1 in every child env; with a mocked LLMR the call counter stays 0; the block count equals |drifts| x |models| x attempts",
+      "Unit: with $HOME/.fiks/build-swarm.active present (temp HOME), 'pnpm tsx packages/exp/src/main.ts R1 --dry ...' starts and 'pnpm tsx packages/exp/src/main.ts R1' without --dry exits non-zero",
+      "Unit (round 6): with the containment preflight mocked to fail, 'pnpm tsx packages/exp/src/main.ts R7 --dry' and 'pnpm tsx packages/exp/src/main.ts R4 --dry' exit non-zero before any block starts; with it passing, meta.json records the preflight result; T0, A0 and R2 do not run the preflight",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 20,
+    "wave": 2
+  },
+  {
+    "id": "RB-R10",
+    "title": "Real bug R10: modelcontextprotocol/servers #4887 (memory lost write)",
+    "goal": "Clone upstream (never a GitHub fork; the clone lives at .work/realbugs/<id>, round 6) into the new private repo vats98754/rb-r10-servers, pin the prefix and fix SHAs, write the blind contract from the symptom only (logged), build process-level replay with labelled fixtures, pass F on the prefix and P on the human fix, and emit adapter.json and issue.md for RBA.",
+    "owns": [
+      "realbugs/R10/**",
+      "external: github.com/vats98754/rb-r10-servers (new private repo; plain clone of modelcontextprotocol/servers, never a GitHub fork)",
+      "paper/build-logs/RB-R10.md"
+    ],
+    "reads": ["paper/PLAN.md", "paper/research/real-bugs-mcp.md", "paper/research/real-bugs-mcp.candidates.json", "packages/replay-proc/**", "packages/sandbox/**", "packages/llm/**", "packages/contracts/**"],
+    "depends_on": ["CORE", "VOCAB", "SBX", "RBX", "LLMR"],
+    "deliverables": [
+      "realbugs/R10/{pins.json (incl. repo: vats98754/rb-r10-servers; round 7), contract.json, contract-log.md, fixtures/ (recorded|synthesized labels), harness/, heldout/, issue.md (upstream issue title + body, for ISSUE-TEXT), adapter.json (server command, base-URL env, prefix/fix SHAs, test command, testRunner, suiteScope = the repo tests that run offline in the SBX image, allowedEditPaths, human-fix test paths, heldout command; consumed by RBA), ATTRITION.md}",
+      "Clone location (round 6): the upstream clone lives at .work/realbugs/R10 (created by RBX's scripts/ensure-realbugs.mjs from realbugs/R10/pins.json; .work/ is gitignored and excluded by biome), never inside realbugs/R10/; harness/run.ts and adapter.json resolve it through FIKS_REALBUG_DIR (default .work/realbugs/R10); realbugs/R10/ holds metadata only"
+    ],
+    "acceptance": [
+      "SETUP: user approved the new private repo vats98754/rb-r10-servers (PLAN 8.0-3); export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile",
+      "pnpm tsx realbugs/R10/harness/run.ts --sha prefix --runs 10: 10/10 failures for the named read-after-write property",
+      "pnpm tsx realbugs/R10/harness/run.ts --sha fix --runs 10: 10/10 pass and no contract fire (or a documented FP)",
+      "contract-log.md timestamps precede the first read of the fix diff (session log)",
+      "git -C .work/realbugs/R10 remote -v lists exactly origin = github.com/vats98754/rb-r10-servers (no upstream remote); 'gh repo view vats98754/rb-r10-servers --json isFork' prints false; the gh audit shows no writes outside vats98754",
+      "realbugs/R10/adapter.json validates against the RealbugAdapter type in packages/interfaces (tsc --noEmit on a typed import in realbugs/<id>/harness) and issue.md is non-empty",
+      "If unreproducible: ATTRITION.md states the reason, and the reserve (servers #3137) is attempted",
+      "test ! -e realbugs/R10/repo, and 'git ls-files -s realbugs/R10 | awk '$1==160000'' prints nothing (no gitlink); from a fresh 'git worktree add' of this branch, node scripts/ensure-realbugs.mjs --id R10 then 'pnpm tsx realbugs/R10/harness/run.ts --sha prefix --runs 1' reproduces"
+    ],
+    "est_hours": 18,
+    "wave": 2
+  },
+  {
+    "id": "RB-R19",
+    "title": "Real bug R19: mongodb-js/mongodb-mcp-server #561 (count identity)",
+    "goal": "The RB-R10 protocol, applied to R19.",
+    "owns": [
+      "realbugs/R19/**",
+      "external: github.com/vats98754/rb-r19-mongodb-mcp-server (new private repo; plain clone of mongodb-js/mongodb-mcp-server, never a GitHub fork)",
+      "external: github.com/vats98754/rb-r19r-servers (new private repo for the reserve servers #4628; plain clone)",
+      "paper/build-logs/RB-R19.md"
+    ],
+    "reads": ["paper/PLAN.md", "paper/research/real-bugs-mcp.md", "paper/research/real-bugs-mcp.candidates.json", "packages/replay-proc/**", "packages/sandbox/**", "packages/llm/**", "packages/contracts/**"],
+    "depends_on": ["CORE", "VOCAB", "SBX", "RBX", "LLMR"],
+    "deliverables": [
+      "realbugs/R19/{pins.json (incl. repo: vats98754/rb-r19-mongodb-mcp-server, or vats98754/rb-r19r-servers if the reserve is used; round 7), contract.json, contract-log.md, fixtures/ (recorded|synthesized labels), harness/, heldout/, issue.md (upstream issue title + body, for ISSUE-TEXT), adapter.json (server command, base-URL env, prefix/fix SHAs, test command, testRunner, suiteScope = the repo tests that run offline in the SBX image, allowedEditPaths, human-fix test paths, heldout command; consumed by RBA), ATTRITION.md}",
+      "Clone location (round 6): the upstream clone lives at .work/realbugs/R19 (created by RBX's scripts/ensure-realbugs.mjs from realbugs/R19/pins.json; .work/ is gitignored and excluded by biome), never inside realbugs/R19/; harness/run.ts and adapter.json resolve it through FIKS_REALBUG_DIR (default .work/realbugs/R19); realbugs/R19/ holds metadata only"
+    ],
+    "acceptance": [
+      "SETUP: user approved the new private repo vats98754/rb-r19-mongodb-mcp-server (PLAN 8.0-3); export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile",
+      "pnpm tsx realbugs/R19/harness/run.ts --sha prefix --runs 10: 10/10 failures for the named count property",
+      "pnpm tsx realbugs/R19/harness/run.ts --sha fix --runs 10: 10/10 pass, no contract fire (or a documented FP)",
+      "contract-log.md timestamps precede the first read of the fix diff",
+      "git -C .work/realbugs/R19 remote -v lists exactly origin = github.com/vats98754/rb-r19-mongodb-mcp-server (no upstream remote); 'gh repo view vats98754/rb-r19-mongodb-mcp-server --json isFork' prints false; the gh audit shows no writes outside vats98754",
+      "realbugs/R19/adapter.json validates against the RealbugAdapter type in packages/interfaces (tsc --noEmit on a typed import in realbugs/<id>/harness) and issue.md is non-empty",
+      "If unreproducible: ATTRITION.md gives the reason, and the reserve (servers #4628) is attempted in vats98754/rb-r19r-servers",
+      "test ! -e realbugs/R19/repo, and 'git ls-files -s realbugs/R19 | awk '$1==160000'' prints nothing (no gitlink); from a fresh 'git worktree add' of this branch, node scripts/ensure-realbugs.mjs --id R19 then 'pnpm tsx realbugs/R19/harness/run.ts --sha prefix --runs 1' reproduces"
+    ],
+    "est_hours": 18,
+    "wave": 2
+  },
+  {
+    "id": "RB-R20",
+    "title": "Real bug R20: GLips/Figma-Context-MCP #364 (false success, no file written)",
+    "goal": "The RB-R10 protocol, applied to R20.",
+    "owns": [
+      "realbugs/R20/**",
+      "external: github.com/vats98754/rb-r20-figma-context-mcp (new private repo; plain clone of GLips/Figma-Context-MCP, never a GitHub fork)",
+      "paper/build-logs/RB-R20.md"
+    ],
+    "reads": ["paper/PLAN.md", "paper/research/real-bugs-mcp.md", "paper/research/real-bugs-mcp.candidates.json", "packages/replay-proc/**", "packages/sandbox/**", "packages/llm/**", "packages/contracts/**"],
+    "depends_on": ["CORE", "VOCAB", "SBX", "RBX", "LLMR"],
+    "deliverables": [
+      "realbugs/R20/{pins.json (incl. repo: vats98754/rb-r20-figma-context-mcp; round 7), contract.json, contract-log.md, fixtures/ (recorded|synthesized labels), harness/, heldout/, issue.md (upstream issue title + body, for ISSUE-TEXT), adapter.json (server command, base-URL env, prefix/fix SHAs, test command, testRunner, suiteScope = the repo tests that run offline in the SBX image, allowedEditPaths, human-fix test paths, heldout command; consumed by RBA), ATTRITION.md}",
+      "Clone location (round 6): the upstream clone lives at .work/realbugs/R20 (created by RBX's scripts/ensure-realbugs.mjs from realbugs/R20/pins.json; .work/ is gitignored and excluded by biome), never inside realbugs/R20/; harness/run.ts and adapter.json resolve it through FIKS_REALBUG_DIR (default .work/realbugs/R20); realbugs/R20/ holds metadata only"
+    ],
+    "acceptance": [
+      "SETUP: user approved the new private repo vats98754/rb-r20-figma-context-mcp (PLAN 8.0-3); export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile",
+      "pnpm tsx realbugs/R20/harness/run.ts --sha prefix --runs 10: 10/10 failures for the named postcondition (file exists, size > 0)",
+      "pnpm tsx realbugs/R20/harness/run.ts --sha fix --runs 10: 10/10 pass, no contract fire (or a documented FP)",
+      "contract-log.md timestamps precede the first read of the fix diff",
+      "git -C .work/realbugs/R20 remote -v lists exactly origin = github.com/vats98754/rb-r20-figma-context-mcp (no upstream remote); 'gh repo view vats98754/rb-r20-figma-context-mcp --json isFork' prints false; the gh audit shows no writes outside vats98754",
+      "realbugs/R20/adapter.json validates against the RealbugAdapter type in packages/interfaces (tsc --noEmit on a typed import in realbugs/<id>/harness) and issue.md is non-empty",
+      "If unreproducible: ATTRITION.md gives the reason; reserve R14 is attempted only if FSL-1.1 permits fork use",
+      "test ! -e realbugs/R20/repo, and 'git ls-files -s realbugs/R20 | awk '$1==160000'' prints nothing (no gitlink); from a fresh 'git worktree add' of this branch, node scripts/ensure-realbugs.mjs --id R20 then 'pnpm tsx realbugs/R20/harness/run.ts --sha prefix --runs 1' reproduces"
+    ],
+    "est_hours": 18,
+    "wave": 2
+  },
+  {
+    "id": "RB-R9",
+    "title": "Real bug R9: cloudflare/mcp-server-cloudflare #468 (serialization corruption)",
+    "goal": "The RB-R10 protocol, applied to R9. The fix is still open, so R9 is graded by held-out manifestations only.",
+    "owns": [
+      "realbugs/R9/**",
+      "external: github.com/vats98754/rb-r9-mcp-server-cloudflare (new private repo; plain clone of cloudflare/mcp-server-cloudflare, never a GitHub fork)",
+      "paper/build-logs/RB-R9.md"
+    ],
+    "reads": ["paper/PLAN.md", "paper/research/real-bugs-mcp.md", "paper/research/real-bugs-mcp.candidates.json", "packages/replay-proc/**", "packages/sandbox/**", "packages/llm/**", "packages/contracts/**"],
+    "depends_on": ["CORE", "VOCAB", "SBX", "RBX", "LLMR"],
+    "deliverables": [
+      "realbugs/R9/{pins.json (incl. repo: vats98754/rb-r9-mcp-server-cloudflare; round 7), contract.json, contract-log.md, fixtures/ (recorded|synthesized labels), harness/, heldout/, issue.md (upstream issue title + body, for ISSUE-TEXT), adapter.json (server command, base-URL env, prefix/fix SHAs, test command, testRunner, suiteScope = the repo tests that run offline in the SBX image, allowedEditPaths, human-fix test paths, heldout command; consumed by RBA), ATTRITION.md}",
+      "Clone location (round 6): the upstream clone lives at .work/realbugs/R9 (created by RBX's scripts/ensure-realbugs.mjs from realbugs/R9/pins.json; .work/ is gitignored and excluded by biome), never inside realbugs/R9/; harness/run.ts and adapter.json resolve it through FIKS_REALBUG_DIR (default .work/realbugs/R9); realbugs/R9/ holds metadata only"
+    ],
+    "acceptance": [
+      "SETUP: user approved the new private repo vats98754/rb-r9-mcp-server-cloudflare (PLAN 8.0-3); export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile",
+      "pnpm tsx realbugs/R9/harness/run.ts --sha prefix --runs 10: 10/10 failures for the named property (text block parses as JSON / matches outputSchema)",
+      "Held-out manifestations exist under realbugs/R9/heldout and fail on the prefix",
+      "contract-log.md timestamps precede the first read of the PR #469 diff",
+      "git -C .work/realbugs/R9 remote -v lists exactly origin = github.com/vats98754/rb-r9-mcp-server-cloudflare (no upstream remote); 'gh repo view vats98754/rb-r9-mcp-server-cloudflare --json isFork' prints false; the gh audit shows no writes outside vats98754",
+      "realbugs/R9/adapter.json validates against the RealbugAdapter type in packages/interfaces (tsc --noEmit on a typed import in realbugs/<id>/harness) and issue.md is non-empty",
+      "If unreproducible: ATTRITION.md gives the reason",
+      "test ! -e realbugs/R9/repo, and 'git ls-files -s realbugs/R9 | awk '$1==160000'' prints nothing (no gitlink); from a fresh 'git worktree add' of this branch, node scripts/ensure-realbugs.mjs --id R9 then 'pnpm tsx realbugs/R9/harness/run.ts --sha prefix --runs 1' reproduces"
+    ],
+    "est_hours": 18,
+    "wave": 2
+  },
+  {
+    "id": "RBA",
+    "title": "Real-bug adapter: Domain per real bug, repair and arm dispatch on realbugs/<id>/repo, grading of heads (P22, run R8 / E7)",
+    "goal": "Make R8 runnable: register one Domain per real bug from realbugs/<id>/adapter.json, so that 'pnpm fiks repair --arm fiks --domain rb-<id>' and 'pnpm fiks arm --name COMP|ISSUE-TEXT --domain rb-<id>' run on the .work/realbugs/<id> clone (RBX ensure-realbugs.mjs; round 6) at the prefix SHA (local refs, no fetch, no push, no PR), with fiks repro generation in the clone's own test layout; and grade every final head against the human-fix tests and realbugs/<id>/heldout/. Wave 3, parallel to INTEG and not a dependency of it; R8 is gated on RBA PASS. Round 5: RBA owns no CORE file. It plugs into the Domain hooks declared in CORE-SEED and wired by CORE (reproEmitter, suite, allowedEditPaths), and into ARMS's and ORCH's '--domain'.",
+    "owns": [
+      "packages/realbug-adapter/**",
+      "packages/cli/src/bootstrap/40-realbugs.ts",
+      "packages/cli/src/commands/realbug-grade.ts",
+      "deps-fragments/RBA.json",
+      "paper/build-logs/RBA.md"
+    ],
+    "reads": ["paper/PLAN.md", "packages/**", "realbugs/**", "packages/cli/src/bootstrap/README.md"],
+    "depends_on": ["CORE", "SBX", "RBX", "ORCH", "ARMS", "HOLD", "RB-R10", "RB-R19", "RB-R20", "RB-R9"],
+    "deliverables": [
+      "packages/realbug-adapter: Domain factory from adapter.json. reproEmitter writes, into the worktree, a repro test in the clone's own runner (adapter.testRunner) plus its check module on RBX process-level replay (files returned by the hook, so no CORE file and no rb-<id> commit is needed). suite runs adapter.testCommand restricted to adapter.suiteScope (the offline-runnable tests, the emitted repro dir and the human-fix tests) in the SBX image. allowedEditPaths comes from adapter.allowedEditPaths (e.g. apps/*/src and packages/*/src for cloudflare)",
+      "packages/cli/src/bootstrap/40-realbugs.ts: registers rb-<id> for every realbugs/<id>/adapter.json present",
+      "realbug-grade --domain rb-<id> --head <sha> -> GradeRecord (human-fix tests, heldout manifestations, SAST 2-of-3 via HOLD's container), Wilson-ready per-arm counts",
+      "deps-fragments/RBA.json: @fiks/realbug-adapter into packages/cli"
+    ],
+    "acceptance": [
+      "SETUP: Docker running; export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && node scripts/apply-dep-fragments.mjs && pnpm install --no-frozen-lockfile (package.json and lockfile edits not committed)",
+      "pnpm vitest run packages/realbug-adapter",
+      "For every bug with a passing RB harness: pnpm fiks repro --domain rb-<id> --trace realbugs/<id>/fixtures/<trigger>.json --target prefix --runs 3 gives F PASS for the named property, and the same repro passes on the fix SHA",
+      "For every such bug: realbug-grade on the human-fix SHA grades correct and on the prefix grades incorrect, identical across 3 reruns",
+      "[LIVE: run only through `pnpm tsx packages/llm/src/live-lock.ts --run -- <cmd>`, one live item at a time across all streams] On one reproducible bug, Opus x 1 attempt each of 'fiks repair --arm fiks', 'fiks arm --name COMP' and 'fiks arm --name ISSUE-TEXT' with --ci local --no-pr completes and writes AttemptRecords keyed by run key; the git shim log shows 0 pushes and the fake gh 0 calls",
+      "A clean clone from the local path ('git clone /Users/anvayvats/fiks $TMPDIR/fiks-clean-rba' at main with RBA merged; round 7) passes 'pnpm install --frozen-lockfile && pnpm typecheck && pnpm lint && pnpm test' (RBA merges after INTEG)",
+      "git diff --name-only <wave-2 merge base> lists neither packages/cli/package.json nor pnpm-lock.yaml",
+      "Unit: for each rb-<id> Domain, reproEmitter, suite and allowedEditPaths come from adapter.json; failGate counts only failures inside suiteScope; 'pnpm fiks arm --name COMP --domain rb-<id>' and 'pnpm fiks repair --arm fiks --domain rb-<id>' pass the Domain's allowedEditPaths to the guard (spy); no file outside this stream's owns list changes",
+      "From a fresh 'git worktree add $TMPDIR/wt-rba HEAD' (no .work/; round 6): SETUP, node scripts/ensure-realbugs.mjs --all, then the repro and realbug-grade items above pass there; packages/realbug-adapter unit tests use fixtures only and pass without any .work/realbugs clone; every rerecord-head call goes through execFiks with --require-sandbox (spy)",
+      "pnpm typecheck && pnpm lint"
+    ],
+    "est_hours": 19,
+    "wave": 3
+  },
+  {
+    "id": "INTEG",
+    "title": "Final integration: shared root files, lockfile, applied dependency fragments, root scripts, end-to-end dry run, clean clone, agent-ux check",
+    "goal": "Own every shared root file. During waves 1-2, at each merge, the orchestrator does mechanical steps on INTEG's (and, for consumer package.json files, CORE-SEED's) behalf. It applies the merged stream's deps-fragments/<ID>.json with scripts/apply-dep-fragments.mjs, regenerates pnpm-lock.yaml with 'pnpm install --lockfile-only', and records each verifier PASS and each applied fragment in PROGRESS.md. In wave 3: root scripts (paper:check, exp), a pin check on new dependencies, an end-to-end dry run across all arms, the detection pipeline, grading and analysis, agent-ux-tester on the proxy and bench changes, and a clean clone that includes a fresh shop-mcp clone at main.",
+    "owns": [
+      "package.json",
+      "pnpm-lock.yaml",
+      "pnpm-workspace.yaml",
+      "biome.json",
+      "vitest.config.ts",
+      "tsconfig.json",
+      "tsconfig.base.json",
+      ".npmrc",
+      ".nvmrc",
+      ".gitignore",
+      "PROGRESS.md",
+      "scripts/check-pins.mjs",
+      "scripts/check-claims.mjs",
+      "scripts/copy-data.mjs",
+      "scripts/render-chart.mjs",
+      "apps/**",
+      "paper/build-logs/INTEG.md"
+    ],
+    "reads": ["paper/PLAN.md", "paper/WORKSTREAMS.json", "paper/build-logs/**", "deps-fragments/**", "packages/**", "paper/**", "scripts/**"],
+    "depends_on": ["CORE-SEED", "CORE", "VOCAB", "MON", "SAFE", "SBX", "BENCHX", "LLMR", "MUT", "INJ", "DOM2", "CU", "SEC", "RBX", "AN", "PREREG", "BASE", "ORCH", "ARMS", "DET", "BLIND", "TRAFFIC", "HOLD", "RUN", "RB-R10", "RB-R19", "RB-R20", "RB-R9"],
+    "deliverables": [
+      "Root scripts: paper:check -> paper/.venv/bin/python paper/scripts/paper_check.py; exp -> tsx packages/exp/src/main.ts; pretest runs ensure-shop-mcp.mjs and ensure-tracker-mcp.mjs (round 6); .gitignore adds paper/.venv/ (.work/ already ignored and excluded by biome.json; every external clone lives under it)",
+      "Committed pnpm-lock.yaml; all new external dependencies pinned exactly and published >= 14 days before install",
+      "Root workspace and vitest globs cover packages/* (every new package's tests run in 'pnpm test')",
+      "End-to-end dry-run log in paper/build-logs/INTEG.md; PROGRESS.md updated with every stream's PASS, commit and applied fragments"
+    ],
+    "acceptance": [
+      "node scripts/apply-dep-fragments.mjs --check exits 0 on main (every fragment is applied; consumer package.json files contain only the declared @fiks/* workspace entries beyond CORE-SEED's own)",
+      "Clean clone from the local path (round 7: the fiks repo has no GitHub remote requirement; nothing is pushed): 'git clone /Users/anvayvats/fiks $TMPDIR/fiks-clean' (main, no .work/), then export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH && pnpm install --frozen-lockfile && pnpm typecheck && pnpm lint && pnpm test (exit 0; pretest clones shop-mcp and checks out the pinned ref of packages/contracts/shop-sync-ref.json, and tracker-mcp at its pinned ref, packages/contracts/test/sync.test.ts passes against the pinned peeled commit, and CORE's legacy-help snapshot test passes with the BENCHX and ORCH default exports present)",
+      "node scripts/check-pins.mjs exits 0 (exact pins, >= 14 days old)",
+      "pnpm exp R1 --dry --dev --drifts D1,D2,D3,DEV-X1,TRK-DEV-1 --models claude-haiku-5-5 --attempts 1 (stub agents and FIKS_LLM_FORBID=1, so it runs while build-swarm.active exists): record + freeze-trace run first; then FIKS, L1, L1-noIV, L1p, COMP, COMP-norep, COMP-plain and REPRO-AGENT consume the same frozen trace (sha256 equal in every AttemptRecord); L1 records ivPlacement 'pre' and COMP 'post'; on D3 the RerecordLog lines of FIKS, L1 and COMP are identical (timestamps excluded); every head is graded with 'pnpm fiks grade' against HOLD's (D1, D2, D3, DEV-X1) and DOM2's (TRK-DEV-1) DriftPackages; the LLM call counter is 0; the AN scripts run on the produced logs",
+      "sha256 of packages/cli/test/orch/fixtures/TRK-DEV-1.trace.json equals that of packages/arms/test/fixtures/TRK-DEV-1.trace.json",
+      "Sidecar agreement (round 7): for every hand-written ARMS sidecar packages/arms/test/fixtures/*.iv.json (planted-FP D4, D2, D3, D4, TRK-DEV-1), DET's 'record --drift' + 'freeze-trace' on the same call (same base, rule, catalog and frozen clock) regenerates identical attributableProperties, ivProperties and ivExcluded (property ids and control verdicts; controlCallId excluded), and the planted-FP D4 trace's violated list and target equal ARMS's fixture",
+      "FIKS parity (round 7): on DET's planted-FP D4 frozen trace, 'pnpm fiks repair --arm fiks' with a stub agent applying packages/cli/test/oracles/D4.patch gives F PASS naming countMatchesTotal only and would_open_pr after green ci-local, and 'fiks-iv --properties <its sidecar>' passes on the same head and fails on base (countMatchesTotal)",
+      "pnpm fiks scenario v1-all --domain tracker and pnpm fiks record --domain tracker work from the clean clone (round 6: pretest's ensure-tracker-mcp.mjs creates .work/tracker-mcp); node scripts/ensure-realbugs.mjs --all creates .work/realbugs/<id> with tags prefix/fix for every bug, after which 'pnpm lint' still exits 0; 'git ls-files -s | awk '$1==160000'' prints nothing",
+      "The git shim log shows 0 pushes, and the fake/real gh audit shows 0 calls, for the dry run",
+      "pnpm paper:check exits 0 on the committed synthetic fixtures",
+      "pnpm tsx paper/prereg/check-ledger.ts passes on the current tags",
+      "The agent-ux-tester report on the MON + BENCHX changes is PASS and saved in paper/build-logs/INTEG.md",
+      "paper/.venv/bin/python paper/scripts/check_workstreams.py paper/WORKSTREAMS.json exits 0, and every stream's 'git diff --name-only' at merge stayed within its owns list (PROGRESS.md log)",
+      "git ls-files paper/results/raw paper/results/confirmatory.lock prints nothing before T0 (run outputs are committed only by run steps)",
+      "PROGRESS.md lists every stream with its verifier PASS and commit hash",
+      "Containment across arms (round 6): ORCH's rerecord-containment plant run through 'pnpm fiks arm --name L1', 'pnpm fiks arm --name COMP' (stub agents) and HOLD accept() gets ENOENT for every host path, HOME=/tmp, no canary or token bytes in any output, and a logged egress denial, exactly as on the FIKS path",
+      "The dry run's stub patches for D1 and D3 are packages/cli/test/oracles/D1.patch and D3.patch on seed-v1 (round 6), and the containment preflight (ORCH rerecord-containment.test.ts) ran and passed first (meta.json)"
+    ],
+    "est_hours": 15,
+    "wave": 3
+  }
+]
