@@ -1,5 +1,5 @@
 // Recorded traffic, frames, frozen traces and detector verdicts (PLAN.md Appendix, 3.1, 5.7, P9).
-import type { HttpExchange, ToolResultLike, Verdict, Violation } from '@fiks/contracts';
+import type { HttpExchange, Recording, ToolResultLike, Verdict, Violation } from '@fiks/contracts';
 
 export type Catalog = 'original' | 'extended-only' | 'all';
 
@@ -100,8 +100,11 @@ export interface FrozenTrace {
   sha256: string;
   /** The full receipt list. */
   violated: Violation[];
-  /** [first drift-attributable entry of `violated`] (property ids). */
-  target: string[];
+  /**
+   * [propertyId of the first drift-attributable entry of `violated`]. Property ids, not
+   * Violation objects: the product trace format's `target` (`Recording.target`, @fiks/contracts).
+   */
+  target: NonNullable<Recording['target']>;
   controlCallId: string;
   attributableProperties: string[];
   /** The triggering tool's properties whose verdict on the v1 control is `verified`. */

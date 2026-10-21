@@ -173,7 +173,11 @@ export type AllowedEditPaths = readonly string[];
 
 export interface Domain {
   id: string;
-  createVendor(catalog: Catalog, opts: DomainVendorOptions): DomainVendor;
+  /**
+   * Appendix form is `createVendor(catalog)`. `opts` is an optional extension; when omitted the
+   * domain uses `{ version: 'v1' }` (no drifts, wall clock).
+   */
+  createVendor(catalog: Catalog, opts?: DomainVendorOptions): DomainVendor;
   /** Constant ISO instant, committed before F2; record runs use it for vendor and proxy `now`. */
   frozenClock: string;
   truth(call: DomainCall, state: unknown): TruthResult;

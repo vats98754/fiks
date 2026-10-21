@@ -1,11 +1,13 @@
 // Names every type of the paper/PLAN.md Appendix, imported from @fiks/interfaces. interfaces.test.ts
 // compiles this file with tsc --noEmit and checks the list against the Appendix.
+import type { Violation } from '@fiks/contracts';
 import type {
   Arm,
   AttemptRecord,
   BootstrapModule,
   CallRecord,
   CandidateRecord,
+  Catalog,
   CiLocal,
   CliCommandModule,
   ConfigStep,
@@ -94,3 +96,14 @@ export type RequiredMembers = [
 
 // Monitor options carry the round-6 and round-7 flags.
 export type MonitorOpts = Has<NonNullable<Parameters<Monitor>[0]['opts']>, 'reenable' | 'perElement'>;
+
+// Appendix form `createVendor(catalog)` is callable with one argument (opts is optional).
+type Extends<A, B> = [A] extends [B] ? true : false;
+export type CreateVendorOneArg = Is<Extends<[Catalog], Parameters<Domain['createVendor']>>>;
+
+// FrozenTrace.target holds property ids (product `Recording.target`), not Violation objects.
+export type TargetIsPropertyIds = [
+  Is<Extends<FrozenTrace['target'], string[]>>,
+  Is<Extends<Extends<FrozenTrace['target'], Violation[]>, false>>,
+  Is<Extends<FrozenTrace['violated'], Violation[]>>,
+];

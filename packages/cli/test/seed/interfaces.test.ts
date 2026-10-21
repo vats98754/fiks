@@ -31,10 +31,8 @@ describe('@fiks/interfaces', () => {
     const names = appendixNames();
     expect(names.length).toBeGreaterThanOrEqual(24);
     const fixture = readFileSync(join(ROOT, FIXTURES, 'all-types.ts'), 'utf8');
-    const imported = fixture.slice(
-      fixture.indexOf('import type {'),
-      fixture.indexOf("} from '@fiks/interfaces'"),
-    );
+    const end = fixture.indexOf("} from '@fiks/interfaces'");
+    const imported = fixture.slice(fixture.lastIndexOf('import type {', end), end);
     const tuple = fixture.slice(fixture.indexOf('export type AppendixTypes'), fixture.indexOf('];'));
     for (const n of names) {
       expect(imported, `${n} imported from @fiks/interfaces`).toMatch(new RegExp(`\\b${n}\\b`));

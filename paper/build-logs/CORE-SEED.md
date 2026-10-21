@@ -26,6 +26,13 @@ Branch `ws/CORE-SEED`, based on main `312ae5c` (the commit that adds `paper/PLAN
   `ReproSpec` and `SuiteRun`, so the existing shop code fits without conversion.
 - `suite.run(repoDir, scope?)` is synchronous, like today's `runSuite`. `oneFailingInScope(run,
   scope?)` is the F predicate (exactly one failing test, inside the scope).
+- `createVendor(catalog, opts?)`: the Appendix form `createVendor(catalog)` compiles; `opts`
+  (`version`, `drifts`, `now`) is an optional extension, default `{ version: 'v1' }` (round 2).
+- `FrozenTrace.violated` is `Violation[]` (the full receipt list). `FrozenTrace.target` is
+  `NonNullable<Recording['target']>`, i.e. `string[]` of property ids: the product trace format's
+  `target` (`packages/contracts/src/types.ts`, consumed as property ids by
+  `packages/repro/src/generate.ts` `targetOf`). Not `Violation[]` (round 2). DET should confirm.
+  `all-types.ts` asserts both at compile time; flipping either type back fails `tsc`.
 - `Monitor` is a callable with an optional `id`; a plain function satisfies it.
 - `CliCommandModule.run` may return `void`, a number (the exit code) or a promise of either.
 
@@ -34,3 +41,9 @@ Branch `ws/CORE-SEED`, based on main `312ae5c` (the commit that adds `paper/PLAN
 `pnpm lint` exits 1 at base `312ae5c` too: 100 errors and 1 warning, all in `paper/**` JSON
 files that biome wants reformatted (`paper/WORKSTREAMS.json`, `paper/research/*.json`). This
 stream does not own those paths. Running biome over every other path reports no errors.
+
+Round 2 (rebase onto main: main still at `312ae5c`, no-op): unchanged. `pnpm lint
+--max-diagnostics=1000` groups as 100 in `paper/research` and 1 in `paper/WORKSTREAMS.json`;
+`biome check packages scripts` exits 0. The fix belongs to the orchestrator on main (format the
+paper JSON, or add `!paper/research` and `!paper/WORKSTREAMS.json` to `biome.json`
+`files.includes`). Until then the acceptance item `pnpm typecheck && pnpm lint` fails as written.
