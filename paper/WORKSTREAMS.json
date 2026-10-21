@@ -71,7 +71,18 @@
       "packages/cli/test/core/**",
       "paper/build-logs/CORE.md"
     ],
-    "reads": ["paper/PLAN.md", "paper/research/codebase-map.md", "packages/contracts/**", "packages/proxy/**", "packages/repair/**", "packages/cli/src/commands/repair.ts", "packages/cli/src/commands/bench.ts", "packages/cli/src/commands/summarize.ts", ".work/shop-mcp", "/Users/anvayvats/fiks/.fiks/traces/tr_079b90c89e.json"],
+    "reads": [
+      "paper/PLAN.md",
+      "paper/research/codebase-map.md",
+      "packages/contracts/**",
+      "packages/proxy/**",
+      "packages/repair/**",
+      "packages/cli/src/commands/repair.ts",
+      "packages/cli/src/commands/bench.ts",
+      "packages/cli/src/commands/summarize.ts",
+      ".work/shop-mcp",
+      "/Users/anvayvats/fiks/.fiks/traces/tr_079b90c89e.json"
+    ],
     "depends_on": ["CORE-SEED"],
     "deliverables": [
       "CLI loader (P18): main.ts loads .env, imports packages/cli/src/bootstrap/*.ts in sorted order, then resolves the command. A default export {name, describe, run(argv)} in packages/cli/src/commands/*.ts wins over packages/cli/src/legacy/<name>.ts. Files without a default export are ignored. main.ts contains no command switch. Each legacy adapter wraps the existing named function with the exact current flags and output, and exports help() returning that command's line(s) of the ec241bc USAGE string",
@@ -130,7 +141,13 @@
       "external: github.com/vats98754/shop-mcp (one re-vendor commit on branch fiks/revendor-f2 touching test/fiks/vendored/evaluate.ts and types.ts only; tag base-shop; main is fast-forwarded to it by the orchestrator at VOCAB's merge, never by the builder)",
       "paper/build-logs/VOCAB.md"
     ],
-    "reads": ["paper/PLAN.md", "paper/research/codebase-map.md", "bench/results/**", ".work/shop-mcp", "packages/interfaces/**"],
+    "reads": [
+      "paper/PLAN.md",
+      "paper/research/codebase-map.md",
+      "bench/results/**",
+      ".work/shop-mcp",
+      "packages/interfaces/**"
+    ],
     "depends_on": ["CORE-SEED"],
     "deliverables": [
       "Invariant kinds enum, crossField, pageComplete; checkInvariant support; describeViolation(); unit tests with true and false fixtures per kind",
@@ -170,11 +187,7 @@
     "id": "MON",
     "title": "Proxy monitor interface, log-only mode, offline replay evaluator (P9)",
     "goal": "Add ProxyOptions.monitor (default = evaluate), --monitor on the proxy bin, a log-only mode that records verdicts and upstream exchanges without changing tool output, and an offline replay evaluator over CallRecords. Round 6: every CallRecord carries its evaluation instant (capturedAt = the proxy's existing 'at' field) and offline replay evaluates with now := capturedAt, never the system clock; '--reenable' passes disabled property ids to the evaluator.",
-    "owns": [
-      "packages/proxy/**",
-      "packages/cli/test/proxy-bin.test.ts",
-      "paper/build-logs/MON.md"
-    ],
+    "owns": ["packages/proxy/**", "packages/cli/test/proxy-bin.test.ts", "paper/build-logs/MON.md"],
     "reads": ["paper/PLAN.md", "packages/contracts/**", "packages/interfaces/**", "bench/results/**"],
     "depends_on": ["CORE-SEED"],
     "deliverables": [
@@ -201,11 +214,14 @@
     "id": "SAFE",
     "title": "Repair package hardening: exec-backend hook, env scrub, realpath read guard, strict trace (E6 only), PR allow-list, runner robustness",
     "goal": "Implement the agent-side parts of P1, P2, P3, P5 and P10, plus the candidate-capture hook, inside packages/repair. Raw format is the default; strict mode exists for E6.",
-    "owns": [
-      "packages/repair/**",
-      "paper/build-logs/SAFE.md"
+    "owns": ["packages/repair/**", "paper/build-logs/SAFE.md"],
+    "reads": [
+      "paper/PLAN.md",
+      "paper/research/codebase-map.md",
+      "paper/research/gap-repair-security.md",
+      "packages/cli/src/commands/repair.ts",
+      "packages/interfaces/**"
     ],
-    "reads": ["paper/PLAN.md", "paper/research/codebase-map.md", "paper/research/gap-repair-security.md", "packages/cli/src/commands/repair.ts", "packages/interfaces/**"],
     "depends_on": ["CORE-SEED"],
     "deliverables": [
       "canUseTool rewrites allow-listed Bash to backend.exec; default host backend unchanged",
@@ -240,11 +256,14 @@
     "id": "SBX",
     "title": "Linux sandbox image, Docker exec backend, hermetic local CI with extra checks, canary and push shim",
     "goal": "Build per-repo Linux images with lockfile node_modules and an offline pnpm store; a DockerExecBackend (--network none, scrubbed env, limits); ciLocal() mirroring ci.yml with optional extra checks (used for IV by L1 pre-PR and COMP post-PR); canary and egress probes; a git shim that logs and blocks any push; a 20-head Actions agreement script. Round 6: a Linux 'fiks-tools' image so that CORE rerecord-head (vendor-api, injector, tap, harness and the candidate server it spawns) runs inside the per-attempt container, never on the host.",
-    "owns": [
-      "packages/sandbox/**",
-      "paper/build-logs/SBX.md"
+    "owns": ["packages/sandbox/**", "paper/build-logs/SBX.md"],
+    "reads": [
+      "paper/PLAN.md",
+      ".work/shop-mcp",
+      "packages/repro/src/worktree.ts",
+      "packages/repair/src/runner.ts",
+      "packages/interfaces/**"
     ],
-    "reads": ["paper/PLAN.md", ".work/shop-mcp", "packages/repro/src/worktree.ts", "packages/repair/src/runner.ts", "packages/interfaces/**"],
     "depends_on": ["CORE-SEED"],
     "deliverables": [
       "Dockerfile + build script per target repo; image digest pinned and printed",
@@ -280,7 +299,12 @@
       "deps-fragments/BENCHX.json",
       "paper/build-logs/BENCHX.md"
     ],
-    "reads": ["paper/PLAN.md", "paper/research/codebase-map.md", "bench/results/**", "packages/interfaces/**"],
+    "reads": [
+      "paper/PLAN.md",
+      "paper/research/codebase-map.md",
+      "bench/results/**",
+      "packages/interfaces/**"
+    ],
     "depends_on": ["CORE-SEED"],
     "deliverables": [
       "infraError outcome, costUsd and cache tokens per trial",
@@ -306,11 +330,13 @@
     "id": "LLMR",
     "title": "LLM call route via Agent SDK query (OAuth), authoring sessions, ollama client, throughput probe (P14, run T0)",
     "goal": "One route for every non-repair LLM call, through the Claude Agent SDK on the OAuth token. Also a minimal ollama client, cost/token logging, retries, infra_error, cap-event detection, and the T0 throughput probe: 1/2/4 sessions, ollama tokens/s, and 1/2/4/6 repair workers at R1 (round 7: 6, not 8, is the machine cap of about 6 concurrent agents, PLAN 7.1).",
-    "owns": [
-      "packages/llm/**",
-      "paper/build-logs/LLMR.md"
+    "owns": ["packages/llm/**", "paper/build-logs/LLMR.md"],
+    "reads": [
+      "paper/PLAN.md",
+      "packages/repair/src/runner.ts",
+      "packages/bench/src/agent.ts",
+      "packages/interfaces/**"
     ],
-    "reads": ["paper/PLAN.md", "packages/repair/src/runner.ts", "packages/bench/src/agent.ts", "packages/interfaces/**"],
     "depends_on": ["CORE-SEED"],
     "deliverables": [
       "complete({model, system, prompt, schema}) via query with tools: [], systemPrompt override, settingSources: []",
@@ -340,10 +366,7 @@
     "id": "MUT",
     "title": "Response- and patch-mutation operators (frozen at F1)",
     "goal": "Response operators M1-M14 and benign controls B1-B4 as pure functions. Patch operators P1-P8 as committed prompts plus a deterministic wrapper that takes an injected llm function.",
-    "owns": [
-      "packages/mutate/**",
-      "paper/build-logs/MUT.md"
-    ],
+    "owns": ["packages/mutate/**", "paper/build-logs/MUT.md"],
     "reads": ["paper/PLAN.md", "packages/interfaces/**"],
     "depends_on": ["CORE-SEED"],
     "deliverables": [
@@ -365,10 +388,7 @@
     "id": "INJ",
     "title": "Third-party response-rewriting injector and dev DriftPackages",
     "goal": "A deterministic reverse proxy (vendor -> injector -> tap) that applies InjectorRules, built by a builder who never reads contracts. Also D1-D5 and one new shop dev drift DEV-X1 as DriftPackage manifests (injector part, with base).",
-    "owns": [
-      "packages/injector/**",
-      "paper/build-logs/INJ.md"
-    ],
+    "owns": ["packages/injector/**", "paper/build-logs/INJ.md"],
     "reads": ["paper/PLAN.md", "packages/vendor-api/**", "packages/interfaces/**"],
     "depends_on": ["CORE-SEED"],
     "deliverables": [
@@ -401,7 +421,14 @@
       "external: github.com/vats98754/tracker-mcp (all branches and tags until handed to run steps)",
       "paper/build-logs/DOM2.md"
     ],
-    "reads": ["paper/PLAN.md", "packages/vendor-api/**", "packages/interfaces/**", "packages/domains/src/registry.ts", ".work/shop-mcp", "paper/research/real-bugs-mcp.md"],
+    "reads": [
+      "paper/PLAN.md",
+      "packages/vendor-api/**",
+      "packages/interfaces/**",
+      "packages/domains/src/registry.ts",
+      ".work/shop-mcp",
+      "paper/research/real-bugs-mcp.md"
+    ],
     "depends_on": ["CORE-SEED"],
     "deliverables": [
       "packages/vendor-tracker: server, original catalog, extended-catalog loader (authorBatch kept), admin endpoints, docs/openapi.json + docs/tracker.md, truth.ts, entityClass.ts (issue type x state; child tools inherit the parent issue's class; search: filter class, else 'all'), originEntity.ts (issue; child tools -> parent issue; collection-level paths on search -> S-grid query id), paginatedEndpoints, tasks/prompts.json (20)",
@@ -437,10 +464,7 @@
     "id": "CU",
     "title": "Contract-update outcome gate (P12)",
     "goal": "A deterministic acceptance gate for {outcome: contract_update, delta}.",
-    "owns": [
-      "packages/contract-update/**",
-      "paper/build-logs/CU.md"
-    ],
+    "owns": ["packages/contract-update/**", "paper/build-logs/CU.md"],
     "reads": ["paper/PLAN.md", "packages/contracts/**", "packages/mutate/**", "packages/interfaces/**"],
     "depends_on": ["CORE-SEED"],
     "deliverables": [
@@ -462,11 +486,7 @@
     "id": "SEC",
     "title": "Adversarial-trace suite, attack oracles, canary checker, malicious-diff detectors (E6)",
     "goal": "12 payload templates from published descriptions, 4 attack goals with hidden oracles, carrier placement, an egress sink, a canary scanner, AST detectors, and the small adaptive attacker of E6 (round 4: owned here).",
-    "owns": [
-      "packages/attacks/**",
-      "paper/security/**",
-      "paper/build-logs/SEC.md"
-    ],
+    "owns": ["packages/attacks/**", "paper/security/**", "paper/build-logs/SEC.md"],
     "reads": ["paper/PLAN.md", "paper/research/gap-repair-security.md", "packages/cli/test/oracles/**"],
     "depends_on": ["CORE-SEED"],
     "deliverables": [
@@ -491,12 +511,13 @@
     "id": "RBX",
     "title": "Process-level replay, HTTPS shim and request matchers for real MCP servers",
     "goal": "Replay recorded upstream exchanges to an unmodified server process (base-URL override, MCP stdio client), with an HTTPS shim and configurable matchers/normalisers. Round 6: owns scripts/ensure-realbugs.mjs, which places every real-bug clone under the already-ignored .work/ (never inside the tracked realbugs/ tree).",
-    "owns": [
-      "packages/replay-proc/**",
-      "scripts/ensure-realbugs.mjs",
-      "paper/build-logs/RBX.md"
+    "owns": ["packages/replay-proc/**", "scripts/ensure-realbugs.mjs", "paper/build-logs/RBX.md"],
+    "reads": [
+      "paper/PLAN.md",
+      "paper/research/codebase-map.md",
+      "packages/repro/**",
+      "packages/contracts/**"
     ],
-    "reads": ["paper/PLAN.md", "paper/research/codebase-map.md", "packages/repro/**", "packages/contracts/**"],
     "depends_on": ["CORE-SEED"],
     "deliverables": [
       "replayServer(recordings, matchers) + spawnServer(cmd, env) + MCP stdio client",
@@ -519,13 +540,12 @@
     "id": "AN",
     "title": "Analysis scripts, power reproduction at stated precision, H1 entity test and N_E rule, size checks, outcome classifier, paper:check",
     "goal": "Implement every script in PLAN.md section 9.1 on synthetic fixture logs, in a Python 3.12 venv with pinned requirements. Reproduce every tagged power number in PLAN.md under the stated-precision rule. Validate test sizes per section 9.1. Implement paper_check.py. Keep paper/scripts/check_workstreams.py (written by the round-4 plan fixer) passing. Run outputs under paper/results/raw/** and paper/results/confirmatory.lock are never written by tests or committed by this stream.",
-    "owns": [
-      "paper/scripts/**",
-      "paper/macros/**",
-      "paper/results/power.json",
-      "paper/build-logs/AN.md"
+    "owns": ["paper/scripts/**", "paper/macros/**", "paper/results/power.json", "paper/build-logs/AN.md"],
+    "reads": [
+      "paper/PLAN.md",
+      "/Users/anvayvats/Library/Application Support/Claude/local-agent-mode-sessions/skills-plugin/30ec47c0-4bbb-4711-85d7-569760cac2dd/ef7e729b-bc9c-44e1-9b2a-7a42d9a71991/skills/paper-forge/scripts/eval_stats.py",
+      "packages/interfaces/**"
     ],
-    "reads": ["paper/PLAN.md", "/Users/anvayvats/Library/Application Support/Claude/local-agent-mode-sessions/skills-plugin/30ec47c0-4bbb-4711-85d7-569760cac2dd/ef7e729b-bc9c-44e1-9b2a-7a42d9a71991/skills/paper-forge/scripts/eval_stats.py", "packages/interfaces/**"],
     "depends_on": ["CORE-SEED"],
     "deliverables": [
       "power_manifest.json (round 7): the exact list of checked numbers from PLAN 9.6",
@@ -564,10 +584,7 @@
     "id": "PREREG",
     "title": "Pre-registration document, freeze ledger checker (peeled refs, F4b), registry builder",
     "goal": "Turn PLAN.md sections 3, 3.0, 3.5, 5.7, 8.2, 9 and 13 into paper/prereg/PREREG.md. Build the freeze-ledger schema (external refs as peeled commits) and its checker, the registry builder, DEVIATIONS.md, an A0 record template, a K1 addendum template and the frame-spec schema.",
-    "owns": [
-      "paper/prereg/**",
-      "paper/build-logs/PREREG.md"
-    ],
+    "owns": ["paper/prereg/**", "paper/build-logs/PREREG.md"],
     "reads": ["paper/PLAN.md", "paper/ORCHESTRATION.md", "packages/interfaces/**"],
     "depends_on": ["CORE-SEED"],
     "deliverables": [
@@ -586,10 +603,7 @@
     "id": "BASE",
     "title": "Detection baseline modules (B-SCHEMA, B-AJV, B-JUDGE(+U), B-SNAP, B-STAT, B-TRIG, B-LLMC runner)",
     "goal": "Implement each section 6.1 baseline as a Monitor over CallRecords (types from packages/interfaces), with an injected llm function for judges and LLM-authored contracts, so DET can run them over identical inputs. B-OM is cut and not built.",
-    "owns": [
-      "packages/baselines/**",
-      "paper/build-logs/BASE.md"
-    ],
+    "owns": ["packages/baselines/**", "paper/build-logs/BASE.md"],
     "reads": ["paper/PLAN.md", "packages/interfaces/**", "packages/contracts/**", "bench/results/**"],
     "depends_on": ["CORE-SEED"],
     "deliverables": [
@@ -678,7 +692,13 @@
       "paper/research/verify/arms-langsmith-recheck.json",
       "paper/build-logs/ARMS.md"
     ],
-    "reads": ["paper/PLAN.md", "paper/research/observability.md", "paper/research/mcp-market.md", "paper/research/verify/observability-1.json", "packages/**"],
+    "reads": [
+      "paper/PLAN.md",
+      "paper/research/observability.md",
+      "paper/research/mcp-market.md",
+      "paper/research/verify/observability-1.json",
+      "packages/**"
+    ],
     "depends_on": ["CORE", "VOCAB", "SAFE", "SBX", "INJ", "LLMR", "DOM2"],
     "deliverables": [
       "pnpm fiks arm --name L1|L1-noIV|L1p|COMP|COMP-norep|COMP-plain|ISSUE-TEXT|REPRO-AGENT --trace <frozen> (ISSUE-TEXT: --issue <file>) --base <local ref> [--domain <id>, default the trace's domain] --run-key ... --ci local --no-pr [--trace-format raw|strict] [--agent-stub <script.json>] (default-export command module). The Domain supplies allowedEditPaths (guard), suite and promptHints; RBA's rb-<id> domains are selected the same way",
@@ -740,7 +760,21 @@
       "paper/harness/detect/**",
       "paper/build-logs/DET.md"
     ],
-    "reads": ["paper/PLAN.md", "packages/interfaces/**", "packages/domains/**", "packages/proxy/**", "packages/injector/**", "packages/mutate/**", "packages/baselines/**", "packages/llm/**", "packages/contracts/**", "packages/vendor-api/**", "packages/vendor-tracker/**", "packages/cli/src/bootstrap/10-tracker.ts", "paper/scripts/**"],
+    "reads": [
+      "paper/PLAN.md",
+      "packages/interfaces/**",
+      "packages/domains/**",
+      "packages/proxy/**",
+      "packages/injector/**",
+      "packages/mutate/**",
+      "packages/baselines/**",
+      "packages/llm/**",
+      "packages/contracts/**",
+      "packages/vendor-api/**",
+      "packages/vendor-tracker/**",
+      "packages/cli/src/bootstrap/10-tracker.ts",
+      "paper/scripts/**"
+    ],
     "depends_on": ["CORE", "VOCAB", "MON", "MUT", "INJ", "DOM2", "LLMR", "BASE", "AN"],
     "deliverables": [
       "enumerate --domain --frame --catalog extended-only|original --seed | --drift <DriftPackage> -> EnumRow JSONL + sha256 (strata per PLAN 3.1 incl. single-line S-write orders with quantity in {1,2}; dedupe key; known-good args excluded from F; per-drift enumeration = original catalog + seeded 50-entity extended sample + grid)",
@@ -793,7 +827,17 @@
       "external: github.com/vats98754/driftbench-blind (private)",
       "paper/build-logs/BLIND.md"
     ],
-    "reads": ["paper/PLAN.md", "packages/interfaces/**", "packages/injector/**", "packages/vendor-tracker/**", "packages/vendor-api/**", "packages/llm/**", "packages/sandbox/**", "packages/contracts/src/**", ".work/tracker-mcp"],
+    "reads": [
+      "paper/PLAN.md",
+      "packages/interfaces/**",
+      "packages/injector/**",
+      "packages/vendor-tracker/**",
+      "packages/vendor-api/**",
+      "packages/llm/**",
+      "packages/sandbox/**",
+      "packages/contracts/src/**",
+      ".work/tracker-mcp"
+    ],
     "depends_on": ["CORE", "VOCAB", "INJ", "DOM2", "SBX", "LLMR"],
     "deliverables": [
       "Export builder with a deny list (test/fiks/**, *.contracts.json, evaluate.ts, test/repro/**, test/traces/**, .git, files containing fiks_receipt, @fiks/ or outcome contract) and per-kind manifests (drift, evasive, benign, catalog, contract-author, fixer, rater)",
@@ -835,7 +879,16 @@
       "deps-fragments/TRAFFIC.json",
       "paper/build-logs/TRAFFIC.md"
     ],
-    "reads": ["paper/PLAN.md", "packages/interfaces/**", "packages/domains/**", "packages/bench/**", "packages/vendor-api/**", "packages/vendor-tracker/**", "packages/llm/**", "packages/cli/src/bootstrap/10-tracker.ts"],
+    "reads": [
+      "paper/PLAN.md",
+      "packages/interfaces/**",
+      "packages/domains/**",
+      "packages/bench/**",
+      "packages/vendor-api/**",
+      "packages/vendor-tracker/**",
+      "packages/llm/**",
+      "packages/cli/src/bootstrap/10-tracker.ts"
+    ],
     "depends_on": ["CORE", "DOM2", "BENCHX", "LLMR"],
     "deliverables": [
       "traffic --domain --agents opus,sonnet,haiku,ollama --trials 3 -> args JSONL + sha256",
@@ -863,7 +916,17 @@
       "deps-fragments/HOLD.json",
       "paper/build-logs/HOLD.md"
     ],
-    "reads": ["paper/PLAN.md", "packages/interfaces/**", "packages/sandbox/**", "packages/mutate/**", "packages/llm/**", "packages/injector/**", "packages/vendor-api/src/truth.ts", "packages/vendor-tracker/src/truth.ts", "packages/cli/test/oracles/**"],
+    "reads": [
+      "paper/PLAN.md",
+      "packages/interfaces/**",
+      "packages/sandbox/**",
+      "packages/mutate/**",
+      "packages/llm/**",
+      "packages/injector/**",
+      "packages/vendor-api/src/truth.ts",
+      "packages/vendor-tracker/src/truth.ts",
+      "packages/cli/test/oracles/**"
+    ],
     "depends_on": ["CORE", "DOM2", "SBX", "MUT", "INJ", "LLMR"],
     "deliverables": [
       "grade -> GradeRecord; semantic equality module; fast-check generators (pinned, seeded); ambiguous-input counting; drifted behaviour from DriftPackage.injectorRule",
@@ -901,10 +964,7 @@
     "id": "RUN",
     "title": "Experiment runner: resumable registry, balanced-block pacing, K1 cut walk, worker pool, status-only output",
     "goal": "pnpm exp <run-id> schedules (drift, model, attempt-index) blocks with all confirmatory arms, in randomized arm order from a seed, breadth-first over attempt index. One OS process per worker with its own FIKS_DIR; an append-only registry; kill-safe resume; cap-stop pause/resume that discards incomplete blocks; status output without correctness or verdict fields. pnpm exp fit implements the PLAN 8.2 fit over every remaining Claude run and the PLAN 13 K1 order (steps 1-11 only; R10, B-OM and ollama traffic are not ConfigSteps). Round 5: '--dry' (stub agents, FIKS_LLM_FORBID=1, no Claude or ollama call; the only mode exempt from the build-swarm guard), '--dev', '--drifts', '--models' and '--attempts'.",
-    "owns": [
-      "packages/exp/**",
-      "paper/build-logs/RUN.md"
-    ],
+    "owns": ["packages/exp/**", "paper/build-logs/RUN.md"],
     "reads": ["paper/PLAN.md", "packages/interfaces/**", "packages/llm/**"],
     "depends_on": ["CORE", "LLMR"],
     "deliverables": [
@@ -948,7 +1008,15 @@
       "external: github.com/vats98754/rb-r10-servers (new private repo; plain clone of modelcontextprotocol/servers, never a GitHub fork)",
       "paper/build-logs/RB-R10.md"
     ],
-    "reads": ["paper/PLAN.md", "paper/research/real-bugs-mcp.md", "paper/research/real-bugs-mcp.candidates.json", "packages/replay-proc/**", "packages/sandbox/**", "packages/llm/**", "packages/contracts/**"],
+    "reads": [
+      "paper/PLAN.md",
+      "paper/research/real-bugs-mcp.md",
+      "paper/research/real-bugs-mcp.candidates.json",
+      "packages/replay-proc/**",
+      "packages/sandbox/**",
+      "packages/llm/**",
+      "packages/contracts/**"
+    ],
     "depends_on": ["CORE", "VOCAB", "SBX", "RBX", "LLMR"],
     "deliverables": [
       "realbugs/R10/{pins.json (incl. repo: vats98754/rb-r10-servers; round 7), contract.json, contract-log.md, fixtures/ (recorded|synthesized labels), harness/, heldout/, issue.md (upstream issue title + body, for ISSUE-TEXT), adapter.json (server command, base-URL env, prefix/fix SHAs, test command, testRunner, suiteScope = the repo tests that run offline in the SBX image, allowedEditPaths, human-fix test paths, heldout command; consumed by RBA), ATTRITION.md}",
@@ -977,7 +1045,15 @@
       "external: github.com/vats98754/rb-r19r-servers (new private repo for the reserve servers #4628; plain clone)",
       "paper/build-logs/RB-R19.md"
     ],
-    "reads": ["paper/PLAN.md", "paper/research/real-bugs-mcp.md", "paper/research/real-bugs-mcp.candidates.json", "packages/replay-proc/**", "packages/sandbox/**", "packages/llm/**", "packages/contracts/**"],
+    "reads": [
+      "paper/PLAN.md",
+      "paper/research/real-bugs-mcp.md",
+      "paper/research/real-bugs-mcp.candidates.json",
+      "packages/replay-proc/**",
+      "packages/sandbox/**",
+      "packages/llm/**",
+      "packages/contracts/**"
+    ],
     "depends_on": ["CORE", "VOCAB", "SBX", "RBX", "LLMR"],
     "deliverables": [
       "realbugs/R19/{pins.json (incl. repo: vats98754/rb-r19-mongodb-mcp-server, or vats98754/rb-r19r-servers if the reserve is used; round 7), contract.json, contract-log.md, fixtures/ (recorded|synthesized labels), harness/, heldout/, issue.md (upstream issue title + body, for ISSUE-TEXT), adapter.json (server command, base-URL env, prefix/fix SHAs, test command, testRunner, suiteScope = the repo tests that run offline in the SBX image, allowedEditPaths, human-fix test paths, heldout command; consumed by RBA), ATTRITION.md}",
@@ -1005,7 +1081,15 @@
       "external: github.com/vats98754/rb-r20-figma-context-mcp (new private repo; plain clone of GLips/Figma-Context-MCP, never a GitHub fork)",
       "paper/build-logs/RB-R20.md"
     ],
-    "reads": ["paper/PLAN.md", "paper/research/real-bugs-mcp.md", "paper/research/real-bugs-mcp.candidates.json", "packages/replay-proc/**", "packages/sandbox/**", "packages/llm/**", "packages/contracts/**"],
+    "reads": [
+      "paper/PLAN.md",
+      "paper/research/real-bugs-mcp.md",
+      "paper/research/real-bugs-mcp.candidates.json",
+      "packages/replay-proc/**",
+      "packages/sandbox/**",
+      "packages/llm/**",
+      "packages/contracts/**"
+    ],
     "depends_on": ["CORE", "VOCAB", "SBX", "RBX", "LLMR"],
     "deliverables": [
       "realbugs/R20/{pins.json (incl. repo: vats98754/rb-r20-figma-context-mcp; round 7), contract.json, contract-log.md, fixtures/ (recorded|synthesized labels), harness/, heldout/, issue.md (upstream issue title + body, for ISSUE-TEXT), adapter.json (server command, base-URL env, prefix/fix SHAs, test command, testRunner, suiteScope = the repo tests that run offline in the SBX image, allowedEditPaths, human-fix test paths, heldout command; consumed by RBA), ATTRITION.md}",
@@ -1033,7 +1117,15 @@
       "external: github.com/vats98754/rb-r9-mcp-server-cloudflare (new private repo; plain clone of cloudflare/mcp-server-cloudflare, never a GitHub fork)",
       "paper/build-logs/RB-R9.md"
     ],
-    "reads": ["paper/PLAN.md", "paper/research/real-bugs-mcp.md", "paper/research/real-bugs-mcp.candidates.json", "packages/replay-proc/**", "packages/sandbox/**", "packages/llm/**", "packages/contracts/**"],
+    "reads": [
+      "paper/PLAN.md",
+      "paper/research/real-bugs-mcp.md",
+      "paper/research/real-bugs-mcp.candidates.json",
+      "packages/replay-proc/**",
+      "packages/sandbox/**",
+      "packages/llm/**",
+      "packages/contracts/**"
+    ],
     "depends_on": ["CORE", "VOCAB", "SBX", "RBX", "LLMR"],
     "deliverables": [
       "realbugs/R9/{pins.json (incl. repo: vats98754/rb-r9-mcp-server-cloudflare; round 7), contract.json, contract-log.md, fixtures/ (recorded|synthesized labels), harness/, heldout/, issue.md (upstream issue title + body, for ISSUE-TEXT), adapter.json (server command, base-URL env, prefix/fix SHAs, test command, testRunner, suiteScope = the repo tests that run offline in the SBX image, allowedEditPaths, human-fix test paths, heldout command; consumed by RBA), ATTRITION.md}",
@@ -1109,8 +1201,45 @@
       "apps/**",
       "paper/build-logs/INTEG.md"
     ],
-    "reads": ["paper/PLAN.md", "paper/WORKSTREAMS.json", "paper/build-logs/**", "deps-fragments/**", "packages/**", "paper/**", "scripts/**"],
-    "depends_on": ["CORE-SEED", "CORE", "VOCAB", "MON", "SAFE", "SBX", "BENCHX", "LLMR", "MUT", "INJ", "DOM2", "CU", "SEC", "RBX", "AN", "PREREG", "BASE", "ORCH", "ARMS", "DET", "BLIND", "TRAFFIC", "HOLD", "RUN", "RB-R10", "RB-R19", "RB-R20", "RB-R9"],
+    "reads": [
+      "paper/PLAN.md",
+      "paper/WORKSTREAMS.json",
+      "paper/build-logs/**",
+      "deps-fragments/**",
+      "packages/**",
+      "paper/**",
+      "scripts/**"
+    ],
+    "depends_on": [
+      "CORE-SEED",
+      "CORE",
+      "VOCAB",
+      "MON",
+      "SAFE",
+      "SBX",
+      "BENCHX",
+      "LLMR",
+      "MUT",
+      "INJ",
+      "DOM2",
+      "CU",
+      "SEC",
+      "RBX",
+      "AN",
+      "PREREG",
+      "BASE",
+      "ORCH",
+      "ARMS",
+      "DET",
+      "BLIND",
+      "TRAFFIC",
+      "HOLD",
+      "RUN",
+      "RB-R10",
+      "RB-R19",
+      "RB-R20",
+      "RB-R9"
+    ],
     "deliverables": [
       "Root scripts: paper:check -> paper/.venv/bin/python paper/scripts/paper_check.py; exp -> tsx packages/exp/src/main.ts; pretest runs ensure-shop-mcp.mjs and ensure-tracker-mcp.mjs (round 6); .gitignore adds paper/.venv/ (.work/ already ignored and excluded by biome.json; every external clone lives under it)",
       "Committed pnpm-lock.yaml; all new external dependencies pinned exactly and published >= 14 days before install",

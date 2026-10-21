@@ -14,7 +14,9 @@
       "!**/dist",
       "!.claude",
       "!bench/results",
-      "!bench/evidence"
+      "!bench/evidence",
+      "!paper/research",
+      "!paper/results/raw"
     ]
   },
   "formatter": {
