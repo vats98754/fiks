@@ -56,3 +56,6 @@ Six rounds. The verifier attacked the repair gates as an adversarial agent and f
 ## Missing / blocked
 - Credentials: resolved. `.env` holds `CLAUDE_CODE_OAUTH_TOKEN`; repair and bench use the Claude Agent SDK. M0–M3 tests run with no credential.
 - Hackathon judging criteria and submission rules are not yet pasted into CLAUDE.md (KICKOFF step 4).
+
+## Paper build log
+- 2026-10-21 CORE-SEED merged (ff-only) at 83e12bd; verifier round 5 (rebase on 7a1d2cf was a no-op; merger re-check on that head: typecheck/lint 0, seed 25/25, domain-hooks 3/3, apply-dep-fragments --selftest 22/22, full suite 158/158); no deps-fragments; no external steps. Note: pnpm-lock.yaml not regenerated (lockfile changes owned by INTEG); streams run pnpm install --no-frozen-lockfile in SETUP.
