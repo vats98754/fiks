@@ -12,7 +12,7 @@ Status per milestone in PLAN.md. Every PASS here is a verifier PASS with a commi
 | M4 repair + PR (green-CI gate) | PASS | (this commit) | live, real Claude agent (claude-opus-5-5 via Agent SDK + OAuth token), 1 attempt each, green CI before PR: D2 vats98754/shop-mcp#1, D1 #2, D3 #3 (with fiks re-record commit), D5 #4. D4 waits for #2 to merge (same file). |
 | M5 bench + summary.json | PASS; phase C run | (this commit) | phases A, B, B_v2_direct run live (claude-sonnet-5-5 via Agent SDK + OAuth); phase C waits for the fix PRs to be merged |
 | M6 dashboard | PASS | (this commit) | built from summary.json + loop events only; designer pass done |
-| M7 README / DEMO / claims audit | in progress | | README.md, DEMO.md, docs/chart.svg, scripts/check-claims.mjs; claims-auditor not yet run |
+| M7 README / DEMO / claims audit | PASS | (this commit) | claims-auditor round 1 FAIL (overstated C1/C3/C9/C11/C19 wording, merge wording, untagged bench facts, missing no-answer disclosure, RESEARCH C26 SHOULD vs MUST); fixed; round 2 PASS. Clean-clone demo run (below) |
 
 ## Environment decisions
 - Node: the machine default was v22.5.1, which is below the Vitest 5 / Vite 8 floor (22.12). Installed v22.23.3 via nvm; `.nvmrc` = 22, `engines.node` = `>=22.12`, `engine-strict=true`. The login shell PATH still pins v22.5.1, so run commands with `export PATH=$HOME/.nvm/versions/node/v22.23.3/bin:$PATH` (or `nvm use`).
@@ -38,21 +38,21 @@ Status per milestone in PLAN.md. Every PASS here is a verifier PASS with a commi
 ## Final bench (2026-10-20, fiks 705e989, claude-sonnet-5-5, 6 tasks x 5)
 - A_v1 100% pass^5, 0 violated receipts; B_v2_direct (no fiks) 50%, 5 wrong (T5 1970) + 2 no answer; B_v2 (fiks receipts v2) 83.3%, 0 wrong, 5 declined (all T3: the vendor really lost the order); C_v2_fixed (all fix PRs merged) 100%, 0 violations.
 - shop-mcp PRs #1-#4, #6, #7 merged by the user's request (2026-10-20); `fiks confirm`: D1-D5 confirmed on main 7bf2e66.
+- Clean clone (2026-10-20, fresh `git clone` of vats98754/fiks into a temp dir): `pnpm i` exit 0; `pnpm test` 25 files / 147 tests pass; `pnpm demo --base fresh --drifts D1,D2,D3` exit 0, 1 attempt each, green CI, PRs vats98754/shop-mcp#8 (D1), #9 (D2), #10 (D3) on base `demo/20261020T225756`. Those demo PRs are left open, not merged.
 - Earlier runs (2026-10-18, receipts v1 and the older harness) stay in bench/results as history; summary uses the latest full run per phase.
 
 ## M4 verification history
-Six rounds. The verifier attacked the repair gates as an adversarial agent and found, in order: the guard could be bypassed by committing; agent code could rewrite fiks's re-recordings during the gates; a detached helper could doctor them before fiks hashed them; the re-record input (vendor profile) was read from disk; a planted symlink could redirect which committed recording was read. Each is fixed and each attack is now a permanent test in `packages/cli/test/repair.test.ts`. Round 6 re-ran all four PoCs: each ends in `gate_failed` with no PR. Extra hardening: git hooks disabled for fiks's git calls, refused re-records end as `gate_failed`, and the PR head must equal the commit that passed CI (else the PR is closed). shop-mcp PR #6 adds the same re-record rule to the tool's own suite (open, for human review).
+Six rounds. The verifier attacked the repair gates as an adversarial agent and found, in order: the guard could be bypassed by committing; agent code could rewrite fiks's re-recordings during the gates; a detached helper could doctor them before fiks hashed them; the re-record input (vendor profile) was read from disk; a planted symlink could redirect which committed recording was read. Each is fixed and each attack is now a permanent test in `packages/cli/test/repair.test.ts`. Round 6 re-ran all four PoCs: each ends in `gate_failed` with no PR. Extra hardening: git hooks disabled for fiks's git calls, refused re-records end as `gate_failed`, and the PR head must equal the commit that passed CI (else the PR is closed). shop-mcp PR #6 adds the same re-record rule to the tool's own suite (merged 2026-10-20 at the user's request).
 
 ## Agent-ux findings on the real bench (M5)
 - 0 v1 false positives (37 A calls verified); receipts noticed and followed in 30/30 B trials; 0 receipt-missing outside the receipt-field-off evidence run.
 - Losses with receipts are "recovery path absent": T1/T2 (10 trials) declined because the receipt said "price is null" / "do not quote" while fiks held the upstream fact (`unit_amount = 1199`, cents). T5 shows the fix pattern: the receipt quoted the upstream value and the agent went 0/5 -> 5/5.
 - T4-3/T4-5: correct text, no submit; the combined receipt ends in a bare "tell the user." and the harness prompt says "when you have the answer".
-- Proposed receipt v2 (not applied): show upstream fields the tool dropped, labelled unconfirmed; combined search receipt names the verified total and suggests narrower searches; read-after-write states the probe's 404; a "hedged wrong" grading outcome first, so the bench can show whether wrong answers come back. Applying it needs a re-run of phase B.
+- Receipt v2 (applied in 705e989, phase B re-run; see Final bench): show upstream fields the tool dropped, labelled unconfirmed; combined search receipt names the verified total and suggests narrower searches; read-after-write states the probe's 404; a "hedged wrong" grading outcome first, so the bench can show whether wrong answers come back. Applying it needs a re-run of phase B.
 
 ## Known limits of the gates (must appear in README Limitations)
 - Contracts check ranges, nullness, counts, uniqueness, freshness, read-after-write and agreement with the upstream response. They cannot tell a correct value from a plausible wrong one when no upstream field says what the value should be. Examples found by the verifier: a D2 "fix" that returns a constant in-range price, or a D1 "fix" that clamps prices to the range ceiling, passes the suite. Fiks never merges; human review of the PR is the backstop. Never claim a green suite proves a fix is correct.
 
 ## Missing / blocked
-- Credential: the user has only a Claude Code OAuth token. Put it in `.env` as `CLAUDE_CODE_OAUTH_TOKEN` and leave `ANTHROPIC_API_KEY` empty. The bench agent moves from `@anthropic-ai/sdk` to the Claude Agent SDK (see PLAN.md ground rules).
-- `.env` now exists (created by the user; not loaded by any code yet). `ANTHROPIC_API_KEY` is first used in M4 (live repair) and M5 (bench). M0–M3 tests run with the key unset.
+- Credentials: resolved. `.env` holds `CLAUDE_CODE_OAUTH_TOKEN`; repair and bench use the Claude Agent SDK. M0–M3 tests run with no credential.
 - Hackathon judging criteria and submission rules are not yet pasted into CLAUDE.md (KICKOFF step 4).

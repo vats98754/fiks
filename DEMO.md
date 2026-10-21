@@ -9,7 +9,7 @@ Before you start, have these ready:
 ## 0:00 – 0:30 The problem
 
 Say:
-> "Agents trust tool results; that's their only view of the world [C1]. MCP servers often fail without an error: a 200 with the wrong data [C3]. Given a null or malformed payload, agents make something up in 56.6% of cases [C9]. A monitor can warn one agent, but the tool stays broken for the next one [C11, C12]."
+> "Agents get their ground truth from tool results at each step [C1]. MCP servers can fail without an error: a success response with the wrong data [C3]. In one study, given a null or malformed payload, agents made something up in 56.6% of valid responses [C9]. A monitor can help one agent recover [C11]; we believe the tool stays broken for the next one [C12]."
 
 Show `vendor-diff`. The vendor's spec is identical before and after its update, and five behaviors changed:
 
@@ -25,7 +25,7 @@ Run one drift through the proxy, against the tool as it was when the vendor chan
 pnpm fiks scenario D2
 ```
 
-Point at the receipt the agent sees: `price is null, but p-1001 should have one. Do not treat the missing price as meaningful…`.
+Point at the receipt the agent sees: `price is null, but p-1001 should have one; vendor sent unit_amount = 1199 (in 20-2000 USD). Don't say there is no price; if you use the vendor value, say unconfirmed.`
 
 Say:
 > "Same tool, same response. fiks checked it against an outcome contract and told the agent. It also saved the exact call and the raw upstream HTTP as a trace."
@@ -55,11 +55,11 @@ Say:
 ## 2:10 – 2:50 What it changed
 
 Switch to the dashboard.
-- **Headline:** before the vendor change, 100% pass^5. After it, 50% without fiks and 83% with fiks receipts. With the fiks PRs merged, back to 100% (bench).
+- **Headline:** before the vendor change, 100% pass^5. After it, 50% without fiks and 83% with fiks receipts; about half of that gap is the agent not calling `submit_answer` (bench). With the fiks PRs merged, back to 100% (bench).
 - **"What the agent told the user":**
   > "Without fiks, the agent told the user the order was placed in 1970. With fiks receipts: no wrong answers, and the only declines are the order that really was lost. Then the fixes land, and it's 100% without needing receipts at all" (bench).
 - **Loop table:** all five drifts, each from violation to green PR in under two minutes, in one agent attempt, merged and confirmed (bench).
-- **Timeline:** click D1 and walk it from violation to PR, with every step linked to evidence.
+- **Timeline:** click D1 and walk it from violation to merge, with links to the trace, the test, the commit, the CI run and the PR.
 
 ## 2:50 – 3:00 Close
 

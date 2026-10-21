@@ -4,13 +4,13 @@
 
 ## The 30-second pitch
 
-- Agents act on whatever their tools return: tool results are their ground truth [C1].
-- MCP servers often fail *without* failing. In 833 confirmed runtime-fault threads, servers returned well-formed success responses despite incorrect behavior, so crash- or error-based detection is not enough [C3]. Payloads can conform to the declared schema and still break assumptions [C4]. When tools return HTTP 200 with empty, null or malformed payloads, agents fabricate results in 56.6% of valid responses [C9].
-- Runtime monitors help one agent retry, but they leave the tool broken for every future agent [C11, C12].
-- The bottleneck in automated repair is a test that truly reproduces the bug [C17, C18]. A violation caught at runtime comes with the exact call, the raw upstream response and the broken property: a ground-truth reproduction [C19].
+- Agents rely on tool results for ground truth at each step [C1].
+- MCP servers can fail *without* failing. In a study of 833 confirmed MCP runtime-fault threads, the authors observed servers returning well-formed success responses despite incorrect behavior, and conclude that crash- or error-based detection is not enough [C3]. Payloads can conform to the declared schema and still break assumptions [C4]. In one study with injected HTTP 200 responses carrying empty, null or malformed payloads, agents fabricated results in 56.6% of valid responses [C9].
+- Runtime monitors help the current agent recover [C11]; we believe the tool stays broken for every future agent until someone fixes it [C12].
+- The bottleneck in automated repair is a test that truly reproduces the bug [C17, C18]. A violation caught at runtime comes with the exact call, the raw upstream response and the broken property. We believe that makes it a ground-truth reproduction [C19].
 - fiks closes the loop. It catches the violation in the traffic passing through its proxy, turns it into a failing test, has a coding agent fix the tool, and opens a PR only after CI is green, since each failed CI check lowers merge odds [C21]. It never merges.
 
-We have not found another product that turns silent runtime violations into verified fix PRs [C28]. Spec-diff tools cannot see a behavior change when the spec stays the same, and error-driven autofix never gets an error [C27].
+We have not found another product that turns silent runtime violations into verified fix PRs [C28]. Spec-diff tools cannot see a behavior change when the spec stays the same, and error-driven autofix never gets an error [C27, C28].
 
 ## What it did here (bench)
 
@@ -32,7 +32,7 @@ The bench agent is a **Claude Agent SDK agent** (claude-sonnet-5-5) with no buil
 | After the change, with the fiks PRs merged | 100% (bench) | 100% (bench) | 30 | 0 | 0 | 0 |
 
 - **False positives on the old vendor version:** 0 violated receipts in 30 trials (bench).
-- **The loop, run live with a Claude Agent SDK repair agent (claude-opus-5-5).** Every PR was merged by a human, and `fiks confirm` then re-ran each drift live on the merged `main` with zero violations and replayed every stored trace clean.
+- **The loop, run live with a Claude Agent SDK repair agent (claude-opus-5-5).** The PRs were merged on 2026-10-20 at the repo owner's request, by the assistant operating fiks with the owner's GitHub credentials. They were not reviewed line by line by a person. `fiks confirm` then re-ran each drift live on the merged `main` with zero violations and replayed every stored trace clean (bench). The merged `main` also holds #6, a test-harness-only change.
 
   | Vendor change | Repro fails, then passes | CI green before PR | Captured violation → PR | Agent attempts | PR | Merged and confirmed |
   |---|---|---|---|---|---|---|
@@ -43,10 +43,10 @@ The bench agent is a **Claude Agent SDK agent** (claude-sonnet-5-5) with no buil
   | D5 timestamps now epoch ms | yes | yes | 1.4 min (bench) | 1 | [#4](https://github.com/vats98754/shop-mcp/pull/4) | yes |
 
 **How to read the middle rows.**
-- **Without fiks:** the agent answered "1970-01-01" for the order date in all 5 timestamp trials; 3 of them added that it might be a placeholder. It also never submitted an answer in 2 price trials.
-- **With fiks receipts:** it gave no wrong answers. Receipts state what the vendor actually sent when the tool dropped it, for example `vendor sent unit_amount = 1199 (in 20-2000 USD)`, and the agent used it as unconfirmed. The 5 declines are all the order task: the vendor really did not save the order, so "could not confirm" is the right answer there.
+- **Without fiks:** the agent answered "1970-01-01" for the order date in all 5 timestamp trials; 3 of them added that it might be a placeholder (bench). In 2 price trials it stated the right price in its text but never called `submit_answer`, which the grading rule counts as a failure (bench). Without those two, the without-fiks pass^5 would be 66.7%, so about half of the gap to the with-receipts row is a submission failure rather than wrong data (bench).
+- **With fiks receipts:** it gave no wrong answers. Receipts state what the vendor actually sent when the tool dropped it, for example `vendor sent unit_amount = 1199 (in 20-2000 USD)`, and the agent used it as unconfirmed. The 5 declines are all the order task, where the vendor really did not save the order. We consider "could not confirm" the right answer there, though the grader counts it as a failure. The same 5 declines happen without fiks, so they are not a fiks effect (bench).
 - **After the merged fixes:** every task passes with no violations, without relying on receipts.
-- **The search-count task** does not separate the phases well, because the search result's `total` field still says 7 even when only one page comes back.
+- **The search-count task** does not separate the phases well, because the search result's `total` field still says 7 even when only one page comes back (bench).
 
 **Receipt wording matters.** An earlier version of the receipts said only what was wrong and told the agent not to quote the value. With it, the same bench gave a pass^5 of 33.3% with fiks against 66.7% without (bench). The agent declined tasks it could have solved by reasoning around the bad data. That run, and its review from the agent's side, are kept in `bench/results/B_v2_20261018T093754` and PROGRESS.md. The current receipts add observed facts and never stop the agent from checking another tool. The earlier runs used an older harness: its prompt did not insist on `submit_answer`, and hedged wrong values counted as declines. So only the four runs dated 2026-10-20 are compared above.
 
@@ -61,15 +61,15 @@ agent ──MCP──▶ fiks-proxy ──MCP──▶ shop-mcp ──HTTP──
              ─▶ repair agent in a git worktree (may edit src/ only)
              ─▶ gates: repro passes, full contract suite, every stored trace, typecheck, lint
              ─▶ push, wait for CI on that exact commit ─▶ PR (only if green; never merged)
-             ─▶ after a human merges: `fiks confirm` re-runs the call live and replays every trace
+             ─▶ after the PR is merged: `fiks confirm` re-runs the call live and replays every trace
 ```
 
-1. **Observe.** `fiks-proxy` sits in front of any MCP server, over stdio or Streamable HTTP. It checks each tool result against an outcome contract: the declared `outputSchema` [C26], plus semantic invariants (ranges, non-null for known-good inputs, counts, uniqueness, freshness, agreement with the upstream response) and read-after-write postconditions confirmed against the upstream [C4, C8]. Each result gets a receipt in `_meta`, a final text block, and a `fiks_receipt` field, because Claude Code shows the model only `structuredContent`. The upstream fields are never changed.
+1. **Observe.** `fiks-proxy` sits in front of any MCP server, over stdio or Streamable HTTP. It checks each tool result against an outcome contract: the declared `outputSchema` [C26], plus semantic invariants (ranges, non-null for known-good inputs, counts, uniqueness, freshness, agreement with the upstream response) and read-after-write postconditions confirmed against the upstream [C4, C8]. Each result gets a receipt in `_meta`, a final text block, and a `fiks_receipt` field, because Claude Code shows the model only `structuredContent` (bench evidence: `bench/evidence/receipt-field`, one trial with and without the field). The upstream fields are never changed.
 2. **Capture.** A violation is saved as a trace: the call, the raw upstream HTTP, the violated properties and the upstream profile.
 3. **Reproduce.** The trace becomes a vitest test in the tool's repo. It must fail on the current code with an assertion that names exactly the violated properties: not "unmatched request", not "error instead of data", not anything else. It must also fail the same way on repeated runs: 3 in the current code (as for D4's PR), and 2 when the first four PRs were made.
 4. **Repair.** A coding agent (Claude Agent SDK) runs in an isolated git worktree. It can edit `src/` only and run only `pnpm typecheck|lint|test`, and fiks rejects commits, test edits, and files changed after they were checked. When a fix legitimately changes upstream requests (a new header, a second page), fiks itself re-records the call against the same upstream, in a separate commit.
 5. **Ship.** fiks pushes the branch, waits for CI on that exact commit, and opens a PR only if it is green. The PR body has what broke, the trace, the test, the fix, before and after, and every gate. Nothing auto-merges.
-6. **Confirm.** After a human merges, `fiks confirm` re-runs the drift live and replays the whole suite on the merged main.
+6. **Confirm.** After the PR is merged, `fiks confirm` re-runs the drift live and replays the whole suite on the merged main.
 
 ## Run it
 
@@ -103,7 +103,7 @@ pnpm dashboard                 # the results page
 - **Agent code runs on the host.** The repair agent's `src/` changes execute during the gates on the machine running fiks, with the user's environment. fiks owns the bytes it commits: it reads inputs from git, builds its own files in memory, verifies every committed blob, and requires the PR head to be the commit that passed CI. It also runs git with hooks disabled. But it does not sandbox the process, so code running on the host could still act with the user's credentials outside fiks, for example by pushing to the branch after the check. CI on GitHub's clean runner is the final gate.
 - **One call at a time per upstream.** The HTTP tap serializes calls so each upstream exchange belongs to exactly one tool call.
 - **The upstream must be configurable.** Upstream checks need the server to read its upstream base URL from an environment variable that fiks can point at its tap. Without a tap, those checks are skipped, and the receipt's `_meta.upstreamObserved` says so.
-- **One run per phase, one model.** Each phase is 30 trials with one model on one day (bench). Each run's `meta.json` records the model, the shop-mcp commit and the fiks commit the bench ran from.
+- **One run per phase, one model.** Each phase is 30 trials with one model on one day (bench). Each run's `meta.json` records the model, the shop-mcp commit and the fiks commit the bench ran from. For three of the four 2026-10-20 runs it also says `fiksDirty: true`. That came from the earlier runs' output files being uncommitted at the time; the `packages/` code did not differ from the recorded commit. The 2026-10-18 runs predate commit recording.
 - **The loop traces came from scripted calls.** The five PRs were made from `fiks repair --scenario` runs, which send fixed calls through the proxy, not from the bench agent's traffic.
 
 ## Repository

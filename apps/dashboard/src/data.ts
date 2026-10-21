@@ -115,7 +115,7 @@ const STEP_LABELS: Record<string, string> = {
 
   gate_ci: 'CI on the pushed commit',
   pr_opened: 'Pull request opened',
-  pr_merged: 'Merged by a human',
+  pr_merged: 'Merged into main',
   confirmed: 'Confirmed on merged main',
 };
 

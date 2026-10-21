@@ -158,7 +158,9 @@ export async function bench(opts: {
     runId,
     phase: label,
     fiksSha: git(ROOT, 'rev-parse', 'HEAD'),
-    fiksDirty: git(ROOT, 'status', '--porcelain').length > 0,
+    // The bench's own output folders do not count: only code and docs changes make a run "dirty".
+    fiksDirty:
+      git(ROOT, 'status', '--porcelain', '--', '.', ':!bench/results', ':!bench/evidence').length > 0,
     proxy: !opts.direct,
     receiptField: !opts.direct && !opts.noReceiptField,
     model,

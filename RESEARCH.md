@@ -93,7 +93,7 @@ https://workos.com/blog/ai-agent-web-traffic-what-developers-need-to-change
 https://events.ycombinator.com/MakeSomethingAgentsWant
 https://www.tipranks.com/news/private-companies/manufact-deepens-ai-agent-ecosystem-engagement-with-yc-hackathon
 
-**C26 [Primary]** MCP spec 2025-11-25 lets tools declare `outputSchema`; results SHOULD include conforming `structuredContent`. (Our contracts extend this with semantic invariants, per C4.)
+**C26 [Primary]** MCP spec 2025-11-25 lets tools declare `outputSchema`; servers MUST return `structuredContent` that conforms to it (corrected from "SHOULD" after the claims audit re-read the spec). (Our contracts extend this with semantic invariants, per C4.)
 https://modelcontextprotocol.io/specification/2025-11-25/server/tools
 
 **C27 [Primary] Adjacent products — what they start from:**
