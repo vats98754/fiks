@@ -1,0 +1,7 @@
+{
+  "model": "qwen2.5:7b-instruct",
+  "digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e",
+  "parameters": "7.6B",
+  "quantization": "Q4_K_M",
+  "approval": "PLAN.md 8.0, user decision 2026-10-21: one ollama 7-8B Q4 instruct model, used only for ideation and held-out traffic"
+}
