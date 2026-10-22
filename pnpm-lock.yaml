@@ -146,6 +146,12 @@ importers:
         specifier: workspace:*
         version: link:../interfaces
 
+  packages/injector:
+    devDependencies:
+      '@fiks/vendor-api':
+        specifier: workspace:*
+        version: link:../vendor-api
+
   packages/interfaces:
     dependencies:
       '@fiks/contracts':
