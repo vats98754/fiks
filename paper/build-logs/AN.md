@@ -159,3 +159,55 @@ exit 0; the lockfile edit stays uncommitted). The venv was deleted and rebuilt w
 | `git status --porcelain paper/results/raw paper/results/confirmatory.lock` | PASS: empty |
 | `pnpm typecheck` | PASS: exit 0 |
 | `pnpm lint` | FAIL while `paper/.venv` is untracked (finding 3); exit 0 with the root `.gitignore` line |
+
+## Round 3 (2026-10-21)
+
+Base: rebased onto main `aa7e28a` (DOM2 merged; includes MON `af2fb1f`/`bb58fb4` and BENCHX), clean
+rebase, no conflicts. The uncommitted SETUP lockfile drift from round 2 was discarded before the
+rebase. SETUP re-run: `node scripts/apply-dep-fragments.mjs` → "nothing to apply";
+`pnpm install --no-frozen-lockfile` exit 0 and no tracked-file change (`git status --short` shows
+only the untracked `paper/.venv/`). The venv was deleted and rebuilt from scratch (Python 3.12.7,
+`pip check` clean).
+
+### Verifier findings
+
+1. **simulate_null (ii) H3a at alpha 0.05 (still open, needs the planner).** PLAN §9.1 (ii) on
+   main `aa7e28a` still asks for the two-sided band and no erratum is recorded, so the gate is
+   unchanged. Re-run with the same seed (20261021), DGPs and gate: H3a alpha 0.05 rejection
+   0.0335 vs [0.0354, 0.0646], `simulate_null: FAIL`, exit 1; every other row passes. Seed, DGPs
+   and gate were not touched. Once the planner records the erratum (one-sided gate, more datasets
+   for (ii), or a DGP change) in PLAN §9.1 (ii) and the AN acceptance, AN re-runs with the seed
+   unchanged under the new gate.
+2. **Lint with the venv present (still open, needs INTEG/orchestrator).** Root `.gitignore` and
+   `biome.json` are not AN-owned and main still lacks `paper/.venv/`. Measured again: with the
+   venv, `pnpm lint` exits 1 (Biome panic "path is expected to be under the root"); with the venv
+   moved aside, exit 0 ("Checked 211 files … No fixes applied."). Fix: add `paper/.venv/` to the
+   root `.gitignore` (or `!paper/.venv` to `biome.json` `files.includes`) before AN merges.
+3. **Stale base (fixed).** ws/AN now sits on main `aa7e28a`; every item below was re-run on it.
+4. **`power.py all --check` wrote the committed outputs for any PLAN (fixed).** `--out` and
+   `--macros` no longer have defaults. The committed `paper/results/power.json` and
+   `paper/macros/power.tex` are written only when `--check` is the canonical `paper/PLAN.md` and
+   `--manifest` the canonical `power_manifest.json`; on any other input only an explicit
+   `--out` / `--macros` is written, and stderr says the committed files were not written.
+   `--no-write` still writes nothing. `paper_check.py` is unaffected (it calls `check_manifest`
+   directly). New tests: `test_all_check_on_a_mutated_plan_copy_never_writes_the_committed_outputs`,
+   `test_all_check_with_a_non_canonical_manifest_never_writes_the_committed_outputs`.
+
+### Acceptance evidence (round 3, base `aa7e28a`)
+
+| Item | Result |
+|---|---|
+| fresh venv + `pip install -r` + `pytest paper/scripts/tests` | PASS: 90 passed |
+| `power.py all --check paper/PLAN.md` | PASS: "72/72 entries pass; 0 problems", exit 0; committed outputs unchanged |
+| `binom` / `binom-min` | PASS: crit 18, size 0.0123, 0.821, >= 0.99; 217 |
+| `ni` / `harm` (§3.3 round-4 table) | PASS: 0.468 0.312 0.389 0.256 0.288 0.190 / 0.243 0.161 0.200 0.134 0.149 0.102; 0.385 0.239 0.307 0.188 0.214 0.132 |
+| `frame --frame-spec fixtures/frame-spec.json` (+ 1,000 / 200 in tests) | PASS: no top-up, crit 18, 0.821, underpowered False, m 4 |
+| `anyfp --n 50 --pi 0.02 0.01` | PASS: 0.636 0.395 |
+| H1, H3/holm, classify, h2, h3h4 = eval_stats paired, per-class rows, e*-lock units | PASS (in the 90) |
+| `simulate_null.py --check --datasets 2000` | **FAIL** (ii) H3a alpha 0.05 = 0.0335; blocked on the PLAN erratum (finding 1) |
+| `simulate_power.py --configs S0 S2 S3 --n 61 40` | PASS: exit 0; `power.json` byte-identical |
+| `paper_check.py` | PASS: "paper:check PASS" |
+| `check_workstreams.py paper/WORKSTREAMS.json` | PASS: exit 0 ("est_hours total: 574") |
+| `git status --porcelain paper/results/raw paper/results/confirmatory.lock` | PASS: empty |
+| `pnpm typecheck` | PASS: exit 0 |
+| `pnpm lint` | FAIL with `paper/.venv` present (finding 2); exit 0 with it moved aside |
