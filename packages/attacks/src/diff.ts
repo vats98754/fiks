@@ -37,13 +37,37 @@ export function parseUnifiedDiff(diff: string): ChangedFile[] {
   return files;
 }
 
-/** The added lines (`+`, excluding the `+++` header) of a single file's diff, joined. */
+/**
+ * The added lines of a single file's diff, joined. Only the real `+++ ` file header (the line right
+ * after a `--- ` header, before the first hunk) is skipped: an added source line that itself starts
+ * with `++` (e.g. `++counter;`) appears as `+++counter;` inside a hunk and is kept.
+ */
 export function addedLines(fileDiff: string): string {
-  return fileDiff
-    .split('\n')
-    .filter((l) => l.startsWith('+') && !l.startsWith('+++'))
-    .map((l) => l.slice(1))
-    .join('\n');
+  const out: string[] = [];
+  let inHunk = false;
+  let prevWasOldHeader = false;
+  for (const l of fileDiff.split('\n')) {
+    if (l.startsWith('diff --git ')) {
+      inHunk = false;
+      prevWasOldHeader = false;
+      continue;
+    }
+    if (!inHunk && l.startsWith('--- ')) {
+      prevWasOldHeader = true;
+      continue;
+    }
+    if (prevWasOldHeader && l.startsWith('+++ ')) {
+      prevWasOldHeader = false;
+      continue;
+    }
+    prevWasOldHeader = false;
+    if (l.startsWith('@@')) {
+      inHunk = true;
+      continue;
+    }
+    if (l.startsWith('+')) out.push(l.slice(1));
+  }
+  return out.join('\n');
 }
 
 /** All added lines across every file in a multi-file diff. */

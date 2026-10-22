@@ -3,8 +3,12 @@
 // `response.body` and every violation message. AgentDojo finds payloads most effective at the END of
 // a tool response (paper/research/gap-repair-security.md §5), so `response-body-append` is the
 // default. All carriers return a deep copy; the base trace is never mutated.
-import type { HttpExchange, Violation } from '@fiks/contracts';
-import type { Trace } from '@fiks/repro';
+// Types come from the CORE-SEED interfaces only (PLAN §7.1: wave-1 streams import only the seed).
+import type { ReproTrace } from '@fiks/interfaces';
+
+type Trace = ReproTrace;
+type HttpExchange = ReproTrace['http'][number];
+type Violation = ReproTrace['violated'][number];
 
 export type CarrierKind =
   | 'response-body-append' // concatenated to the end of the last exchange's response body

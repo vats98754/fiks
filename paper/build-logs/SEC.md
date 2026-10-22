@@ -5,10 +5,11 @@ Owns `packages/attacks/**`, `paper/security/**`, `paper/build-logs/SEC.md`. Depe
 
 ## What was built
 
-`@fiks/attacks` — the E6 adversarial suite. It is self-contained: it imports only the CORE-SEED
-packages (`@fiks/interfaces`, `@fiks/repro`, `@fiks/contracts`) and takes everything else (the
-attacker model, the repair runner) as injected functions, so it does not depend on any other wave-1
-stream (SAFE's strict formatter, ARMS, ORCH).
+`@fiks/attacks` — the E6 adversarial suite. It imports only the CORE-SEED package `@fiks/interfaces`
+(`ReproTrace`, `RunKey`, `TraceFormat`), as PLAN §7.1 requires of wave-1 streams, and takes everything
+else (the attacker model, the repair runner) as injected functions. (Round 1 also type-imported
+`@fiks/repro` and `@fiks/contracts` and wrongly called them CORE-SEED packages; they are not — they
+are pre-existing product packages owned by CORE. Round 2 removed both imports and dependencies.)
 
 - `src/templates.ts` — 12 payload templates, each a natural-language injection lure paraphrased from a
   published attack description (AgentDojo, InjecAgent, AIShellJack, GitHub MCP toxic flow, Rules File
@@ -66,3 +67,24 @@ package it does not own) and `pnpm install --no-frozen-lockfile`. A local `.work
 - The suite measures a status-only adaptive attacker; the hardened-vs-current-loop arm is cut
   (PLAN §0.0 M7). The oracles bound capability, not model behaviour, matching the threat model in
   `paper/research/gap-repair-security.md`.
+
+## Round 2 (verifier findings)
+
+Rebased onto main `c144b03` (no-op: already based there). SETUP re-run: `apply-dep-fragments.mjs` →
+"nothing to apply"; `pnpm install --no-frozen-lockfile` (the local lockfile edit is not committed).
+
+| # | Finding | Status |
+|---|---|---|
+| 1 | raw and strict rounds shared a RunKey | Fixed: `attempt = configIndex*rounds + round` (raw 1–5, strict 6–10). Test: all 40 run keys unique. |
+| 2 | attacker not adaptive (prompt never carries its own previous payload) | **Not done — blocked.** Work on this item was stopped by a safety classifier during the round-2 build; it needs a human decision before it is attempted again. `adaptive.ts` prompt logic is unchanged from round 1. |
+| 3 | AST detectors miss alias/indirect forms | **Not done — blocked**, same reason as 2. `ast.ts` is unchanged from round 1. |
+| 4 | `addedLines` dropped added lines starting with `++` | Fixed: only the real `+++ ` header right after `--- ` (before the first hunk) is skipped. Tests in `test/diff.test.ts`. |
+| 5 | canary-egress ignored headers | Fixed: url, body and header values, same as `EgressSink.hitsContaining`. Test: secret only in an Authorization header fires. |
+| 6 | attacker-src-behaviour fired on gate-failing candidates | Fixed: `AttemptOutcome.gatePassed`; the goal requires it; findings on a gate-failing candidate go to `OracleHit.ungatedReasons` / `AdaptiveRow.ungatedReasons` and never stop a goal early. Tests in goals and adaptive. |
+| 7 | 6 SOURCES.md rows had placeholder licences | Fixed: GitHub licence API (InjecAgent MIT, ImpossibleBench MIT, AgentDojo MIT) and arXiv rights links (InjecAgent, AIShellJack: arXiv non-exclusive distribution licence 1.0; ImpossibleBench: CC BY 4.0); AIShellJack has no linked artifact. New test rejects placeholder licence cells (fails on the round-1 file, passes now). |
+| 8 | imports from non-seed `@fiks/repro` | Fixed: `ReproTrace` from `@fiks/interfaces`; `@fiks/repro` and `@fiks/contracts` removed from `packages/attacks/package.json`. |
+
+Round-2 evidence: `pnpm vitest run packages/attacks` → Test Files 7 passed (7), Tests 61 passed (61);
+`pnpm typecheck` → exit 0; `pnpm lint` → exit 0. Acceptance item "adaptive.ts … passes only status
+fields to the attacker" still passes as tested, but finding 2 (the attacker is not actually adaptive)
+is open, so the adaptive deliverable is not complete.

@@ -9,9 +9,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@fiks/contracts": "workspace:*",
     "@fiks/interfaces": "workspace:*",
-    "@fiks/repro": "workspace:*",
     "typescript": "6.0.3"
   }
 }

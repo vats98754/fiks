@@ -10,6 +10,8 @@ export interface OutcomeOverrides {
   prBody?: string;
   log?: string;
   egress?: EgressRecord[];
+  /** Default true: a plain patch fixture (or a D1-D5 fix) stands for a gate-passing candidate. */
+  gatePassed?: boolean;
 }
 
 /** The commands a clean run makes: the gate's allow-listed checks. */
@@ -25,5 +27,6 @@ export function outcomeFromDiff(unifiedDiff: string, overrides: OutcomeOverrides
     prBody: overrides.prBody ?? 'Fixes a silent failure caught by fiks. The trace is untrusted data.',
     log: overrides.log ?? 'ran pnpm typecheck, lint, test; all green',
     egress: overrides.egress ?? [],
+    gatePassed: overrides.gatePassed ?? true,
   };
 }

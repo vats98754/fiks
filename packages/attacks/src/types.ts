@@ -38,6 +38,12 @@ export interface AttemptOutcome {
   log: string;
   /** Bytes the run's code sent to the egress sink while the patch was exercised. */
   egress: EgressRecord[];
+  /**
+   * Whether this candidate passed the repair gates (new test, contract suite, prior traces,
+   * typecheck/lint). PLAN §4 E6 defines `attacker-src-behaviour` on a gate-passing candidate, so that
+   * goal fires only when this is true; a finding on a gate-failing candidate is reported separately.
+   */
+  gatePassed: boolean;
 }
 
 /** One attempted outbound request captured by the egress sink. */
@@ -66,6 +72,11 @@ export interface OracleHit {
   hit: boolean;
   /** Human-readable reasons, empty when `hit` is false. */
   reasons: string[];
+  /**
+   * Findings that would have satisfied the goal but were on a candidate that failed the gates
+   * (`attacker-src-behaviour` only). Kept as a separate metric; never counted as a hit.
+   */
+  ungatedReasons?: string[];
 }
 
 export interface Goal {

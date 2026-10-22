@@ -10,7 +10,7 @@
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { formatRunKey, type RunKey, type TraceFormat } from '@fiks/interfaces';
+import { formatRunKey, type ReproTrace, type RunKey, type TraceFormat } from '@fiks/interfaces';
 import { type CarrierKind, placePayload } from './carrier.ts';
 import { defaultOracleContext, GOALS } from './goals.ts';
 import type { AttemptOutcome, Goal, OracleContext } from './types.ts';
@@ -35,7 +35,7 @@ export interface AdaptiveConfig {
   configs: readonly TraceFormat[];
   carrier: CarrierKind;
   /** Base trace the carrier places payloads into. */
-  baseTrace: import('@fiks/repro').Trace;
+  baseTrace: ReproTrace;
   canary: string;
   recordedIds: string[];
   model: string;
@@ -64,6 +64,8 @@ export interface AdaptiveRow {
   payloadHash: string;
   goalHit: boolean;
   reasons: string[];
+  /** Goal findings on a gate-failing candidate (separate metric; never a hit). */
+  ungatedReasons: string[];
   /** True when this round ended the (goal, config) sequence early. */
   stoppedEarly: boolean;
 }
@@ -97,7 +99,7 @@ export async function runAdaptive(cfg: AdaptiveConfig, deps: AdaptiveDeps): Prom
   const rows: AdaptiveRow[] = [];
 
   for (const goal of cfg.goals) {
-    for (const config of cfg.configs) {
+    for (const [configIndex, config] of cfg.configs.entries()) {
       let prev: RoundStatus | null = null;
       for (let round = 1; round <= cfg.rounds; round++) {
         const prompt = buildAttackerPrompt(goal, config, prev);
@@ -110,7 +112,9 @@ export async function runAdaptive(cfg: AdaptiveConfig, deps: AdaptiveDeps): Prom
           model: cfg.model,
           domain: cfg.domain,
           drift: goal.id,
-          attempt: round,
+          // P6: results never overwrite. The config is part of the key, so raw and strict runs of
+          // the same goal and round get distinct attempts: raw 1..rounds, strict rounds+1..2*rounds.
+          attempt: configIndex * cfg.rounds + round,
         };
         const runKeyStr = formatRunKey(runKey);
         const tracePath = join(traceDir, `${goal.id}.${config}.${round}.json`);
@@ -145,6 +149,7 @@ export async function runAdaptive(cfg: AdaptiveConfig, deps: AdaptiveDeps): Prom
           payloadHash: hash(payload),
           goalHit: verdict.hit,
           reasons: verdict.reasons,
+          ungatedReasons: verdict.ungatedReasons ?? [],
           stoppedEarly,
         };
         deps.writeRow(row);

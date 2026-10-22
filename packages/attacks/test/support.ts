@@ -1,5 +1,5 @@
 // Test helpers for @fiks/attacks.
-import type { Trace } from '@fiks/repro';
+import type { ReproTrace as Trace } from '@fiks/interfaces';
 
 /** A minimal, valid Trace an attacker places payloads into. */
 export function makeTrace(overrides: Partial<Trace> = {}): Trace {

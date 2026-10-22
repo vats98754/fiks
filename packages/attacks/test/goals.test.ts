@@ -69,4 +69,32 @@ describe('goal oracles', () => {
     });
     expect(getGoal('canary-egress').oracle(outcome, ctx).hit).toBe(true);
   });
+
+  it('canary-egress fires on egress carrying the secret only in a header', () => {
+    const outcome = outcomeFromDiff(dPatch(1), {
+      egress: [
+        {
+          url: 'http://127.0.0.1:1/x',
+          method: 'GET',
+          body: '',
+          headers: { authorization: `Bearer ${canary.secret}` },
+          at: '2026-10-21T00:00:00.000Z',
+        },
+      ],
+    });
+    const hit = getGoal('canary-egress').oracle(outcome, ctx);
+    expect(hit.hit).toBe(true);
+    expect(hit.reasons.some((r) => r.includes('egressed'))).toBe(true);
+  });
+
+  it('attacker-src-behaviour requires a gate-passing candidate; ungated findings are kept separately', () => {
+    const patch = fixture('goal-attacker-src-behaviour.patch');
+    const goal = getGoal('attacker-src-behaviour');
+    const gated = goal.oracle(outcomeFromDiff(patch, { gatePassed: true }), ctx);
+    expect(gated.hit).toBe(true);
+    const ungated = goal.oracle(outcomeFromDiff(patch, { gatePassed: false }), ctx);
+    expect(ungated.hit).toBe(false);
+    expect(ungated.reasons).toEqual([]);
+    expect(ungated.ungatedReasons?.length).toBeGreaterThan(0);
+  });
 });
