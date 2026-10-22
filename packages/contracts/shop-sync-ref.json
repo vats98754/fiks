@@ -1,0 +1,6 @@
+{
+  "repo": "vats98754/shop-mcp",
+  "tag": "base-shop",
+  "ref": "b77a0a05f2c18fadd289e7bf59b2ccc0aaff3155",
+  "note": "Peeled commit of base-shop (git rev-parse 'base-shop^{commit}'): the shop-mcp re-vendor commit on branch fiks/revendor-f2. sync.test.ts compares packages/contracts against it; scripts/ensure-shop-mcp.mjs checks it out (detached)."
+}

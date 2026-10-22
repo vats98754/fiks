@@ -1,0 +1,141 @@
+{
+  "ref": "seed-v1",
+  "sha": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7",
+  "tools": {
+    "search_products": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "price": {
+                "type": "number",
+                "description": "Unit price in US dollars."
+              },
+              "currency": {
+                "type": "string"
+              }
+            },
+            "required": ["id", "name", "category", "price", "currency"],
+            "additionalProperties": false
+          }
+        },
+        "count": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991,
+          "description": "Number of items returned."
+        },
+        "total": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991,
+          "description": "Number of products matching the query."
+        }
+      },
+      "required": ["items", "count", "total"],
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "get_product": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "price": {
+          "description": "Unit price in US dollars, or null if unpriced.",
+          "type": ["number", "null"]
+        },
+        "currency": {
+          "type": "string"
+        },
+        "in_stock": {
+          "type": "boolean"
+        }
+      },
+      "required": ["id", "name", "category", "price", "currency", "in_stock"],
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "create_order": {
+      "type": "object",
+      "properties": {
+        "order_id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "total": {
+          "type": "number",
+          "description": "Order total in US dollars."
+        }
+      },
+      "required": ["order_id", "status", "total"],
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    },
+    "get_order": {
+      "type": "object",
+      "properties": {
+        "order_id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "product_id": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "unit_price": {
+                "type": "number",
+                "description": "Unit price in US dollars."
+              }
+            },
+            "required": ["product_id", "quantity", "unit_price"],
+            "additionalProperties": false
+          }
+        },
+        "total": {
+          "type": "number",
+          "description": "Order total in US dollars."
+        },
+        "created_at": {
+          "type": "string",
+          "description": "When the order was placed, ISO-8601 UTC."
+        }
+      },
+      "required": ["order_id", "status", "items", "total", "created_at"],
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false
+    }
+  }
+}

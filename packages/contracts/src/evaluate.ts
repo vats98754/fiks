@@ -1,6 +1,8 @@
 import type {
   ContractFile,
+  CrossFieldOp,
   EvalInput,
+  EvalOptions,
   EvalResult,
   Invariant,
   JsonSchema,
@@ -158,7 +160,8 @@ function checkInvariant(
   inv: Invariant,
   data: unknown,
   input: EvalInput,
-): Violation | null | 'skip' {
+  perElement = false,
+): Violation[] | 'skip' {
   const propertyId = `${c.id}/${inv.id}`;
   const v = (path: string, expected: string, actual: unknown, message: string): Violation => ({
     propertyId,
@@ -180,49 +183,50 @@ function checkInvariant(
           (inv.min !== undefined && (value as number) < inv.min) ||
           (inv.max !== undefined && (value as number) > inv.max),
       );
+      if (perElement) {
+        return bad.map(({ at, value }) => v(at, expected, value, `${at} = ${value} is outside ${expected}`));
+      }
       const first = bad[0];
-      if (!first) return null;
+      if (!first) return [];
       const field = inv.path.split('.').pop() ?? inv.path;
       const message =
         values.length === 1
           ? `${first.at} = ${first.value} is outside ${expected}`
           : `${bad.length} of ${values.length} ${field}s outside ${expected} (${label(data, first.at)} = ${first.value})`;
-      return v(first.at, expected, first.value, message);
+      return [v(first.at, expected, first.value, message)];
     }
     case 'notNull':
     case 'nonEmpty': {
       if (inv.onlyKnownGood && !isKnownGood(c, input.args)) return 'skip';
+      const out: Violation[] = [];
       for (const { at, value } of select(data, inv.path)) {
         if (inv.kind === 'notNull' && (value === null || value === undefined)) {
-          return v(
-            at,
-            'not null',
-            value ?? null,
-            `${at} is null, but ${argText(input.args)} should have one`,
+          out.push(
+            v(at, 'not null', value ?? null, `${at} is null, but ${argText(input.args)} should have one`),
           );
         }
         if (inv.kind === 'nonEmpty' && (!Array.isArray(value) || value.length === 0)) {
-          return v(
-            at,
-            'non-empty array',
-            value,
-            `${at} is empty, but ${argText(input.args)} should have results`,
+          out.push(
+            v(at, 'non-empty array', value, `${at} is empty, but ${argText(input.args)} should have results`),
           );
         }
+        if (out.length && !perElement) break;
       }
-      return null;
+      return out;
     }
     case 'countMatchesTotal': {
       const items = getOne(data, inv.itemsPath);
       const total = getOne(data, inv.totalPath);
       if (!Array.isArray(items) || typeof total !== 'number') return 'skip';
-      if (items.length === total) return null;
-      return v(
-        inv.itemsPath,
-        `${inv.itemsPath}.length == ${inv.totalPath} (${total})`,
-        items.length,
-        `list is incomplete, ${items.length} of ${total} matches returned`,
-      );
+      if (items.length === total) return [];
+      return [
+        v(
+          inv.itemsPath,
+          `${inv.itemsPath}.length == ${inv.totalPath} (${total})`,
+          items.length,
+          `list is incomplete, ${items.length} of ${total} matches returned`,
+        ),
+      ];
     }
     case 'equalsUpstream': {
       const first = input.upstream?.[0];
@@ -240,44 +244,153 @@ function checkInvariant(
         inv.compare === 'instant'
           ? toTime(got) !== null && toTime(got) === toTime(want)
           : JSON.stringify(got) === JSON.stringify(want);
-      if (same) return null;
-      return v(
-        inv.path,
-        `${show(want)} (upstream ${inv.upstreamPath})`,
-        got,
-        inv.compare === 'instant'
-          ? `${inv.path} shows ${dateOnly(got)} but upstream sent ${toMinute(want)}`
-          : `${inv.path} = ${show(got)} but upstream sent ${show(want)}`,
-      );
+      if (same) return [];
+      return [
+        v(
+          inv.path,
+          `${show(want)} (upstream ${inv.upstreamPath})`,
+          got,
+          inv.compare === 'instant'
+            ? `${inv.path} shows ${dateOnly(got)} but upstream sent ${toMinute(want)}`
+            : `${inv.path} = ${show(got)} but upstream sent ${show(want)}`,
+        ),
+      ];
     }
     case 'unique': {
       const seen = new Map<string, string>();
+      const out: Violation[] = [];
       for (const { at, value } of select(data, inv.path)) {
         const key = JSON.stringify(value);
         const first = seen.get(key);
-        if (first !== undefined)
-          return v(at, 'unique values', value, `${at} = ${show(value)} repeats ${first}`);
+        if (first !== undefined) {
+          out.push(v(at, 'unique values', value, `${at} = ${show(value)} repeats ${first}`));
+          if (!perElement) break;
+          continue;
+        }
         seen.set(key, at);
       }
-      return null;
+      return out;
     }
     case 'freshness': {
       const now = input.now.getTime();
       const lo = now - inv.maxAgeDays * DAY_MS;
       const hi = now + (inv.maxFutureDays ?? 1) * DAY_MS;
       const expected = `within ${inv.maxAgeDays} days before and ${inv.maxFutureDays ?? 1} after now`;
+      const out: Violation[] = [];
       for (const { at, value } of select(data, inv.path)) {
         const t = toTime(value);
-        if (t === null) return v(at, expected, value, `${at} = ${show(value)} is not a timestamp`);
-        if (t < lo || t > hi) {
+        if (t === null) out.push(v(at, expected, value, `${at} = ${show(value)} is not a timestamp`));
+        else if (t < lo || t > hi) {
           const days = Math.round((now - t) / DAY_MS);
           const when = days >= 0 ? `${days} days old` : `${-days} days in the future`;
-          return v(at, expected, value, `${at} shows ${dateOnly(value)}, ${when}`);
+          out.push(v(at, expected, value, `${at} shows ${dateOnly(value)}, ${when}`));
         }
+        if (out.length && !perElement) break;
       }
-      return null;
+      return out;
+    }
+    case 'enum': {
+      if (inv.onlyKnownGood && !isKnownGood(c, input.args)) return 'skip';
+      const allowed = new Set(inv.values.map((x) => JSON.stringify(x)));
+      const expected = `one of ${inv.values.map(show).join(', ')}`;
+      const values = select(data, inv.path).filter((x) => x.value !== null && x.value !== undefined);
+      const bad = values.filter(({ value }) => !allowed.has(JSON.stringify(value)));
+      const field = inv.path.split('.').pop() ?? inv.path;
+      const one = (at: string, value: unknown) =>
+        v(at, expected, value, `${at} = ${show(value)} is not ${expected}`);
+      if (perElement) return bad.map(({ at, value }) => one(at, value));
+      const first = bad[0];
+      if (!first) return [];
+      if (values.length === 1) return [one(first.at, first.value)];
+      return [
+        v(
+          first.at,
+          expected,
+          first.value,
+          `${bad.length} of ${values.length} ${field}s not ${expected} (${label(data, first.at)} = ${show(first.value)})`,
+        ),
+      ];
+    }
+    case 'crossField': {
+      const objects = inv.path ? select(data, inv.path) : [{ at: '', value: data }];
+      const expected = `${inv.left} ${inv.op} ${inv.right}`;
+      const out: Violation[] = [];
+      for (const { at, value } of objects) {
+        const a = getOne(value, inv.left);
+        const b = getOne(value, inv.right);
+        if (a === undefined || a === null || b === undefined || b === null) continue;
+        const holds = relationHolds(a, inv.op, b, inv.tolerance ?? 0);
+        if (holds !== false) continue; // true, or not comparable (outputSchema's job)
+        const where = at ? `${at}.${inv.left}` : inv.left;
+        const rightAt = at ? `${at}.${inv.right}` : inv.right;
+        out.push(
+          v(where, expected, a, `${where} = ${show(a)} but ${rightAt} = ${show(b)}, expected ${expected}`),
+        );
+        if (!perElement) break;
+      }
+      return out;
+    }
+    case 'pageComplete': {
+      const pages: unknown[] = [];
+      for (const x of input.upstream ?? []) {
+        if (x.response.status < 200 || x.response.status > 299) continue;
+        let body: unknown;
+        try {
+          body = JSON.parse(x.response.body);
+        } catch {
+          continue;
+        }
+        if (select(body, inv.upstreamCursorPath).some((s) => s.value !== undefined)) pages.push(body);
+      }
+      const last = pages.at(-1);
+      if (last === undefined) return 'skip';
+      const cursor = getOne(last, inv.upstreamCursorPath);
+      if (cursor === null || cursor === undefined || cursor === false || cursor === '') return [];
+      const n = pages.length;
+      return [
+        v(
+          inv.upstreamCursorPath,
+          `upstream ${inv.upstreamCursorPath} empty on the last page read`,
+          cursor,
+          `list is incomplete, the tool stopped after ${n} upstream ${n === 1 ? 'page' : 'pages'} but upstream ${inv.upstreamCursorPath} = ${show(cursor)}`,
+        ),
+      ];
     }
   }
+}
+
+/** `a op b`: true or false, or null when the two values cannot be compared. */
+function relationHolds(a: unknown, op: CrossFieldOp, b: unknown, tolerance: number): boolean | null {
+  let d: number | null = null;
+  const ta = toTime(a);
+  const tb = toTime(b);
+  if (typeof a === 'number' && typeof b === 'number') d = a - b;
+  // A timestamp string on either side: compare as instants (ISO-8601 or epoch ms).
+  else if ((typeof a === 'string' || typeof b === 'string') && ta !== null && tb !== null) d = ta - tb;
+  if (d === null) {
+    if (op !== '==' && op !== '!=') return null;
+    const same = JSON.stringify(a) === JSON.stringify(b);
+    return op === '==' ? same : !same;
+  }
+  switch (op) {
+    case '==':
+      return Math.abs(d) <= tolerance;
+    case '!=':
+      return Math.abs(d) > tolerance;
+    case '<':
+      return d < 0;
+    case '<=':
+      return d <= 0;
+    case '>':
+      return d > 0;
+    case '>=':
+      return d >= 0;
+  }
+}
+
+/** One line of receipt text for a violation: what was wrong, against which property. */
+export function describeViolation(v: Violation): string {
+  return `${v.propertyId}: ${v.message} (expected ${v.expected})`;
 }
 
 function checkReadAfterWrite(
@@ -342,7 +455,11 @@ function checkReadAfterWrite(
 }
 
 /** Pure: checks one tool result against its contract. Never throws on odd payloads. */
-export function evaluate(contract: ToolContract | undefined, input: EvalInput): EvalResult {
+export function evaluate(
+  contract: ToolContract | undefined,
+  input: EvalInput,
+  opts: EvalOptions = {},
+): EvalResult {
   if (!contract) return { verdict: 'unverifiable', contractId: null, checked: [], violations: [] };
   const empty: EvalResult = { verdict: 'unverifiable', contractId: contract.id, checked: [], violations: [] };
   // An explicit tool error is not a silent failure; the agent already sees it.
@@ -373,6 +490,14 @@ export function evaluate(contract: ToolContract | undefined, input: EvalInput): 
 
   const checked: string[] = [];
   const violations: Violation[] = [];
+  const disabled: string[] = [];
+  const reenable = opts.reenable ?? [];
+  const isOff = (p: { id: string; disabled?: true }) => {
+    const propertyId = `${contract.id}/${p.id}`;
+    if (p.disabled !== true || reenable.includes(propertyId)) return false;
+    disabled.push(propertyId);
+    return true;
+  };
 
   const schema = contract.outputSchema ?? input.declaredOutputSchema;
   if (schema) {
@@ -390,16 +515,24 @@ export function evaluate(contract: ToolContract | undefined, input: EvalInput): 
       });
   }
   for (const inv of contract.invariants) {
-    const r = checkInvariant(contract, inv, data, input);
+    if (isOff(inv)) continue;
+    const r = checkInvariant(contract, inv, data, input, opts.perElement === true);
     if (r === 'skip') continue;
     checked.push(`${contract.id}/${inv.id}`);
-    if (r) violations.push(r);
+    violations.push(...r);
   }
   for (const post of contract.postconditions ?? []) {
+    if (isOff(post)) continue;
     checked.push(`${contract.id}/${post.id}`);
     const r = checkReadAfterWrite(contract, post, data, input);
     if (r) violations.push(r);
   }
   const verdict = violations.length ? 'violated' : checked.length ? 'verified' : 'unverifiable';
-  return { verdict, contractId: contract.id, checked, violations };
+  return {
+    verdict,
+    contractId: contract.id,
+    checked,
+    violations,
+    ...(disabled.length ? { disabled } : {}),
+  };
 }

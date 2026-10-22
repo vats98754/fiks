@@ -2,6 +2,7 @@ import shopContracts from '../contracts/shop-mcp.contracts.json' with { type: 'j
 import type { ContractFile } from './types.ts';
 
 export * from './evaluate.ts';
+export * from './fp-capability.ts';
 export type * from './types.ts';
 
 export const name = '@fiks/contracts';

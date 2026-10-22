@@ -1,0 +1,1013 @@
+[
+  {
+    "scenario": "v1-all",
+    "tool": "search_products",
+    "args": {
+      "query": "laptop"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"items\":[{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"price\":1199,\"currency\":\"USD\"},{\"id\":\"p-1002\",\"name\":\"Volt 13 Laptop\",\"category\":\"laptop\",\"price\":899,\"currency\":\"USD\"},{\"id\":\"p-1003\",\"name\":\"Titan 16 Laptop\",\"category\":\"laptop\",\"price\":1499,\"currency\":\"USD\"},{\"id\":\"p-1004\",\"name\":\"Nimbus 15 Laptop\",\"category\":\"laptop\",\"price\":749.5,\"currency\":\"USD\"}],\"count\":4,\"total\":4}"
+        }
+      ],
+      "structuredContent": {
+        "items": [
+          {
+            "id": "p-1001",
+            "name": "Aero 14 Laptop",
+            "category": "laptop",
+            "price": 1199,
+            "currency": "USD"
+          },
+          {
+            "id": "p-1002",
+            "name": "Volt 13 Laptop",
+            "category": "laptop",
+            "price": 899,
+            "currency": "USD"
+          },
+          {
+            "id": "p-1003",
+            "name": "Titan 16 Laptop",
+            "category": "laptop",
+            "price": 1499,
+            "currency": "USD"
+          },
+          {
+            "id": "p-1004",
+            "name": "Nimbus 15 Laptop",
+            "category": "laptop",
+            "price": 749.5,
+            "currency": "USD"
+          }
+        ],
+        "count": 4,
+        "total": 4
+      }
+    },
+    "http": [
+      {
+        "seq": 0,
+        "startedAt": "2026-10-22T01:02:44.112Z",
+        "durationMs": 6,
+        "request": {
+          "method": "GET",
+          "url": "/products?q=laptop",
+          "headers": {
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate"
+          },
+          "body": null
+        },
+        "response": {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "vendor-api-version": "2026-01-01"
+          },
+          "body": "{\"items\":[{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":12,\"price\":1199},{\"id\":\"p-1002\",\"name\":\"Volt 13 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":30,\"price\":899},{\"id\":\"p-1003\",\"name\":\"Titan 16 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":4,\"price\":1499},{\"id\":\"p-1004\",\"name\":\"Nimbus 15 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":18,\"price\":749.5}],\"total\":4,\"next_cursor\":null}"
+        }
+      }
+    ],
+    "at": "2026-10-22T01:02:44.126Z"
+  },
+  {
+    "scenario": "v1-all",
+    "tool": "search_products",
+    "args": {
+      "query": "cable"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"items\":[{\"id\":\"p-1101\",\"name\":\"Thunderbolt 5 Cable 1m\",\"category\":\"cable\",\"price\":69,\"currency\":\"USD\"},{\"id\":\"p-1102\",\"name\":\"Thunderbolt 5 Cable 2m\",\"category\":\"cable\",\"price\":89,\"currency\":\"USD\"},{\"id\":\"p-1103\",\"name\":\"USB4 Cable 1m\",\"category\":\"cable\",\"price\":60,\"currency\":\"USD\"},{\"id\":\"p-1104\",\"name\":\"USB4 Cable 2m\",\"category\":\"cable\",\"price\":64,\"currency\":\"USD\"},{\"id\":\"p-1105\",\"name\":\"Active Optical HDMI Cable 10m\",\"category\":\"cable\",\"price\":99,\"currency\":\"USD\"},{\"id\":\"p-1106\",\"name\":\"DisplayPort 2.1 Cable 3m\",\"category\":\"cable\",\"price\":72,\"currency\":\"USD\"},{\"id\":\"p-1107\",\"name\":\"Braided Power Cable 2m\",\"category\":\"cable\",\"price\":61.5,\"currency\":\"USD\"}],\"count\":7,\"total\":7}"
+        }
+      ],
+      "structuredContent": {
+        "items": [
+          {
+            "id": "p-1101",
+            "name": "Thunderbolt 5 Cable 1m",
+            "category": "cable",
+            "price": 69,
+            "currency": "USD"
+          },
+          {
+            "id": "p-1102",
+            "name": "Thunderbolt 5 Cable 2m",
+            "category": "cable",
+            "price": 89,
+            "currency": "USD"
+          },
+          {
+            "id": "p-1103",
+            "name": "USB4 Cable 1m",
+            "category": "cable",
+            "price": 60,
+            "currency": "USD"
+          },
+          {
+            "id": "p-1104",
+            "name": "USB4 Cable 2m",
+            "category": "cable",
+            "price": 64,
+            "currency": "USD"
+          },
+          {
+            "id": "p-1105",
+            "name": "Active Optical HDMI Cable 10m",
+            "category": "cable",
+            "price": 99,
+            "currency": "USD"
+          },
+          {
+            "id": "p-1106",
+            "name": "DisplayPort 2.1 Cable 3m",
+            "category": "cable",
+            "price": 72,
+            "currency": "USD"
+          },
+          {
+            "id": "p-1107",
+            "name": "Braided Power Cable 2m",
+            "category": "cable",
+            "price": 61.5,
+            "currency": "USD"
+          }
+        ],
+        "count": 7,
+        "total": 7
+      }
+    },
+    "http": [
+      {
+        "seq": 1,
+        "startedAt": "2026-10-22T01:02:44.130Z",
+        "durationMs": 1,
+        "request": {
+          "method": "GET",
+          "url": "/products?q=cable",
+          "headers": {
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate"
+          },
+          "body": null
+        },
+        "response": {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "vendor-api-version": "2026-01-01"
+          },
+          "body": "{\"items\":[{\"id\":\"p-1101\",\"name\":\"Thunderbolt 5 Cable 1m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":100,\"price\":69},{\"id\":\"p-1102\",\"name\":\"Thunderbolt 5 Cable 2m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":80,\"price\":89},{\"id\":\"p-1103\",\"name\":\"USB4 Cable 1m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":120,\"price\":60},{\"id\":\"p-1104\",\"name\":\"USB4 Cable 2m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":90,\"price\":64},{\"id\":\"p-1105\",\"name\":\"Active Optical HDMI Cable 10m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":35,\"price\":99},{\"id\":\"p-1106\",\"name\":\"DisplayPort 2.1 Cable 3m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":60,\"price\":72},{\"id\":\"p-1107\",\"name\":\"Braided Power Cable 2m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":75,\"price\":61.5}],\"total\":7,\"next_cursor\":null}"
+        }
+      }
+    ],
+    "at": "2026-10-22T01:02:44.134Z"
+  },
+  {
+    "scenario": "v1-all",
+    "tool": "search_products",
+    "args": {
+      "query": "monitor"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"items\":[{\"id\":\"p-1005\",\"name\":\"Clarity 27 Monitor\",\"category\":\"monitor\",\"price\":329,\"currency\":\"USD\"},{\"id\":\"p-1006\",\"name\":\"Clarity 32 Monitor\",\"category\":\"monitor\",\"price\":459,\"currency\":\"USD\"}],\"count\":2,\"total\":2}"
+        }
+      ],
+      "structuredContent": {
+        "items": [
+          {
+            "id": "p-1005",
+            "name": "Clarity 27 Monitor",
+            "category": "monitor",
+            "price": 329,
+            "currency": "USD"
+          },
+          {
+            "id": "p-1006",
+            "name": "Clarity 32 Monitor",
+            "category": "monitor",
+            "price": 459,
+            "currency": "USD"
+          }
+        ],
+        "count": 2,
+        "total": 2
+      }
+    },
+    "http": [
+      {
+        "seq": 2,
+        "startedAt": "2026-10-22T01:02:44.136Z",
+        "durationMs": 1,
+        "request": {
+          "method": "GET",
+          "url": "/products?q=monitor",
+          "headers": {
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate"
+          },
+          "body": null
+        },
+        "response": {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "vendor-api-version": "2026-01-01"
+          },
+          "body": "{\"items\":[{\"id\":\"p-1005\",\"name\":\"Clarity 27 Monitor\",\"category\":\"monitor\",\"currency\":\"USD\",\"stock\":25,\"price\":329},{\"id\":\"p-1006\",\"name\":\"Clarity 32 Monitor\",\"category\":\"monitor\",\"currency\":\"USD\",\"stock\":9,\"price\":459}],\"total\":2,\"next_cursor\":null}"
+        }
+      }
+    ],
+    "at": "2026-10-22T01:02:44.139Z"
+  },
+  {
+    "scenario": "v1-all",
+    "tool": "search_products",
+    "args": {
+      "query": "teapot"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"items\":[],\"count\":0,\"total\":0}"
+        }
+      ],
+      "structuredContent": {
+        "items": [],
+        "count": 0,
+        "total": 0
+      }
+    },
+    "http": [
+      {
+        "seq": 3,
+        "startedAt": "2026-10-22T01:02:44.142Z",
+        "durationMs": 1,
+        "request": {
+          "method": "GET",
+          "url": "/products?q=teapot",
+          "headers": {
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate"
+          },
+          "body": null
+        },
+        "response": {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "vendor-api-version": "2026-01-01"
+          },
+          "body": "{\"items\":[],\"total\":0,\"next_cursor\":null}"
+        }
+      }
+    ],
+    "at": "2026-10-22T01:02:44.144Z"
+  },
+  {
+    "scenario": "v1-all",
+    "tool": "get_product",
+    "args": {
+      "id": "p-1001"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"price\":1199,\"currency\":\"USD\",\"in_stock\":true}"
+        }
+      ],
+      "structuredContent": {
+        "id": "p-1001",
+        "name": "Aero 14 Laptop",
+        "category": "laptop",
+        "price": 1199,
+        "currency": "USD",
+        "in_stock": true
+      }
+    },
+    "http": [
+      {
+        "seq": 4,
+        "startedAt": "2026-10-22T01:02:44.147Z",
+        "durationMs": 3,
+        "request": {
+          "method": "GET",
+          "url": "/products/p-1001",
+          "headers": {
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate"
+          },
+          "body": null
+        },
+        "response": {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "vendor-api-version": "2026-01-01"
+          },
+          "body": "{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":12,\"price\":1199}"
+        }
+      }
+    ],
+    "at": "2026-10-22T01:02:44.153Z"
+  },
+  {
+    "scenario": "v1-all",
+    "tool": "get_product",
+    "args": {
+      "id": "p-1004"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"id\":\"p-1004\",\"name\":\"Nimbus 15 Laptop\",\"category\":\"laptop\",\"price\":749.5,\"currency\":\"USD\",\"in_stock\":true}"
+        }
+      ],
+      "structuredContent": {
+        "id": "p-1004",
+        "name": "Nimbus 15 Laptop",
+        "category": "laptop",
+        "price": 749.5,
+        "currency": "USD",
+        "in_stock": true
+      }
+    },
+    "http": [
+      {
+        "seq": 5,
+        "startedAt": "2026-10-22T01:02:44.156Z",
+        "durationMs": 0,
+        "request": {
+          "method": "GET",
+          "url": "/products/p-1004",
+          "headers": {
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate"
+          },
+          "body": null
+        },
+        "response": {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "vendor-api-version": "2026-01-01"
+          },
+          "body": "{\"id\":\"p-1004\",\"name\":\"Nimbus 15 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":18,\"price\":749.5}"
+        }
+      }
+    ],
+    "at": "2026-10-22T01:02:44.158Z"
+  },
+  {
+    "scenario": "v1-all",
+    "tool": "get_product",
+    "args": {
+      "id": "p-1107"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"id\":\"p-1107\",\"name\":\"Braided Power Cable 2m\",\"category\":\"cable\",\"price\":61.5,\"currency\":\"USD\",\"in_stock\":true}"
+        }
+      ],
+      "structuredContent": {
+        "id": "p-1107",
+        "name": "Braided Power Cable 2m",
+        "category": "cable",
+        "price": 61.5,
+        "currency": "USD",
+        "in_stock": true
+      }
+    },
+    "http": [
+      {
+        "seq": 6,
+        "startedAt": "2026-10-22T01:02:44.159Z",
+        "durationMs": 2,
+        "request": {
+          "method": "GET",
+          "url": "/products/p-1107",
+          "headers": {
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate"
+          },
+          "body": null
+        },
+        "response": {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "vendor-api-version": "2026-01-01"
+          },
+          "body": "{\"id\":\"p-1107\",\"name\":\"Braided Power Cable 2m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":75,\"price\":61.5}"
+        }
+      }
+    ],
+    "at": "2026-10-22T01:02:44.162Z"
+  },
+  {
+    "scenario": "v1-all",
+    "tool": "get_product",
+    "args": {
+      "id": "p-0000"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "No product with id p-0000."
+        }
+      ],
+      "isError": true
+    },
+    "http": [
+      {
+        "seq": 7,
+        "startedAt": "2026-10-22T01:02:44.164Z",
+        "durationMs": 0,
+        "request": {
+          "method": "GET",
+          "url": "/products/p-0000",
+          "headers": {
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate"
+          },
+          "body": null
+        },
+        "response": {
+          "status": 404,
+          "headers": {
+            "content-type": "application/json",
+            "vendor-api-version": "2026-01-01"
+          },
+          "body": "{\"error\":\"not_found\",\"message\":\"Unknown product.\"}"
+        }
+      }
+    ],
+    "at": "2026-10-22T01:02:44.167Z"
+  },
+  {
+    "scenario": "v1-all",
+    "tool": "create_order",
+    "args": {
+      "items": [
+        {
+          "product_id": "p-1004",
+          "quantity": 2
+        }
+      ]
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"order_id\":\"o-5002\",\"status\":\"confirmed\",\"total\":1499}"
+        }
+      ],
+      "structuredContent": {
+        "order_id": "o-5002",
+        "status": "confirmed",
+        "total": 1499
+      }
+    },
+    "http": [
+      {
+        "seq": 8,
+        "startedAt": "2026-10-22T01:02:44.171Z",
+        "durationMs": 4,
+        "request": {
+          "method": "POST",
+          "url": "/orders",
+          "headers": {
+            "content-type": "application/json",
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate"
+          },
+          "body": "{\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2}]}"
+        },
+        "response": {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "vendor-api-version": "2026-01-01"
+          },
+          "body": "{\"id\":\"o-5002\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2,\"unit_price\":749.5}],\"total\":1499,\"created_at\":\"2026-10-18T12:00:00.000Z\"}"
+        }
+      }
+    ],
+    "probe": {
+      "tool": "get_order",
+      "args": {
+        "order_id": "o-5002"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"order_id\":\"o-5002\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2,\"unit_price\":749.5}],\"total\":1499,\"created_at\":\"2026-10-18T12:00:00.000Z\"}"
+          }
+        ],
+        "structuredContent": {
+          "order_id": "o-5002",
+          "status": "confirmed",
+          "items": [
+            {
+              "product_id": "p-1004",
+              "quantity": 2,
+              "unit_price": 749.5
+            }
+          ],
+          "total": 1499,
+          "created_at": "2026-10-18T12:00:00.000Z"
+        }
+      },
+      "http": [
+        {
+          "seq": 9,
+          "startedAt": "2026-10-22T01:02:44.179Z",
+          "durationMs": 0,
+          "request": {
+            "method": "GET",
+            "url": "/orders/o-5002",
+            "headers": {
+              "accept": "*/*",
+              "accept-language": "*",
+              "sec-fetch-mode": "cors",
+              "user-agent": "node",
+              "accept-encoding": "gzip, deflate"
+            },
+            "body": null
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "content-type": "application/json",
+              "vendor-api-version": "2026-01-01"
+            },
+            "body": "{\"id\":\"o-5002\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2,\"unit_price\":749.5}],\"total\":1499,\"created_at\":\"2026-10-18T12:00:00.000Z\"}"
+          }
+        }
+      ]
+    },
+    "at": "2026-10-22T01:02:44.183Z"
+  },
+  {
+    "scenario": "v1-all",
+    "tool": "get_order",
+    "args": {
+      "order_id": "o-5001"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"order_id\":\"o-5001\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1005\",\"quantity\":2,\"unit_price\":329}],\"total\":658,\"created_at\":\"2026-10-16T12:00:00.000Z\"}"
+        }
+      ],
+      "structuredContent": {
+        "order_id": "o-5001",
+        "status": "confirmed",
+        "items": [
+          {
+            "product_id": "p-1005",
+            "quantity": 2,
+            "unit_price": 329
+          }
+        ],
+        "total": 658,
+        "created_at": "2026-10-16T12:00:00.000Z"
+      }
+    },
+    "http": [
+      {
+        "seq": 10,
+        "startedAt": "2026-10-22T01:02:44.185Z",
+        "durationMs": 1,
+        "request": {
+          "method": "GET",
+          "url": "/orders/o-5001",
+          "headers": {
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate"
+          },
+          "body": null
+        },
+        "response": {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "vendor-api-version": "2026-01-01"
+          },
+          "body": "{\"id\":\"o-5001\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1005\",\"quantity\":2,\"unit_price\":329}],\"total\":658,\"created_at\":\"2026-10-16T12:00:00.000Z\"}"
+        }
+      }
+    ],
+    "at": "2026-10-22T01:02:44.186Z"
+  },
+  {
+    "scenario": "D1",
+    "tool": "search_products",
+    "args": {
+      "query": "laptop"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"items\":[{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"price\":119900,\"currency\":\"USD\"},{\"id\":\"p-1002\",\"name\":\"Volt 13 Laptop\",\"category\":\"laptop\",\"price\":89900,\"currency\":\"USD\"},{\"id\":\"p-1003\",\"name\":\"Titan 16 Laptop\",\"category\":\"laptop\",\"price\":149900,\"currency\":\"USD\"},{\"id\":\"p-1004\",\"name\":\"Nimbus 15 Laptop\",\"category\":\"laptop\",\"price\":74950,\"currency\":\"USD\"}],\"count\":4,\"total\":4}"
+        }
+      ],
+      "structuredContent": {
+        "items": [
+          {
+            "id": "p-1001",
+            "name": "Aero 14 Laptop",
+            "category": "laptop",
+            "price": 119900,
+            "currency": "USD"
+          },
+          {
+            "id": "p-1002",
+            "name": "Volt 13 Laptop",
+            "category": "laptop",
+            "price": 89900,
+            "currency": "USD"
+          },
+          {
+            "id": "p-1003",
+            "name": "Titan 16 Laptop",
+            "category": "laptop",
+            "price": 149900,
+            "currency": "USD"
+          },
+          {
+            "id": "p-1004",
+            "name": "Nimbus 15 Laptop",
+            "category": "laptop",
+            "price": 74950,
+            "currency": "USD"
+          }
+        ],
+        "count": 4,
+        "total": 4
+      }
+    },
+    "http": [
+      {
+        "seq": 0,
+        "startedAt": "2026-10-22T01:02:44.673Z",
+        "durationMs": 1,
+        "request": {
+          "method": "GET",
+          "url": "/products?q=laptop",
+          "headers": {
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate"
+          },
+          "body": null
+        },
+        "response": {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "vendor-api-version": "2026-10-01"
+          },
+          "body": "{\"items\":[{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":12,\"price\":119900},{\"id\":\"p-1002\",\"name\":\"Volt 13 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":30,\"price\":89900},{\"id\":\"p-1003\",\"name\":\"Titan 16 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":4,\"price\":149900},{\"id\":\"p-1004\",\"name\":\"Nimbus 15 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":18,\"price\":74950}],\"total\":4,\"next_cursor\":null}"
+        }
+      }
+    ],
+    "at": "2026-10-22T01:02:44.681Z"
+  },
+  {
+    "scenario": "D2",
+    "tool": "get_product",
+    "args": {
+      "id": "p-1001"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"price\":null,\"currency\":\"USD\",\"in_stock\":true}"
+        }
+      ],
+      "structuredContent": {
+        "id": "p-1001",
+        "name": "Aero 14 Laptop",
+        "category": "laptop",
+        "price": null,
+        "currency": "USD",
+        "in_stock": true
+      }
+    },
+    "http": [
+      {
+        "seq": 0,
+        "startedAt": "2026-10-22T01:02:45.161Z",
+        "durationMs": 1,
+        "request": {
+          "method": "GET",
+          "url": "/products/p-1001",
+          "headers": {
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate"
+          },
+          "body": null
+        },
+        "response": {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "vendor-api-version": "2026-10-01"
+          },
+          "body": "{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":12,\"unit_amount\":1199}"
+        }
+      }
+    ],
+    "at": "2026-10-22T01:02:45.170Z"
+  },
+  {
+    "scenario": "D3",
+    "tool": "create_order",
+    "args": {
+      "items": [
+        {
+          "product_id": "p-1004",
+          "quantity": 2
+        }
+      ]
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"order_id\":\"o-5002\",\"status\":\"confirmed\",\"total\":1499}"
+        }
+      ],
+      "structuredContent": {
+        "order_id": "o-5002",
+        "status": "confirmed",
+        "total": 1499
+      }
+    },
+    "http": [
+      {
+        "seq": 0,
+        "startedAt": "2026-10-22T01:02:45.697Z",
+        "durationMs": 1,
+        "request": {
+          "method": "POST",
+          "url": "/orders",
+          "headers": {
+            "content-type": "application/json",
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate"
+          },
+          "body": "{\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2}]}"
+        },
+        "response": {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "vendor-api-version": "2026-10-01"
+          },
+          "body": "{\"id\":\"o-5002\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2,\"unit_price\":749.5}],\"total\":1499,\"created_at\":\"2026-10-18T12:00:00.000Z\"}"
+        }
+      }
+    ],
+    "probe": {
+      "tool": "get_order",
+      "args": {
+        "order_id": "o-5002"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "No order with id o-5002."
+          }
+        ],
+        "isError": true
+      },
+      "http": [
+        {
+          "seq": 1,
+          "startedAt": "2026-10-22T01:02:45.706Z",
+          "durationMs": 1,
+          "request": {
+            "method": "GET",
+            "url": "/orders/o-5002",
+            "headers": {
+              "accept": "*/*",
+              "accept-language": "*",
+              "sec-fetch-mode": "cors",
+              "user-agent": "node",
+              "accept-encoding": "gzip, deflate"
+            },
+            "body": null
+          },
+          "response": {
+            "status": 404,
+            "headers": {
+              "content-type": "application/json",
+              "vendor-api-version": "2026-10-01"
+            },
+            "body": "{\"error\":\"not_found\",\"message\":\"Unknown order.\"}"
+          }
+        }
+      ]
+    },
+    "at": "2026-10-22T01:02:45.708Z"
+  },
+  {
+    "scenario": "D4",
+    "tool": "search_products",
+    "args": {
+      "query": "cable"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"items\":[{\"id\":\"p-1101\",\"name\":\"Thunderbolt 5 Cable 1m\",\"category\":\"cable\",\"price\":69,\"currency\":\"USD\"},{\"id\":\"p-1102\",\"name\":\"Thunderbolt 5 Cable 2m\",\"category\":\"cable\",\"price\":89,\"currency\":\"USD\"},{\"id\":\"p-1103\",\"name\":\"USB4 Cable 1m\",\"category\":\"cable\",\"price\":60,\"currency\":\"USD\"},{\"id\":\"p-1104\",\"name\":\"USB4 Cable 2m\",\"category\":\"cable\",\"price\":64,\"currency\":\"USD\"},{\"id\":\"p-1105\",\"name\":\"Active Optical HDMI Cable 10m\",\"category\":\"cable\",\"price\":99,\"currency\":\"USD\"}],\"count\":5,\"total\":7}"
+        }
+      ],
+      "structuredContent": {
+        "items": [
+          {
+            "id": "p-1101",
+            "name": "Thunderbolt 5 Cable 1m",
+            "category": "cable",
+            "price": 69,
+            "currency": "USD"
+          },
+          {
+            "id": "p-1102",
+            "name": "Thunderbolt 5 Cable 2m",
+            "category": "cable",
+            "price": 89,
+            "currency": "USD"
+          },
+          {
+            "id": "p-1103",
+            "name": "USB4 Cable 1m",
+            "category": "cable",
+            "price": 60,
+            "currency": "USD"
+          },
+          {
+            "id": "p-1104",
+            "name": "USB4 Cable 2m",
+            "category": "cable",
+            "price": 64,
+            "currency": "USD"
+          },
+          {
+            "id": "p-1105",
+            "name": "Active Optical HDMI Cable 10m",
+            "category": "cable",
+            "price": 99,
+            "currency": "USD"
+          }
+        ],
+        "count": 5,
+        "total": 7
+      }
+    },
+    "http": [
+      {
+        "seq": 0,
+        "startedAt": "2026-10-22T01:02:46.257Z",
+        "durationMs": 0,
+        "request": {
+          "method": "GET",
+          "url": "/products?q=cable",
+          "headers": {
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate"
+          },
+          "body": null
+        },
+        "response": {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "vendor-api-version": "2026-10-01"
+          },
+          "body": "{\"items\":[{\"id\":\"p-1101\",\"name\":\"Thunderbolt 5 Cable 1m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":100,\"price\":69},{\"id\":\"p-1102\",\"name\":\"Thunderbolt 5 Cable 2m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":80,\"price\":89},{\"id\":\"p-1103\",\"name\":\"USB4 Cable 1m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":120,\"price\":60},{\"id\":\"p-1104\",\"name\":\"USB4 Cable 2m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":90,\"price\":64},{\"id\":\"p-1105\",\"name\":\"Active Optical HDMI Cable 10m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":35,\"price\":99}],\"total\":7,\"next_cursor\":\"5\"}"
+        }
+      }
+    ],
+    "at": "2026-10-22T01:02:46.263Z"
+  },
+  {
+    "scenario": "D5",
+    "tool": "get_order",
+    "args": {
+      "order_id": "o-5001"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"order_id\":\"o-5001\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1005\",\"quantity\":2,\"unit_price\":329}],\"total\":658,\"created_at\":\"1970-01-01T00:00:00.000Z\"}"
+        }
+      ],
+      "structuredContent": {
+        "order_id": "o-5001",
+        "status": "confirmed",
+        "items": [
+          {
+            "product_id": "p-1005",
+            "quantity": 2,
+            "unit_price": 329
+          }
+        ],
+        "total": 658,
+        "created_at": "1970-01-01T00:00:00.000Z"
+      }
+    },
+    "http": [
+      {
+        "seq": 0,
+        "startedAt": "2026-10-22T01:02:47.134Z",
+        "durationMs": 1,
+        "request": {
+          "method": "GET",
+          "url": "/orders/o-5001",
+          "headers": {
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate"
+          },
+          "body": null
+        },
+        "response": {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "vendor-api-version": "2026-10-01"
+          },
+          "body": "{\"id\":\"o-5001\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1005\",\"quantity\":2,\"unit_price\":329}],\"total\":658,\"created_at\":1792152000000}"
+        }
+      }
+    ],
+    "at": "2026-10-22T01:02:47.141Z"
+  }
+]
