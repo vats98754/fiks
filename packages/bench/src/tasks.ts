@@ -1,6 +1,14 @@
 import { CATALOG, type DriftId, SEED_ORDER_ID, type VendorState } from '@fiks/vendor-api';
 
+/** A graded answer. */
 export type Outcome = 'correct' | 'wrong' | 'declined';
+
+/**
+ * What a trial ends as: a graded outcome, or `infraError` when the agent never produced an answer
+ * because of the infrastructure (SDK/transport failure, 429/5xx, harness crash) after every retry.
+ * An infraError is never graded as a model failure (PLAN P10, 9.3).
+ */
+export type TrialOutcome = Outcome | 'infraError';
 
 export interface Grade {
   pass: boolean;
@@ -8,6 +16,21 @@ export interface Grade {
   reason: string;
 }
 
+/**
+ * A bench task of any domain. Structurally the same as `DomainTask` in `@fiks/interfaces`
+ * (`Domain.tasks`), so a registered domain's tasks run unchanged. Method syntax keeps a domain's
+ * narrower state type (e.g. the shop `VendorState`) assignable.
+ */
+export interface BenchTask {
+  id: string;
+  /** The drift this task is sensitive to (none for a control task). */
+  drift?: string;
+  prompt: string;
+  /** Deterministic: compares the submitted answer with the vendor's ground-truth state. */
+  grade(answer: string, state: unknown): { pass: boolean; outcome: string; reason: string };
+}
+
+/** The shop tasks (T1..T6). */
 export interface Task {
   id: string;
   /** The drift this task is sensitive to (none for the control task). */

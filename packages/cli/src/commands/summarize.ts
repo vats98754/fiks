@@ -1,13 +1,31 @@
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { passHatK, TASKS } from '@fiks/bench';
+import { parseArgs } from 'node:util';
+import {
+  buildRunsSummary,
+  monitorOf,
+  passHatKCurve,
+  type RunMeta,
+  type RunStats,
+  type RunsSummary,
+  readRunDirs,
+  TASKS,
+} from '@fiks/bench';
+import type { CliCommandModule } from '@fiks/interfaces';
 
 /** A phase run counts only if it covers every task with at least this many trials each. */
 export const FULL_K = 5;
 
+/**
+ * summary.json is the legacy shop view: the latest complete run per phase label, among older runs
+ * and new runs in the default configuration (this model; see `isLegacyView`). Every run is in
+ * summary.runs.json, keyed by `${phase}@${model}@${monitor}@${arm}`.
+ */
+export const LEGACY_MODEL = 'claude-sonnet-5-5';
+
 import { type LoopEvent, readEvents } from '@fiks/repro';
 import { FIKS_DIR, ROOT } from '../paths.ts';
-import type { TrialRecord } from './bench.ts';
+import { LEGACY_GLOBAL_OPTIONS, noteIgnored, type TrialRecord } from './bench.ts';
 import type { RepairResult } from './repair.ts';
 import { SCENARIOS } from './scenario.ts';
 
@@ -43,6 +61,8 @@ export interface PhaseSummary {
     { n: number; pass: number; correct: number; wrong: number; declined: number; noAnswer: number }
   >;
   violatedCalls: number;
+  /** Trials lost to infrastructure errors (excluded above); present only when > 0. */
+  infraErrors?: number;
 }
 
 export interface Summary {
@@ -85,6 +105,22 @@ export function exportLoop(): string[] {
   return [...traceIds];
 }
 
+/**
+ * Runs that belong in the legacy summary.json. Runs from before BENCHX (no `monitor` in meta.json)
+ * all do, exactly as before. A newer run does only in the default configuration: shop domain,
+ * the proxy's own monitor or no proxy, no arm, and LEGACY_MODEL, so another model, monitor or
+ * arm can never replace a phase here (all of them are in summary.runs.json).
+ */
+function isLegacyView(meta: RunMeta): boolean {
+  if (meta.monitor === undefined) return true;
+  return (
+    (meta.domain ?? 'shop') === 'shop' &&
+    meta.model === LEGACY_MODEL &&
+    ['contracts', 'none'].includes(monitorOf(meta)) &&
+    (meta.arm ?? 'none') === 'none'
+  );
+}
+
 function readJsonl<T>(file: string): T[] {
   return readFileSync(file, 'utf8')
     .split('\n')
@@ -105,17 +141,12 @@ export function buildSummary(): Summary {
         .sort()
     : [];
   for (const run of runs) {
-    const meta = JSON.parse(readFileSync(join(RESULTS, run, 'meta.json'), 'utf8')) as {
-      runId: string;
-      phase: string;
-      model: string;
-      k: number;
+    const meta = JSON.parse(readFileSync(join(RESULTS, run, 'meta.json'), 'utf8')) as RunMeta & {
       shopMcpSha: string;
-      tasks: string[];
-      finishedAt: string;
     };
     const file = join(RESULTS, run, 'trials.jsonl');
     if (!existsSync(file)) continue;
+    if (!isLegacyView(meta)) continue;
     // Only complete runs count: every task, k trials each, and the run finished. A smoke run or
     // an aborted run never replaces a phase.
     const rows = readJsonl<TrialRecord>(file);
@@ -127,7 +158,9 @@ export function buildSummary(): Summary {
       continue;
     }
     sources.push(relative(ROOT, join(RESULTS, run, 'meta.json')), relative(ROOT, file));
-    const trials = rows;
+    // Infrastructure errors are never graded as model failures (PLAN 9.3): they leave n.
+    const trials = rows.filter((t) => t.outcome !== 'infraError');
+    const infraErrors = rows.length - trials.length;
     const perTask: PhaseSummary['perTask'] = {};
     for (const t of trials) {
       if (!perTask[t.taskId])
@@ -136,7 +169,7 @@ export function buildSummary(): Summary {
       s.n++;
       if (t.pass) s.pass++;
       if (t.answer === null) s.noAnswer++;
-      else s[t.outcome]++;
+      else s[t.outcome as 'correct' | 'wrong' | 'declined']++;
     }
     const tasks = Object.values(perTask).map((s) => ({ n: s.n, c: s.pass }));
     // The latest complete run per phase label wins (run ids sort by time).
@@ -147,7 +180,8 @@ export function buildSummary(): Summary {
       tasks: tasks.length,
       k: meta.k,
       trials: trials.length,
-      passHatK: [1, 2, 3, 4, 5].filter((k) => k <= meta.k).map((k) => Number(passHatK(tasks, k).toFixed(4))),
+      // Unbiased pass^1..K, K = the smallest per-task count (= k when no trial was lost).
+      passHatK: passHatKCurve(tasks).map((x) => Number(x.toFixed(4))),
       outcomes: {
         correct: trials.filter((t) => t.outcome === 'correct').length,
         wrong: trials.filter((t) => t.outcome === 'wrong' && t.answer !== null).length,
@@ -156,6 +190,7 @@ export function buildSummary(): Summary {
       },
       perTask,
       violatedCalls: trials.reduce((n, t) => n + t.calls.filter((c) => c.verdict === 'violated').length, 0),
+      ...(infraErrors ? { infraErrors } : {}),
     };
   }
 
@@ -216,28 +251,158 @@ export function buildSummary(): Summary {
   };
 }
 
+/** Every run in the results folder, keyed by `${phase}@${model}@${monitor}@${arm}`. */
+export function buildRunsSummaryFromResults(): RunsSummary {
+  return buildRunsSummary(readRunDirs(resultsDir()));
+}
+
+/**
+ * The keyed summary must reproduce every number of the legacy view: for each phase in
+ * summary.json, the same run's stats in the keyed summary. Returns the mismatches.
+ */
+export function crossCheck(legacy: Summary, keyed: RunsSummary): string[] {
+  const byRun = new Map<string, RunStats>();
+  for (const g of Object.values(keyed.groups)) for (const r of g.runs) byRun.set(r.runId, r);
+  const out: string[] = [];
+  for (const [phase, p] of Object.entries(legacy.phases)) {
+    const r = byRun.get(p.runId);
+    if (!r) {
+      out.push(`${phase}: run ${p.runId} is missing from the keyed summary`);
+      continue;
+    }
+    const same = (what: string, a: unknown, b: unknown) => {
+      if (JSON.stringify(a) !== JSON.stringify(b))
+        out.push(
+          `${phase} (${p.runId}) ${what}: summary.json ${JSON.stringify(a)} vs keyed ${JSON.stringify(b)}`,
+        );
+    };
+    same('model', p.model, r.model);
+    same('shopMcpSha', p.shopMcpSha, r.targetSha);
+    same('k', p.k, r.k);
+    same('trials', p.trials, r.graded);
+    same('tasks', p.tasks, r.tasks.length - r.droppedTasks.length);
+    same('passHatK', p.passHatK, r.passHatK);
+    same('outcomes', p.outcomes, {
+      correct: r.outcomes.correct,
+      wrong: r.outcomes.wrong,
+      declined: r.outcomes.declined,
+      noAnswer: r.outcomes.noAnswer,
+    });
+    same(
+      'perTask',
+      p.perTask,
+      Object.fromEntries(
+        Object.entries(r.perTask)
+          .filter(([, t]) => t.n > 0)
+          .map(([id, t]) => [
+            id,
+            {
+              n: t.n,
+              pass: t.pass,
+              correct: t.correct,
+              wrong: t.wrong,
+              declined: t.declined,
+              noAnswer: t.noAnswer,
+            },
+          ]),
+      ),
+    );
+    same('violatedCalls', p.violatedCalls, r.violatedCalls);
+    same('infraErrors', p.infraErrors ?? 0, r.infraErrors);
+  }
+  return out;
+}
+
+const stripGenerated = <T extends { generatedAt: string }>(s: T | null) =>
+  s ? JSON.stringify({ ...s, generatedAt: '' }) : 'missing';
+
 export function summarize(opts: { check?: boolean } = {}): {
   summary: Summary;
+  runs: RunsSummary;
   file: string;
+  runsFile: string;
   ok: boolean;
   diff?: string;
 } {
   const RESULTS = resultsDir();
   const file = join(RESULTS, 'summary.json');
+  const runsFile = join(RESULTS, 'summary.runs.json');
   if (!opts.check) exportLoop();
   const summary = buildSummary();
+  const runs = buildRunsSummaryFromResults();
   if (opts.check) {
     const onDisk = existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as Summary) : null;
-    const strip = (s: Summary | null) => (s ? JSON.stringify({ ...s, generatedAt: '' }) : 'missing');
-    const ok = strip(onDisk) === strip(summary);
-    return {
-      summary,
-      file,
-      ok,
-      diff: ok ? undefined : 'bench/results/summary.json does not match a rebuild from bench/results/**',
-    };
+    const problems: string[] = [];
+    if (stripGenerated(onDisk) !== stripGenerated(summary))
+      problems.push('bench/results/summary.json does not match a rebuild from bench/results/**');
+    problems.push(...crossCheck(summary, runs));
+    // summary.runs.json is checked once a run step has committed one (older results have none).
+    if (existsSync(runsFile)) {
+      const runsOnDisk = JSON.parse(readFileSync(runsFile, 'utf8')) as RunsSummary;
+      if (stripGenerated(runsOnDisk) !== stripGenerated(runs))
+        problems.push('bench/results/summary.runs.json does not match a rebuild from bench/results/**');
+    }
+    const ok = problems.length === 0;
+    return { summary, runs, file, runsFile, ok, diff: ok ? undefined : problems.join('\n') };
   }
   mkdirSync(RESULTS, { recursive: true });
   writeFileSync(file, `${JSON.stringify(summary, null, 2)}\n`);
-  return { summary, file, ok: true };
+  writeFileSync(runsFile, `${JSON.stringify(runs, null, 2)}\n`);
+  return { summary, runs, file, runsFile, ok: true };
 }
+
+const DESCRIBE = 'bench/results/summary.json from logs only (--check: rebuild and compare)';
+
+const HELP = `usage: fiks summarize [--check] [--json]
+
+  ${DESCRIBE}
+
+  Writes summary.json (legacy view: one run per phase label, default model/monitor/arm) and
+  summary.runs.json (every run, keyed by \${phase}@\${model}@\${monitor}@\${arm}, with pass^1..K,
+  Wilson intervals, infraError counts, cost and tokens). Results folder: $FIKS_RESULTS_DIR or bench/results.
+
+  --check   rebuild both and compare with the files on disk (summary.runs.json only if present),
+            and check that the keyed summary reproduces every number of summary.json; exit 1 on any difference
+  --json    print JSON`;
+
+/** `fiks summarize`, parsing its own argv (P18). Returns the exit code. */
+export function runSummarizeCommand(argv: string[]): number {
+  let values: ReturnType<typeof parse>;
+  function parse() {
+    return parseArgs({
+      args: argv,
+      options: { ...LEGACY_GLOBAL_OPTIONS, help: { type: 'boolean', short: 'h', default: false } },
+      allowPositionals: false,
+    }).values;
+  }
+  try {
+    values = parse();
+  } catch (e) {
+    console.error(`${e instanceof Error ? e.message : String(e)}\n\n${HELP}`);
+    return 2;
+  }
+  if (values.help) {
+    console.log(HELP);
+    return 0;
+  }
+  noteIgnored('summarize', argv, ['json', 'check']);
+  const r = summarize({ check: values.check });
+  const data = values.check ? { ok: r.ok, diff: r.diff } : r.summary;
+  console.log(
+    values.json
+      ? JSON.stringify(data, null, 2)
+      : values.check
+        ? r.ok
+          ? 'summary.json matches the logs'
+          : (r.diff ?? 'mismatch')
+        : `wrote ${r.file}`,
+  );
+  return r.ok ? 0 : 1;
+}
+
+const command: CliCommandModule = {
+  name: 'summarize',
+  describe: DESCRIBE,
+  run: (argv) => runSummarizeCommand(argv),
+};
+export default command;
