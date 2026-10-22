@@ -66,7 +66,7 @@ export function edit(rec: Recording, id: string, fn: (body: Obj, out: Obj) => vo
 }
 
 /** A mutation variant as a GateCase labelled with its operator. */
-const variant = (trigger: Recording, m: string, fn: (body: Obj, out: Obj) => void): GateCase => ({
+export const variant = (trigger: Recording, m: string, fn: (body: Obj, out: Obj) => void): GateCase => ({
   ...fromRecording(edit(trigger, `${trigger.id}~${m}`, fn)),
   mutant: m,
 });

@@ -12,17 +12,25 @@
 //              under the current contract;
 //   corpus   - no clean v1 case violates a property it did not already violate;
 //   mutation - every mutation variant of the trigger is still rejected on every property that
-//              rejected it before, except on the amended properties (P12 as written; BA6). An
-//              amended property that rejected at least one variant before must still reject at
-//              least one after, so "amend" cannot mean "disable". Every variant must be a call of
-//              the trigger's tool with the trigger's arguments.
+//              rejected it before, except on the amended properties (P12 as written; BA6). The
+//              amended properties are those the delta replaces, plus the onlyKnownGood properties
+//              the trigger violates that an in-scope known-good edit switches off for the
+//              trigger's own input. Every variant must be a call of the trigger's tool with the
+//              trigger's arguments.
 // Every case is checked against the server's declared outputSchema (`declaredOutputSchemas`, from
 // tools/list), as the live proxy does, so `<contract>/outputSchema` verdicts match production.
 // Missing or unevaluable inputs fail closed (a case without a tool result, or a case of a contract
 // with read-after-write postconditions that carries no probe), and so does a check that would pass
 // vacuously: no stored trace that violates its target, no corpus case that verifies, no variant
 // rejected before, a "variant" that is not a variant of the trigger.
-import { type ContractFile, type EvalResult, evaluate, findContract, type Verdict } from '@fiks/contracts';
+import {
+  type ContractFile,
+  type EvalResult,
+  evaluate,
+  findContract,
+  isKnownGood,
+  type Verdict,
+} from '@fiks/contracts';
 import { applyDelta } from './apply.ts';
 import { type DeclaredOutputSchemas, evalInput, type GateCase, type GateInput, toGateCase } from './cases.ts';
 import { type ContractDelta, parseDelta } from './outcome.ts';
@@ -70,6 +78,10 @@ export interface GateResult {
   findings: GateFinding[];
   /** Non-blocking observations (stale stored traces, a corpus case that was never clean). */
   notes: string[];
+  /**
+   * The properties the delta amends: those it replaces, then the onlyKnownGood properties the
+   * trigger violates that a known-good edit of the trigger's own input switches off for it.
+   */
   amended: string[];
   added: string[];
   contractLevel: string[];
@@ -192,6 +204,8 @@ export function acceptDelta(delta: unknown, ctx: GateContext): GateResult {
   }
   const { contracts: next, amended, added, contractLevel, touchedContracts, knownGoodEdits } = applied.value;
   const old = ctx.contracts;
+  // Replaced properties plus those a known-good edit amends (below); P12 exempts both from the
+  // per-variant mutation check.
   const amendedSet = new Set(amended);
 
   // Inputs: the gate never passes vacuously.
@@ -235,6 +249,7 @@ export function acceptDelta(delta: unknown, ctx: GateContext): GateResult {
   };
 
   // Trigger and scope.
+  const switchedOff: string[] = [];
   const trigger = toGateCase(ctx.trigger);
   const [tBefore, tAfter] = evalBoth(trigger);
   if (!tBefore || !tAfter) unevaluable('trigger', trigger);
@@ -274,6 +289,31 @@ export function acceptDelta(delta: unknown, ctx: GateContext): GateResult {
         check: 'scope',
         message: `the delta ${e.op === 'add' ? 'adds' : 'removes'} known-good input ${JSON.stringify(e.input)}, which ${Object.keys(e.input).length ? 'does not match' : 'matches every input, not just'} the trigger's arguments ${JSON.stringify(trigger.args)}; that switches ${props.join(', ') || 'its onlyKnownGood properties'} ${e.op === 'add' ? 'on' : 'off'} for inputs other than the trigger's. A contract update may edit only the trigger's own known-good input`,
       });
+    }
+    // An in-scope known-good edit that switches the trigger's input from known-good to not
+    // known-good turns every onlyKnownGood property of the contract off for that input. Those the
+    // trigger violates are amended by the edit (as a replace amends a property): P12 exempts them
+    // from the per-variant mutation check. Properties the trigger does not violate are not
+    // amended, so a variant still lost on them is rejected.
+    const inScope = knownGoodEdits.some(
+      (e) => e.contractId === tContract && matchesInput(e.input, trigger.args),
+    );
+    const oldC = old.contracts.find((x) => x.id === tContract);
+    const nextC = next.contracts.find((x) => x.id === tContract);
+    if (
+      inScope &&
+      tContract &&
+      oldC &&
+      nextC &&
+      isKnownGood(oldC, trigger.args) &&
+      !isKnownGood(nextC, trigger.args)
+    ) {
+      for (const p of onlyKnownGoodProps(old, tContract)) {
+        if (tBefore.violated.has(p) && !amendedSet.has(p)) {
+          amendedSet.add(p);
+          switchedOff.push(p);
+        }
+      }
     }
     if (tAfter.res.verdict !== 'verified') {
       const left = tAfter.res.violations.map((v) => `${v.propertyId}: ${v.message}`).join('; ');
@@ -359,14 +399,10 @@ export function acceptDelta(delta: unknown, ctx: GateContext): GateResult {
       message: `none of the ${summary.corpus.total} clean v1 corpus cases verifies under the current contract, so the corpus check would pass vacuously; the gate fails closed`,
     });
 
-  // Mutation variants are still rejected, except on the amended properties (P12; BA6). An
-  // amended property must still reject at least one of the variants it rejected before, so it is
-  // amended, not disabled. Each variant must be a variant of the trigger (same tool, same
-  // arguments; MUT operators edit the upstream body only), or the check would say nothing about
-  // the amended contract.
+  // Mutation variants are still rejected, except on the amended properties (P12 as written; BA6).
+  // Each variant must be a variant of the trigger (same tool, same arguments; MUT operators edit
+  // the upstream body only), or the check would say nothing about the amended contract.
   const tToolContract = findContract(old, trigger.tool)?.id;
-  const amendedBefore = new Map<string, number>();
-  const amendedAfter = new Map<string, number>();
   let usable = 0;
   for (const input of ctx.mutationVariants ?? []) {
     const c = toGateCase(input);
@@ -396,10 +432,6 @@ export function acceptDelta(delta: unknown, ctx: GateContext): GateResult {
     usable++;
     if (before.violated.size) summary.mutation.rejectedBefore++;
     if (after.violated.size) summary.mutation.rejectedAfter++;
-    for (const p of amended) {
-      if (before.violated.has(p)) amendedBefore.set(p, (amendedBefore.get(p) ?? 0) + 1);
-      if (after.violated.has(p)) amendedAfter.set(p, (amendedAfter.get(p) ?? 0) + 1);
-    }
     for (const p of before.violated) {
       if (amendedSet.has(p) || after.violated.has(p)) continue;
       findings.push({
@@ -415,15 +447,12 @@ export function acceptDelta(delta: unknown, ctx: GateContext): GateResult {
       check: 'input',
       message: `none of the ${usable} mutation variants of the trigger is rejected under the current contract, so the mutation check would pass vacuously; the gate fails closed`,
     });
-  for (const p of amended) {
-    const n = amendedBefore.get(p) ?? 0;
-    if (n > 0 && (amendedAfter.get(p) ?? 0) === 0)
-      findings.push({
-        check: 'mutation',
-        property: p,
-        message: `the amended ${p} rejected ${n} mutation variant(s) of the trigger before and rejects none after; the delta disables the property instead of amending it`,
-      });
-  }
 
-  return done({ amended, added, contractLevel, proposed: next, delta: parsed.value });
+  return done({
+    amended: [...amended, ...switchedOff],
+    added,
+    contractLevel,
+    proposed: next,
+    delta: parsed.value,
+  });
 }

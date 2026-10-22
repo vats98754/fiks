@@ -19,6 +19,7 @@ import {
   searchVariants,
   shopOutputSchemas,
   storedTraces,
+  variant,
 } from './helpers.ts';
 
 const SEARCH_RANGE = 'shop.search_products/items.price.range';
@@ -180,6 +181,8 @@ describe('acceptDelta: acceptance items (PLAN P12)', () => {
       expect.objectContaining({ check: 'mutation', caseId: m5?.id, property: PRODUCT_NOT_NULL }),
     ]);
     expect(r.reasons[0]).toContain('[M5]');
+    // The trigger does not violate price.notNull, so the removal does not amend it.
+    expect(r.amended).toEqual([PRODUCT_RANGE]);
 
     // Control: the same widening without the known-good edit is accepted.
     const ok = acceptDelta(widenProduct(3000), ctx(premiumProduct(), productVariants()));
@@ -315,10 +318,26 @@ describe('acceptDelta: other checks', () => {
     expect(r.summary.corpus.regressions).toBe(1);
   });
 
-  it('rejects an amendment that neutralises the property (no variant rejected on it any more)', () => {
-    const r = acceptDelta(widenProduct(1e9, 0), ctx(premiumProduct(), productVariants()));
-    expect(r.accepted).toBe(false);
-    expect(r.findings).toEqual([expect.objectContaining({ check: 'mutation', property: PRODUCT_RANGE })]);
+  it('accepts an amendment after which the amended property rejects no variant (P12 as written; BA6)', () => {
+    // [20, 1e6] admits M1 (x100: 249,900) and M2 ($24.99): price.range rejected M1 before and
+    // rejects no variant after. P12 exempts the amended property from the mutation check, and every
+    // other check holds, so the gate accepts it (the round 1-5 "amend, not disable" rule was
+    // stricter than P12 and is removed).
+    const variants = productVariants();
+    const m1 = variants.find((v) => v.mutant === 'M1');
+    if (!m1) throw new Error('no M1');
+    const r = acceptDelta(widenProduct(1e6), ctx(premiumProduct(), variants));
+    expect(r.reasons).toEqual([]);
+    expect(r.accepted).toBe(true);
+    expect(r.amended).toEqual([PRODUCT_RANGE]);
+    expect(r.summary.trigger).toEqual({ before: 'violated', after: 'verified' });
+    expect(r.summary.stored).toEqual({ total: 5, used: 5, stillViolate: 5 });
+    expect(r.summary.corpus.regressions).toBe(0);
+    if (!r.proposed) throw new Error('no proposal');
+    expect(violatedIds(m1)).toContain(PRODUCT_RANGE);
+    expect(violatedIds(m1, r.proposed)).not.toContain(PRODUCT_RANGE);
+    // M5 (null) and M7 (string) are still rejected on the properties the delta does not amend.
+    expect(r.summary.mutation).toEqual({ total: 4, rejectedBefore: 3, rejectedAfter: 2 });
   });
 
   it('fails closed on missing inputs', () => {
@@ -588,9 +607,13 @@ describe('acceptDelta: amend, not disable (P12 as written; BA6)', () => {
     expect(r.reasons[0]).toContain('is not a variant of the trigger');
     expect(r.summary.mutation).toEqual({ total: 4, rejectedBefore: 0, rejectedAfter: 0 });
 
-    // Control: with the trigger's own variants the same delta is rejected as a neutralisation.
+    // Control: with the trigger's own variants the same delta passes the mutation check (P12
+    // exempts the amended price.range; M5 and M7 are still rejected on the properties it does not
+    // amend), so only the foreign variants made the difference.
     const own = acceptDelta(widenProduct(1e9, 0), ctx(premiumProduct(), productVariants()));
-    expect(own.reasons).toEqual([expect.stringContaining('disables the property instead of amending it')]);
+    expect(own.reasons).toEqual([]);
+    expect(own.accepted).toBe(true);
+    expect(own.summary.mutation).toEqual({ total: 4, rejectedBefore: 3, rejectedAfter: 2 });
   });
 
   it("fails closed on variants with other arguments than the trigger's, one finding per foreign variant", () => {
@@ -604,6 +627,45 @@ describe('acceptDelta: amend, not disable (P12 as written; BA6)', () => {
     const own = acceptDelta(widenProduct(3000), ctx(premiumProduct(), productVariants()));
     expect(own.accepted).toBe(true);
     expect(r.summary.mutation).toEqual({ ...own.summary.mutation, total: 5 });
+  });
+  it("counts a known-good edit of the trigger's input as amending the onlyKnownGood property the trigger violates", () => {
+    // Trigger: known-good p-1004 with a null price, which violates price.notNull (onlyKnownGood).
+    // Removing p-1004 from the known-good inputs switches price.notNull off for it: that edit
+    // amends price.notNull, so P12 exempts it from the mutation check (a variant that keeps the
+    // price null is no longer rejected on it), while price.range still rejects the $0 variant.
+    const trigger = edit(load('shop-v1/product-p-1004.json'), 'benign-null-p-1004', (b, o) => {
+      b.price = null;
+      o.price = null;
+    });
+    expect(violatedIds(trigger)).toEqual([PRODUCT_NOT_NULL]);
+    const renamed = variant(trigger, 'Mx', (b, o) => {
+      b.name = 'Renamed Product';
+      o.name = 'Renamed Product';
+    });
+    const free = variant(trigger, 'M0', (b, o) => {
+      b.price = 0;
+      o.price = 0;
+    });
+    expect(violatedIds(renamed)).toEqual([PRODUCT_NOT_NULL]);
+    expect(violatedIds(free)).toEqual([PRODUCT_RANGE]);
+    const delta: ContractDelta = {
+      rationale: 'p-1004 is now sold on request only, with no list price.',
+      ops: [{ op: 'removeKnownGoodInput', contractId: 'shop.get_product', input: { id: 'p-1004' } }],
+    };
+    const r = acceptDelta(delta, ctx(trigger, [renamed, free]));
+    expect(r.reasons).toEqual([]);
+    expect(r.accepted).toBe(true);
+    expect(r.amended).toEqual([PRODUCT_NOT_NULL]);
+    expect(r.contractLevel).toEqual(['shop.get_product']);
+    expect(r.summary.trigger).toEqual({ before: 'violated', after: 'verified' });
+    expect(r.summary.mutation).toEqual({ total: 2, rejectedBefore: 2, rejectedAfter: 1 });
+    if (!r.proposed) throw new Error('no proposal');
+    expect(violatedIds(renamed, r.proposed)).toEqual([]);
+    expect(violatedIds(free, r.proposed)).toEqual([PRODUCT_RANGE]);
+
+    // The $0 variant is still rejected on price.range, which the edit does not switch. The
+    // acceptance-item test that stops rejecting an M5 mutant is the control: there the trigger
+    // does not violate price.notNull, so the same removal does not amend it and M5 is rejected.
   });
 });
 
@@ -641,10 +703,11 @@ describe('acceptDelta: declared outputSchemas (as the live proxy checks them)', 
     expect(violatedIds(m7, r.proposed)).toEqual([PRODUCT_SCHEMA]);
   });
 
-  it('sees a variant lost on outputSchema by a contract-level override', () => {
-    // An override that admits a string price (allowed: it amends the trigger's contract, but not a
-    // property the trigger violates) is caught by scope; with the declared schema the gate also
-    // sees M7 no longer rejected on outputSchema.
+  it('rejects a contract-level outputSchema override the trigger does not need (scope)', () => {
+    // An override that admits a string price amends the trigger's contract, but not a property the
+    // trigger violates: scope rejects it. M7 (string price) is no longer rejected on outputSchema
+    // under it; since outputSchema is the amended property, P12 exempts it from the mutation check
+    // (BA6), so scope is the only finding.
     const loose = shopOutputSchemas().get_product as { properties: Record<string, unknown> };
     const delta: ContractDelta = {
       rationale: 'x',
@@ -660,16 +723,14 @@ describe('acceptDelta: declared outputSchemas (as the live proxy checks them)', 
         },
       ],
     };
-    const r = acceptDelta(delta, ctx(premiumProduct(), productVariants()));
+    const variants = productVariants();
+    const r = acceptDelta(delta, ctx(premiumProduct(), variants));
     expect(r.accepted).toBe(false);
-    expect(r.findings).toContainEqual(expect.objectContaining({ check: 'scope', property: PRODUCT_SCHEMA }));
-    expect(r.findings).toContainEqual(
-      expect.objectContaining({
-        check: 'mutation',
-        property: PRODUCT_SCHEMA,
-        message: expect.stringContaining('disables the property'),
-      }),
-    );
+    expect(r.findings).toEqual([expect.objectContaining({ check: 'scope', property: PRODUCT_SCHEMA })]);
+    const m7 = variants.find((v) => v.mutant === 'M7');
+    if (!m7 || !r.proposed) throw new Error('no M7 or no proposal');
+    expect(violatedIds(m7)).toEqual([PRODUCT_SCHEMA]);
+    expect(violatedIds(m7, r.proposed)).toEqual([]);
   });
 
   it('rejects a delta whose trigger still violates the declared outputSchema', () => {

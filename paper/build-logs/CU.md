@@ -1,6 +1,6 @@
 # CU build log
 
-Branch `ws/CU`, based on main `a585b65` (round 5; originally `c144b03`). Wave 1, depends on CORE-SEED. No external actions; the
+Branch `ws/CU`, based on main `a585b65` (rounds 5-7; originally `c144b03`). Wave 1, depends on CORE-SEED. No external actions; the
 only network use was the read-only `scripts/ensure-shop-mcp.mjs` clone into the worktree's
 `.work/` (needed because `packages/cli/vitest.config.ts` loads it for every `vitest run`).
 
@@ -39,12 +39,13 @@ only network use was the read-only `scripts/ensure-shop-mcp.mjs` clone into the 
 4. **corpus**: no clean v1 case violates a property it did not already violate (pre-existing
    violations are notes, not blamed on the delta).
 5. **mutation**: each variant is still rejected on every property that rejected it before, except
-   on the amended properties (P12 as written; BA6, round 5). An amended property that rejected at
-   least one variant before must still reject at least one after (the rounds 1-3 rule), so "amend"
-   cannot mean "disable". A `replaceInvariant` keeps the invariant's `kind` and paths and a
-   `replacePostcondition` its `probeTool` (round 4, a `delta` error otherwise). Round 4 had
-   required every variant to stay rejected on the amended properties too; BA6 rejected that as a
-   change to a pre-registered gate rule.
+   on the amended properties (P12 as written; BA6, rounds 5 and 7). The amended properties are
+   those the delta replaces plus, since round 7, the `onlyKnownGood` properties the trigger
+   violates that an in-scope known-good edit switches off for the trigger's own input. There is
+   no further condition on an amended property: the "must still reject at least one variant"
+   rule kept in round 5 was stricter than P12 and was removed in round 7. A `replaceInvariant`
+   keeps the invariant's `kind` and paths and a `replacePostcondition` its `probeTool` (round 4,
+   a `delta` error otherwise).
 6. **input**: empty stored/corpus/variant lists and cases without a tool result fail closed, and so
    does every mutation variant that is not a call of the trigger's tool with the trigger's
    arguments (round 4; it is skipped, not evaluated).
@@ -281,6 +282,67 @@ the D1 trace withheld and rejected by the stored check with it.
 Evidence: `pnpm --reporter=default vitest run packages/contract-update` -> 2 files, 41 tests
 passed; `-t "PLAN P12"` -> the 4 acceptance tests pass; `-t "BA6|CallRecord"` -> 9 pass;
 `pnpm typecheck` exit 0; `pnpm lint` exit 0 ("Checked 382 files ... No fixes applied").
+
+## Round 7 (verifier findings: P12 as written, known-good amendment)
+
+Base: `git rebase main` -> refused only because of the uncommitted SETUP lockfile edit; HEAD
+already contains main `a585b65` (`git merge-base --is-ancestor main HEAD` true), so there was
+nothing to replay. SETUP re-run: `node scripts/apply-dep-fragments.mjs` -> "nothing to apply";
+`pnpm install --no-frozen-lockfile` exit 0 (lockfile edit left uncommitted).
+
+**Finding 1 (BA6; P12 as written).** The rule kept in round 5, "an amended property that rejected
+at least one variant before must still reject at least one after", is a mutation condition that
+P12 does not state, and PLAN §0.B BA6 records only "mutation variants still rejected except on the
+amended property"; it is not recorded there as an amendment, so it is removed from `gate.ts`, the
+`index.ts` header and rule 5 above. Repro now accepted: trigger `premiumProduct()` (p-1004 at
+$2,499), `productVariants()`, `replaceInvariant shop.get_product price.range {kind: range, path:
+price, min: 20, max: 1e6, unit: USD}` -> `accepted: true`, no reasons, amended
+`[shop.get_product/price.range]`, trigger violated -> verified, stored 5/5 still violate, 0 corpus
+regressions, mutation `{total: 4, rejectedBefore: 3, rejectedAfter: 2}` (M1 lost on the amended
+`price.range` only; M5 still on `price.notNull`, M7 on `outputSchema`). Tests updated:
+- `rejects an amendment that neutralises the property` -> `accepts an amendment after which the
+  amended property rejects no variant (P12 as written; BA6)`, on the exact repro delta.
+- Foreign-variant control: with the trigger's own variants the [0, 1e9] widening is now accepted
+  (only the foreign variants make the difference).
+- outputSchema override -> `rejects a contract-level outputSchema override the trigger does not
+  need (scope)`: scope is now the only finding (M7 is lost on the amended `outputSchema`, which
+  P12 exempts); the test asserts M7 violates `outputSchema` under the current contract and nothing
+  under the proposed one.
+Unchanged: the `applyDelta` identity check (kind swap and path/probe moves still `delta` errors),
+the stored, corpus, foreign-variant and vacuous-pass checks. What still stops a delta from simply
+switching a check off: scope (only properties the trigger violates), the stored traces, and every
+variant still rejected on the properties not amended. This is the documented P12 limit.
+
+**Finding 2 (known-good edit amends the trigger's onlyKnownGood property).** A removal of the
+trigger's own known-good input switches every `onlyKnownGood` property off for that input, but
+only replaced properties counted as amended, so a correct update for a trigger that violates e.g.
+`price.notNull` on its own known-good input was rejected as soon as a variant kept the field null.
+`gate.ts` now adds to the amended set (and to `GateResult.amended`, after the replaced ones) every
+`onlyKnownGood` property of the trigger's contract that (a) the trigger violates under the current
+contract and (b) is switched off for the trigger's input: at least one in-scope known-good edit
+(the trigger's contract, a non-empty pattern matching the trigger's arguments), the trigger's
+input known-good under the current contract and not under the proposed one. The "amended property
+still checked on the trigger" and "amends only violated properties" scope rules still use the
+replaced properties only. Repro now accepted: trigger `shop-v1/product-p-1004.json` with `price`
+null in body and output (violates `shop.get_product/price.notNull` only), variants `~Mx` (name
+changed, price null; violates `price.notNull`) and `~M0` (price 0; violates `price.range`), delta
+`removeKnownGoodInput shop.get_product {id: p-1004}` -> `accepted: true`, amended
+`[shop.get_product/price.notNull]`, trigger violated -> verified, mutation `{2, 2, 1}` (`~M0` still
+rejected on `price.range`). Acceptance item 3 is intact: there the trigger does not violate
+`price.notNull`, so the same removal does not amend it (the test now also asserts `amended ==
+[shop.get_product/price.range]`) and M5 lost on it is still the one `[mutation]` finding. New test:
+`counts a known-good edit of the trigger's input as amending the onlyKnownGood property the
+trigger violates`.
+
+Self-check: with `src/gate.ts` restored to round 6 (temporary, reverted) 4 tests fail (the two
+round-7 acceptance changes, the foreign-variant control, the outputSchema override); restored, all
+pass.
+
+Evidence: `pnpm vitest run packages/contract-update` -> 2 files, 42 tests passed; `-t "PLAN P12"`
+-> the 4 acceptance tests pass (D1 silencing rejected,
+its D1-as-trigger variant rejected, benign $2,500 widening accepted with D1 still violating,
+M5-on-another-property delta rejected); `pnpm typecheck` exit 0; `pnpm lint` exit 0 ("Checked 382 files ... No fixes
+applied").
 
 ## For ORCH (`--arm fiks+cu`)
 
