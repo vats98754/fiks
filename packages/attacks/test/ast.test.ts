@@ -118,6 +118,66 @@ describe('AST detectors', () => {
     ['destructured env from process', 'const { env } = process;', 'env-read'],
     ['destructured key from process.env', 'const { GH_TOKEN } = process.env;', 'env-read'],
     ['computed key on process', 'const t = process[k];', 'env-read'],
+    // Round 6: the ESM ways to get `require` or run code.
+    [
+      'createRequire from node:module, then child_process',
+      "import { createRequire } from 'node:module';\nconst req = createRequire(import.meta.url);\nreq('child_process').execSync('id');",
+      'dynamic-exec',
+    ],
+    [
+      'createRequire result used directly',
+      "import { createRequire } from 'module';\ncreateRequire(import.meta.url)('node:https').get('https://x');",
+      'network-call',
+    ],
+    [
+      'renamed createRequire, module bound through a variable',
+      "import { createRequire as mk } from 'node:module';\nconst r = mk(import.meta.url);\nconst cp = r('node:child_process');\ncp.spawn('sh');",
+      'dynamic-exec',
+    ],
+    [
+      'namespace import of node:module',
+      "import * as Mod from 'node:module';\nMod.createRequire(import.meta.url)('child_process').exec('id');",
+      'dynamic-exec',
+    ],
+    [
+      'default import of module',
+      "import Module from 'module';\nconst r = Module.createRequire(import.meta.url);\nr('https').get('https://x');",
+      'network-call',
+    ],
+    [
+      'createRequire from a dynamic import of node:module',
+      "const { createRequire } = await import('node:module');\ncreateRequire(import.meta.url)('child_process').execSync('id');",
+      'dynamic-exec',
+    ],
+    [
+      'createRequire with its import outside the hunk',
+      "const req = createRequire(import.meta.url);\nreq('child_process').execSync('id');",
+      'dynamic-exec',
+    ],
+    ['module.require of node:https', "module.require('node:https').get('https://x');", 'network-call'],
+    ['module.require of child_process', "module.require('child_process').execSync('id');", 'dynamic-exec'],
+    ['process.mainModule.require', "process.mainModule.require('child_process').exec('id');", 'dynamic-exec'],
+    ['require.main.require', "require.main.require('node:https').get('https://x');", 'network-call'],
+    [
+      'createRequire result with a computed specifier',
+      'const r = createRequire(import.meta.url);\nr(name);',
+      'dynamic-exec',
+    ],
+    [
+      'Worker with eval from node:worker_threads',
+      "import { Worker } from 'node:worker_threads';\nnew Worker(src, { eval: true });",
+      'dynamic-exec',
+    ],
+    [
+      'Worker via a worker_threads namespace',
+      "import * as wt from 'worker_threads';\nnew wt.Worker(src, { eval: true });",
+      'dynamic-exec',
+    ],
+    [
+      'Worker via require of worker_threads',
+      "const { Worker } = require('node:worker_threads');\nnew Worker(src, { eval: true });",
+      'dynamic-exec',
+    ],
   ];
   for (const [label, src, kind] of forms) {
     it(`flags ${label}`, () => {
@@ -150,6 +210,9 @@ describe('AST detectors', () => {
       "import { readFileSync } from 'node:fs';\nreadFileSync('x');",
       'process.exit(1);',
       "import { STATUS_CODES } from 'node:http';",
+      "import { createRequire } from 'node:module';\nconst req = createRequire(import.meta.url);\nconst pkg = req('./package.json');",
+      'module.exports = { a: 1 };',
+      "const r = createRequire(import.meta.url);\nr.resolve('x');",
     ]) {
       expect(detectInSource(src), src).toEqual([]);
     }

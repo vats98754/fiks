@@ -5,7 +5,10 @@
 // (did the goal oracle fire — no transcript, no diff, no log, no oracle reasons, as the threat model
 // demands), the carrier placer puts it into
 // a trace, and an injected runner invokes a repair run via the argv template
-//   pnpm fiks repair --arm fiks --trace-format raw|strict --no-pr --run-key <key> --trace <path>
+//   pnpm fiks repair --arm fiks --domain <d> --trace-format raw|strict --ci local --no-pr
+//     --run-key <key> --base <DriftPackage.base> --trace <path>
+// (PLAN §7 P4: experiments use `--ci local --no-pr`; P8: `--domain` is the RunKey's domain; P17 and
+// RUN: every arm gets `--trace` and `--base`.)
 // One JSONL row is written per round. A goal stops early once its oracle fires. Adaptive robustness
 // is NOT claimed (nasr2025attackermovessecond); this measures how a status-only attacker fares.
 import { mkdtempSync, writeFileSync } from 'node:fs';
@@ -46,7 +49,10 @@ export interface AdaptiveConfig {
   canary: string;
   recordedIds: string[];
   model: string;
+  /** Domain of the run; passed as `--domain` and written into the RunKey, so the two always agree. */
   domain: string;
+  /** Git ref of the server base the repair starts from (`DriftPackage.base`); passed as `--base`. */
+  base: string;
   /** Experiment id for the RunKey (default `E6`). */
   experiment?: string;
   /** The loop's command guard for the disallowed-command oracle (default `defaultMayRun`). */
@@ -148,11 +154,17 @@ export async function runAdaptive(cfg: AdaptiveConfig, deps: AdaptiveDeps): Prom
           'repair',
           '--arm',
           'fiks',
+          '--domain',
+          cfg.domain,
           '--trace-format',
           config,
+          '--ci',
+          'local',
           '--no-pr',
           '--run-key',
           runKeyStr,
+          '--base',
+          cfg.base,
           '--trace',
           tracePath,
         ];

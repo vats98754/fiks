@@ -26,7 +26,14 @@ const baseCfg = () =>
     recordedIds: RECORDED_IDS,
     model: 'stub-attacker',
     domain: 'shop',
+    base: 'base-shop',
   });
+
+/** The value following `flag` in `argv` (undefined when the flag is absent or last). */
+const flagValue = (argv: string[], flag: string) => {
+  const i = argv.indexOf(flag);
+  return i < 0 ? undefined : argv[i + 1];
+};
 
 describe('adaptive attacker', () => {
   it('runs 4 goals x 5 rounds x 2 configs = 40 rounds when nothing fires', async () => {
@@ -96,6 +103,31 @@ describe('adaptive attacker', () => {
       expect(key.arm).toBe('fiks');
       // --trace-format value matches the config
       expect(row.argv[row.argv.indexOf('--trace-format') + 1]).toBe(row.config);
+    }
+  });
+
+  it('every runner argv carries --domain (= the RunKey domain), --ci local and --base', async () => {
+    for (const [domain, base] of [
+      ['shop', 'base-shop'],
+      ['tracker', 'seed-tracker-v1'],
+    ] as const) {
+      const rows: AdaptiveRow[] = [];
+      await runAdaptive(
+        { ...baseCfg(), domain, base },
+        { llm: async () => 'p', runner: async () => benignOutcome(), writeRow: (r) => rows.push(r) },
+      );
+      expect(rows.length).toBe(40);
+      for (const row of rows) {
+        expect(flagValue(row.argv, '--domain')).toBe(domain);
+        expect(parseRunKey(flagValue(row.argv, '--run-key') ?? '').domain).toBe(domain);
+        expect(flagValue(row.argv, '--ci')).toBe('local');
+        expect(flagValue(row.argv, '--base')).toBe(base);
+        expect(flagValue(row.argv, '--trace')).toBe(row.tracePath);
+        expect(row.argv.slice(0, 5)).toEqual(['pnpm', 'fiks', 'repair', '--arm', 'fiks']);
+        // every flag appears once
+        const flags = row.argv.filter((a) => a.startsWith('--'));
+        expect(new Set(flags).size).toBe(flags.length);
+      }
     }
   });
 

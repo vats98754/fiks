@@ -13,6 +13,12 @@
 // `EventSource`, a global sink passed around as a value, and recorded ids in string or
 // no-substitution template literals. It is a static, intra-fragment analysis: data flow through
 // function parameters, string-built property names and code outside the diff are out of reach.
+//
+// Round 6: every ESM route to a `require` resolves to it — `createRequire(...)` from `node:module`
+// (named, renamed, namespace, default or dynamic import, or unbound when its import is outside the
+// hunk), `module.require`, `process.mainModule.require` and `require.main.require` — so a call
+// through any of them is a module load like `require(...)`. `worker_threads` (a `Worker` with
+// `eval: true` runs a string as code) is an exec module.
 import ts from 'typescript';
 import { addedLinesAll } from './diff.ts';
 
@@ -47,7 +53,7 @@ const NETWORK_MODULES = new Set([
   'ws',
 ]);
 /** Modules whose exports run code or processes. */
-const EXEC_MODULES = new Set(['child_process', 'vm']);
+const EXEC_MODULES = new Set(['child_process', 'vm', 'worker_threads']);
 
 /** Globals that are network or exec sinks when not shadowed by a local declaration. */
 const GLOBAL_SINKS = new Map<string, SinkClass>([
@@ -82,7 +88,13 @@ type Ref =
   | { t: 'process' }
   | { t: 'env' }
   | { t: 'global' }
-  | { t: 'require' };
+  | { t: 'require' }
+  /** The `node:module` builtin, or a CommonJS Module object (`module`, `require.main`). */
+  | { t: 'module' }
+  /** `createRequire` from `node:module`: calling it returns a `require`. */
+  | { t: 'createRequire' };
+
+const MODULE_BUILTIN = 'module';
 
 function moduleClass(spec: string): SinkClass | null {
   const m = spec.startsWith('node:') ? spec.slice('node:'.length) : spec;
@@ -94,6 +106,12 @@ function moduleClass(spec: string): SinkClass | null {
 function moduleSink(spec: string): Ref | null {
   const cls = moduleClass(spec);
   return cls ? { t: 'sink', cls, label: spec } : null;
+}
+
+/** What importing or requiring `spec` yields: a sink module, the `node:module` builtin, or nothing. */
+function moduleRef(spec: string): Ref | null {
+  const m = spec.startsWith('node:') ? spec.slice('node:'.length) : spec;
+  return m === MODULE_BUILTIN ? { t: 'module' } : moduleSink(spec);
 }
 
 /** The static text of a string or no-substitution template literal, else null. */
@@ -117,15 +135,6 @@ function unwrap(node: ts.Expression): ts.Expression {
     n = n.expression;
   }
   return n;
-}
-
-/** `require(x)` or `import(x)`. */
-function isModuleLoad(node: ts.Node): node is ts.CallExpression {
-  return (
-    ts.isCallExpression(node) &&
-    (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
-      (ts.isIdentifier(node.expression) && node.expression.text === 'require'))
-  );
 }
 
 /** The property name a binding element reads (`{ a }` -> a, `{ a: b }` -> a), or null. */
@@ -218,7 +227,14 @@ export function detectInSource(source: string, recordedIds: string[] = []): AstF
         return GLOBAL_OBJECTS.has(key) ? { t: 'global' } : null;
       }
       case 'process':
-        return key === 'env' ? { t: 'env' } : null;
+        if (key === 'env') return { t: 'env' };
+        return key === 'mainModule' ? { t: 'module' } : null;
+      case 'module':
+        // module.require / Module._load load a module; Module.createRequire makes a require.
+        if (key === 'require' || key === '_load') return { t: 'require' };
+        return key === 'createRequire' ? { t: 'createRequire' } : null;
+      case 'require':
+        return key === 'main' ? { t: 'module' } : null;
       case 'sink':
         // Any member of a network/exec module (or of a sink callable) is itself a sink.
         return { t: 'sink', cls: base.cls, label: `${base.label}.${key}` };
@@ -237,13 +253,20 @@ export function detectInSource(source: string, recordedIds: string[] = []): AstF
       if (g) return { t: 'sink', cls: g, label: e.text };
       if (e.text === 'process') return { t: 'process' };
       if (e.text === 'require') return { t: 'require' };
+      // The CommonJS `module` object, and `createRequire` whose import sits outside the hunk.
+      if (e.text === 'module') return { t: 'module' };
+      if (e.text === 'createRequire') return { t: 'createRequire' };
       if (GLOBAL_OBJECTS.has(e.text)) return { t: 'global' };
       const ns = IMPLICIT_NAMESPACES.get(e.text);
       return ns ? moduleSink(ns) : null;
     }
-    if (isModuleLoad(e)) {
-      const spec = literalText(e.arguments[0]);
-      return spec === null ? null : moduleSink(spec);
+    if (ts.isCallExpression(e)) {
+      if (isModuleLoad(e)) {
+        const spec = literalText(e.arguments[0]);
+        return spec === null ? null : moduleRef(spec);
+      }
+      // createRequire(import.meta.url) returns a require.
+      return resolve(e.expression)?.t === 'createRequire' ? { t: 'require' } : null;
     }
     if (ts.isPropertyAccessExpression(e)) return member(resolve(e.expression), e.name.text);
     if (ts.isElementAccessExpression(e)) {
@@ -255,6 +278,12 @@ export function detectInSource(source: string, recordedIds: string[] = []): AstF
     }
     return null;
   };
+
+  /** `import(x)`, `require(x)`, or a call through anything that resolves to a `require`. */
+  const isModuleLoad = (node: ts.CallExpression): boolean =>
+    node.expression.kind === ts.SyntaxKind.ImportKeyword ||
+    (ts.isIdentifier(node.expression) && node.expression.text === 'require') ||
+    resolve(node.expression)?.t === 'require';
 
   const bindPattern = (name: ts.BindingName, ref: Ref | null) => {
     if (ts.isIdentifier(name)) {
@@ -274,7 +303,7 @@ export function detectInSource(source: string, recordedIds: string[] = []): AstF
 
   const collect = (node: ts.Node): void => {
     if (ts.isImportDeclaration(node) && node.importClause) {
-      const mod = moduleSink(literalText(node.moduleSpecifier) ?? '');
+      const mod = moduleRef(literalText(node.moduleSpecifier) ?? '');
       const clause = node.importClause;
       if (clause.name) bind(clause.name.text, mod);
       const nb = clause.namedBindings;
@@ -288,7 +317,7 @@ export function detectInSource(source: string, recordedIds: string[] = []): AstF
     } else if (ts.isImportEqualsDeclaration(node)) {
       const ref = node.moduleReference;
       const spec = ts.isExternalModuleReference(ref) ? literalText(ref.expression) : null;
-      bind(node.name.text, spec === null ? null : moduleSink(spec));
+      bind(node.name.text, spec === null ? null : moduleRef(spec));
     } else if (ts.isVariableDeclaration(node)) {
       bindPattern(node.name, node.initializer ? resolve(node.initializer) : null);
     } else if (
@@ -316,7 +345,7 @@ export function detectInSource(source: string, recordedIds: string[] = []): AstF
 
   const visit = (node: ts.Node): void => {
     if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
-      if (isModuleLoad(node)) {
+      if (ts.isCallExpression(node) && isModuleLoad(node)) {
         const spec = literalText(node.arguments[0]);
         // `require(name)` / `import(name)` with a computed specifier is arbitrary code loading.
         if (spec === null) push('dynamic-exec', node);

