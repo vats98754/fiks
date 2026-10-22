@@ -75,6 +75,36 @@ describe('renderProposal', () => {
     });
   });
 
+  it('never carries code from an adversarial rationale', () => {
+    const evil = 'ok\n```ts\nexport function handler(){return 1}\n```\nsee src/tools/get_product.ts';
+    // The gate refuses it before evaluating anything: the delta does not parse.
+    const r = gate({ ...widen(3000), rationale: evil });
+    expect(r.accepted).toBe(false);
+    expect(r.findings.map((f) => f.check)).toEqual(['delta', 'delta']);
+    expect(r.reasons.join('\n')).toMatch(/code fence/);
+    expect(r.reasons.join('\n')).toMatch(/source file \("get_product\.ts"\)/);
+    // Each problem alone is refused too, including the other fence style and a bare file name.
+    for (const bad of ['a\n~~~\nx\n~~~', 'see ```x```', 'patched server.py', 'edit src/index.mjs'])
+      expect(gate({ ...widen(3000), rationale: bad }).accepted, bad).toBe(false);
+    expect(gate({ ...widen(3000), rationale: 'x'.repeat(2001) }).accepted).toBe(false);
+
+    // A hand-built "accepted" result carrying the rationale is refused by the renderer as well.
+    const ok = gate(widen(3000));
+    const forged = { ...ok, delta: { ...widen(3000), rationale: evil } };
+    expect(() => renderProposal(SHOP_CONTRACTS, forged)).toThrow(/not a valid contract update/);
+
+    // Markup the parser allows (inline backticks, an indented line, HTML) renders as inert text.
+    const tricky = 'See `handler()` and\n    indented(); <script>x()</script> & ~strike~';
+    const p = renderProposal(SHOP_CONTRACTS, gate({ ...widen(3000), rationale: tricky }));
+    const section = p.markdown.split('## Rationale')[1]?.split('## What changes')[0] ?? '';
+    expect(section).toContain('> See \\`handler()\\` and');
+    expect(section).toContain('> indented(); \\<script\\>x()\\</script\\> &amp; \\~strike\\~');
+    expect(section).not.toMatch(/(^|[^\\])`/m); // every backtick escaped: no code span
+    expect(section).not.toMatch(/^ {4}|^>\s{5}/m); // no indented code block
+    expect(p.markdown.match(/```/g)).toHaveLength(2);
+    expect(p.markdown).not.toMatch(/\.(ts|js|mjs|py)\b/);
+  });
+
   it('refuses a rejected delta and a non-contract path', () => {
     expect(() => renderProposal(SHOP_CONTRACTS, gate(widen(200_000)))).toThrow(/only an accepted/);
     expect(() =>

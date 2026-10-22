@@ -3,6 +3,7 @@
 // only file it names is the contracts JSON.
 import type { ContractFile, ToolContract } from '@fiks/contracts';
 import type { GateResult } from './gate.ts';
+import { parseDelta } from './outcome.ts';
 
 export interface ProposalOptions {
   /** Repo-relative path of the contracts file (default `contracts/<server>.contracts.json`). */
@@ -92,6 +93,38 @@ export function contractDiff(base: ContractFile, proposed: ContractFile, contrac
   return parts.length ? `${parts.join('\n')}\n` : '';
 }
 
+/**
+ * Free text as an inert markdown blockquote: each line trimmed (an indented line would become a
+ * code block) and every character that can open code or markup escaped (` ~ < > \ &), so the text
+ * renders as plain prose whatever it contains.
+ */
+export function plainText(text: string): string {
+  return text
+    .split(/\r\n|\r|\n/)
+    .map((l) =>
+      l
+        .trim()
+        .replace(/[\\`~<>]/g, (ch) => `\\${ch}`)
+        .replace(/&/g, '&amp;'),
+    )
+    .map((l) => (l ? `> ${l}` : '>'))
+    .join('\n');
+}
+
+/** One line of trace-derived text (notes quote call arguments) with code and markup escaped. */
+function escapeInline(text: string): string {
+  return text
+    .replace(/\s+/g, ' ')
+    .replace(/[\\`~<>]/g, (ch) => `\\${ch}`)
+    .replace(/&/g, '&amp;');
+}
+
+/** A fence longer than any backtick run in `body`, so the body cannot close it. */
+function fenceFor(body: string): string {
+  const longest = Math.max(0, ...(body.match(/`+/g) ?? []).map((r) => r.length));
+  return '`'.repeat(Math.max(3, longest + 1));
+}
+
 export function renderProposal(
   base: ContractFile,
   result: GateResult,
@@ -104,7 +137,13 @@ export function renderProposal(
     throw new Error(
       `renderProposal: ${contractsPath} is not a contracts file; a proposal never touches code`,
     );
+  // The gate parsed the delta already; re-check, since a GateResult can be built by hand and the
+  // rationale is the one free-text field that reaches the markdown.
+  const again = parseDelta(result.delta);
+  if (!again.ok)
+    throw new Error(`renderProposal: the delta is not a valid contract update: ${again.errors.join('; ')}`);
   const diff = contractDiff(base, result.proposed, contractsPath);
+  const fence = fenceFor(diff);
   const s = result.summary;
   const list = (xs: string[]) => (xs.length ? xs.map((x) => `\`${x}\``).join(', ') : 'none');
   const lines = [
@@ -115,7 +154,9 @@ export function renderProposal(
     '',
     '## Rationale',
     '',
-    result.delta.rationale,
+    'As stated by the repair agent (plain text, not verified by the gate):',
+    '',
+    plainText(again.value.rationale),
     '',
     '## What changes',
     '',
@@ -129,13 +170,13 @@ export function renderProposal(
     `- Stored true-violation traces: ${s.stored.stillViolate} of ${s.stored.used} still violate their target properties (${s.stored.total} given).`,
     `- Clean v1 corpus: ${s.corpus.total} cases (${s.corpus.verified} verified before), ${s.corpus.regressions} new violations.`,
     `- Mutation variants of the trigger: ${s.mutation.rejectedBefore} of ${s.mutation.total} rejected before, ${s.mutation.rejectedAfter} after; none lost on a property the proposal does not amend.`,
-    ...(result.notes.length ? ['', '### Notes', '', ...result.notes.map((n) => `- ${n}`)] : []),
+    ...(result.notes.length ? ['', '### Notes', '', ...result.notes.map((n) => `- ${escapeInline(n)}`)] : []),
     '',
     '## Contract diff',
     '',
-    '```diff',
+    `${fence}diff`,
     diff.trimEnd(),
-    '```',
+    fence,
     '',
   ];
   return { markdown: lines.join('\n'), diff, proposed: result.proposed };

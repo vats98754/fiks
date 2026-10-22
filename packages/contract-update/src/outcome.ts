@@ -34,6 +34,34 @@ export interface ContractUpdateOutcome {
 
 export type ParseResult<T> = { ok: true; value: T } | { ok: false; errors: string[] };
 
+/** A property id: it is quoted in receipts and proposals, so it carries no markup. */
+const PROPERTY_ID = /^[A-Za-z0-9_.-]+$/;
+
+/** A code fence (``` or ~~~), anywhere in the text. */
+const CODE_FENCE = /```|~~~/;
+/** A source-file name or path, e.g. `src/tools/get_product.ts` or `server.py`. */
+const SOURCE_PATH = /[\w-]+\.(?:[cm]?[jt]sx?|py|go|rs|java|kt|rb|php|sh|c|cc|cpp|h|hpp|cs|swift)(?![\w-])/;
+/** Longest rationale accepted: a changelog citation, not a document. */
+export const MAX_RATIONALE_CHARS = 2000;
+
+/**
+ * Problems with a delta's free-text rationale. A contract update never carries code, and the
+ * rationale is rendered into the proposal, so it may not contain a code fence or name a source
+ * file; it is plain prose (the proposal renderer escapes it as well).
+ */
+export function rationaleProblems(text: string): string[] {
+  const out: string[] = [];
+  if (CODE_FENCE.test(text)) out.push('delta.rationale: must not contain a code fence (``` or ~~~)');
+  const path = SOURCE_PATH.exec(text);
+  if (path)
+    out.push(
+      `delta.rationale: must not name a source file ("${path[0]}"); a contract update changes the contract, never code`,
+    );
+  if (text.length > MAX_RATIONALE_CHARS)
+    out.push(`delta.rationale: must be at most ${MAX_RATIONALE_CHARS} characters`);
+  return out;
+}
+
 const INVARIANT_KINDS = [
   'range',
   'notNull',
@@ -57,7 +85,7 @@ const invariantSchema: JsonSchema = {
   type: 'object',
   required: ['id', 'kind'],
   properties: {
-    id: { type: 'string' },
+    id: { type: 'string', pattern: PROPERTY_ID.source },
     kind: { type: 'string', enum: [...INVARIANT_KINDS] },
     path: { type: 'string' },
     min: { type: 'number' },
@@ -86,7 +114,11 @@ export const CONTRACT_UPDATE_OUTCOME_SCHEMA: JsonSchema = {
       required: ['ops', 'rationale'],
       additionalProperties: false,
       properties: {
-        rationale: { type: 'string' },
+        rationale: {
+          type: 'string',
+          maxLength: MAX_RATIONALE_CHARS,
+          description: 'Plain prose: no code fences, no source-file names.',
+        },
         ops: {
           type: 'array',
           items: {
@@ -122,7 +154,8 @@ function validateInvariant(x: unknown, at: string, errors: string[]): void {
     return;
   }
   if (!isStr(x.id)) errors.push(`${at}.id: must be a non-empty string`);
-  else if (x.id.includes('/')) errors.push(`${at}.id: must not contain "/"`);
+  else if (!PROPERTY_ID.test(x.id))
+    errors.push(`${at}.id: must use only letters, digits, ".", "_" and "-" (no "/")`);
   const need = (k: string, pred: (v: unknown) => boolean, what: string) => {
     if (!pred(x[k])) errors.push(`${at}.${k}: must be ${what}`);
   };
@@ -230,6 +263,7 @@ export function parseDelta(x: unknown): ParseResult<ContractDelta> {
   if (!isObj(x)) return { ok: false, errors: ['delta: must be an object'] };
   checkKeys(x, ['ops', 'rationale'], 'delta', errors);
   if (!isStr(x.rationale)) errors.push('delta.rationale: must be a non-empty string');
+  else errors.push(...rationaleProblems(x.rationale));
   if (!Array.isArray(x.ops) || x.ops.length === 0) errors.push('delta.ops: must be a non-empty array');
   else for (const [i, op] of x.ops.entries()) validateOp(op, `delta.ops[${i}]`, errors);
   if (errors.length) return { ok: false, errors };

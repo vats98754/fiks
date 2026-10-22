@@ -2,8 +2,10 @@
 // same inputs always give the same result, in input order.
 //
 // A delta is accepted only if all of these hold:
-//   scope    - the delta edits only the trigger's contract, and amends only properties the trigger
-//              violates under the current contract;
+//   scope    - the delta edits only the trigger's contract, amends only properties the trigger
+//              violates under the current contract, and adds or removes no known-good input other
+//              than the trigger's own (a known-good edit switches every onlyKnownGood property on
+//              or off for the inputs it matches);
 //   trigger  - the trigger verifies under the amended contract (verdict `verified`, every amended
 //              property still checked);
 //   stored   - every stored true-violation trace still violates each target property it violates
@@ -88,6 +90,28 @@ function evalCase(
   return { res, violated: new Set(res.violations.map((v) => v.propertyId)) };
 }
 
+/**
+ * Whether known-good pattern `pattern` covers exactly the trigger's input: it is non-empty and
+ * every field equals the trigger's argument (the proxy's `isKnownGood` subset match). An empty
+ * pattern matches every input, so it is never the trigger's own.
+ */
+function matchesInput(pattern: Record<string, unknown>, args: unknown): boolean {
+  if (args === null || typeof args !== 'object') return false;
+  const keys = Object.keys(pattern);
+  return (
+    keys.length > 0 &&
+    keys.every((k) => JSON.stringify((args as Record<string, unknown>)[k]) === JSON.stringify(pattern[k]))
+  );
+}
+
+/** The `onlyKnownGood` properties of a contract, as `${contractId}/${id}`. */
+function onlyKnownGoodProps(file: ContractFile, contractId: string): string[] {
+  const c = file.contracts.find((x) => x.id === contractId);
+  return (c?.invariants ?? [])
+    .filter((inv) => 'onlyKnownGood' in inv && inv.onlyKnownGood)
+    .map((inv) => `${contractId}/${inv.id}`);
+}
+
 function describe(c: GateCase): string {
   const m = c.mutant ? ` [${c.mutant}]` : '';
   return `${c.id}${m} (${c.tool} ${JSON.stringify(c.args)})`;
@@ -132,7 +156,7 @@ export function acceptDelta(delta: unknown, ctx: GateContext): GateResult {
     for (const message of applied.errors) findings.push({ check: 'delta', message });
     return done({ delta: parsed.value });
   }
-  const { contracts: next, amended, added, contractLevel, touchedContracts } = applied.value;
+  const { contracts: next, amended, added, contractLevel, touchedContracts, knownGoodEdits } = applied.value;
   const old = ctx.contracts;
   const amendedSet = new Set(amended);
 
@@ -203,6 +227,19 @@ export function acceptDelta(delta: unknown, ctx: GateContext): GateResult {
           property: p,
           message: `the delta amends ${p}, which the trigger does not violate (trigger violates: ${[...tBefore.violated].join(', ') || 'nothing'})`,
         });
+    }
+    // A known-good edit switches every onlyKnownGood property of the contract on or off for each
+    // input it matches, so it may only edit the trigger's own input: the corpus and the trigger's
+    // variants never cover other inputs, so nothing else would notice a check turned off (remove)
+    // or a false positive turned on (add) for them.
+    for (const e of knownGoodEdits) {
+      if (e.contractId !== tContract) continue; // already a scope finding above
+      if (matchesInput(e.input, trigger.args)) continue;
+      const props = onlyKnownGoodProps(old, e.contractId);
+      findings.push({
+        check: 'scope',
+        message: `the delta ${e.op === 'add' ? 'adds' : 'removes'} known-good input ${JSON.stringify(e.input)}, which ${Object.keys(e.input).length ? 'does not match' : 'matches every input, not just'} the trigger's arguments ${JSON.stringify(trigger.args)}; that switches ${props.join(', ') || 'its onlyKnownGood properties'} ${e.op === 'add' ? 'on' : 'off'} for inputs other than the trigger's. A contract update may edit only the trigger's own known-good input`,
+      });
     }
     if (tAfter.res.verdict !== 'verified') {
       const left = tAfter.res.violations.map((v) => `${v.propertyId}: ${v.message}`).join('; ');

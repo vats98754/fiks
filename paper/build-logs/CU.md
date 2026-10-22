@@ -29,8 +29,9 @@ only network use was the read-only `scripts/ensure-shop-mcp.mjs` clone into the 
 
 ## Gate rules (all must hold; every failure is listed, nothing short-circuits after parsing)
 
-1. **scope**: the delta edits only the trigger's contract, and amends only properties the trigger
-   violates under the current contract; the trigger must violate the current contract at all.
+1. **scope**: the delta edits only the trigger's contract, amends only properties the trigger
+   violates under the current contract, and adds or removes no known-good input other than the
+   trigger's own (round 3); the trigger must violate the current contract at all.
 2. **trigger**: under the amended contract the trigger's verdict is `verified`, and every amended
    property is still checked on it.
 3. **stored**: each stored true-violation trace still violates each of its `target` properties
@@ -111,6 +112,44 @@ Rebased onto main `c144b03` (no new commits; "Current branch ws/CU is up to date
 Evidence: `pnpm vitest run packages/contract-update` -> 2 files, 28 tests passed (the four P12
 acceptance tests among them); `pnpm typecheck` exit 0; `pnpm lint` exit 0 ("Checked 162 files ...
 No fixes applied").
+
+## Round 3 (verifier findings)
+
+Rebased onto main `6157cb4` (MON merged; clean rebase after discarding the uncommitted SETUP
+lockfile edit). SETUP re-run: "nothing to apply", `pnpm install --no-frozen-lockfile` exit 0
+(lockfile edit again left uncommitted).
+
+1. **Known-good edits are in scope only for the trigger's own input** (`apply.ts`, `gate.ts`).
+   `applyDelta` now reports `knownGoodEdits` (`{contractId, op: add|remove, input}`). In the scope
+   block, an add or remove on the trigger's contract whose pattern does not match the trigger's
+   arguments (the proxy's subset match), or is empty (`{}` matches every input), is a `scope`
+   finding naming the `onlyKnownGood` properties it switches on or off. Rationale: such an edit
+   amends those properties for inputs the trigger does not cover, and neither the corpus nor the
+   trigger's variants exercise them. Removing the trigger's own input stays in scope, so the M5
+   acceptance test is unchanged: rejected by the mutation check alone. Verifier repros, now:
+   `get_product` widen 3000 + remove `{id: p-1002}` -> `accepted=false`, one `[scope]` reason
+   naming `shop.get_product/price.notNull`; `search_products` widen 3000 + remove
+   `{query: monitor}` -> `accepted=false`, one `[scope]` reason naming
+   `shop.search_products/items.nonEmpty`. Tests added for both, for adding a non-trigger input
+   (`{id: p-2001}`), and for an empty pattern.
+2. **The rationale cannot carry code** (`outcome.ts`, `render.ts`). `parseDelta` rejects a
+   rationale with a code fence (``` or ~~~), a source-file name (`*.ts`, `*.js`, `*.py`, ... as
+   `rationaleProblems`), or more than 2,000 characters; invariant ids must match
+   `^[A-Za-z0-9_.-]+$` (they are quoted in the markdown). `renderProposal` re-parses the delta
+   (a hand-built GateResult is refused), renders the rationale as a blockquote with each line
+   trimmed and `` ` ~ < > \ `` escaped and `&` encoded, escapes notes the same way, and sizes the
+   diff fence longer than any backtick run in the diff. Verifier repro, now: the 4-fence
+   rationale is rejected by the gate with two `[delta]` reasons (code fence; source file
+   "get_product.ts"). New adversarial test: that rationale and each problem alone are refused by
+   the gate; a forged accepted result is refused by the renderer; inline backticks, an indented
+   line and `<script>` render escaped (no code span, no indented code block, exactly 2 fences, no
+   source path).
+
+Self-check: with `src/` reverted to round 2 (`git stash push packages/contract-update/src`), the
+five new tests fail and the other 28 pass.
+
+Evidence: `pnpm vitest run packages/contract-update` -> 2 files, 33 tests passed; `pnpm
+typecheck` exit 0; `pnpm lint` exit 0 ("Checked 173 files ... No fixes applied").
 
 ## For ORCH (`--arm fiks+cu`)
 

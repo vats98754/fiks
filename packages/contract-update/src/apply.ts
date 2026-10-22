@@ -12,6 +12,15 @@ export interface AppliedDelta {
   contractLevel: string[];
   /** Ids of every contract the delta touches. */
   touchedContracts: string[];
+  /** Every known-good input the delta adds or removes, in op order. */
+  knownGoodEdits: KnownGoodEdit[];
+}
+
+/** A contract-level edit: it switches every `onlyKnownGood` property on or off for `input`. */
+export interface KnownGoodEdit {
+  contractId: string;
+  op: 'add' | 'remove';
+  input: Record<string, unknown>;
 }
 
 export type ApplyResult = { ok: true; value: AppliedDelta } | { ok: false; errors: string[] };
@@ -29,6 +38,7 @@ export function applyDelta(file: ContractFile, delta: ContractDelta): ApplyResul
   const added: string[] = [];
   const contractLevel: string[] = [];
   const touched: string[] = [];
+  const knownGoodEdits: KnownGoodEdit[] = [];
 
   delta.ops.forEach((op, i) => {
     const at = `delta.ops[${i}] (${op.op})`;
@@ -101,6 +111,7 @@ export function applyDelta(file: ContractFile, delta: ContractDelta): ApplyResul
         }
         c.knownGoodInputs = [...list, structuredClone(op.input)];
         pushOnce(contractLevel, c.id);
+        knownGoodEdits.push({ contractId: c.id, op: 'add', input: structuredClone(op.input) });
         return;
       }
       case 'removeKnownGoodInput': {
@@ -112,11 +123,15 @@ export function applyDelta(file: ContractFile, delta: ContractDelta): ApplyResul
         }
         c.knownGoodInputs = rest;
         pushOnce(contractLevel, c.id);
+        knownGoodEdits.push({ contractId: c.id, op: 'remove', input: structuredClone(op.input) });
         return;
       }
     }
   });
 
   if (errors.length) return { ok: false, errors };
-  return { ok: true, value: { contracts, amended, added, contractLevel, touchedContracts: touched } };
+  return {
+    ok: true,
+    value: { contracts, amended, added, contractLevel, touchedContracts: touched, knownGoodEdits },
+  };
 }

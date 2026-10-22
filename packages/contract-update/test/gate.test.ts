@@ -142,6 +142,8 @@ describe('acceptDelta: acceptance items (PLAN P12)', () => {
     };
     const r = acceptDelta(delta, ctx(premiumProduct(), variants));
     expect(r.accepted).toBe(false);
+    // p-1004 is the trigger's own input, so scope allows the removal: the mutation check alone
+    // rejects it.
     expect(r.findings).toEqual([
       expect.objectContaining({ check: 'mutation', caseId: m5?.id, property: PRODUCT_NOT_NULL }),
     ]);
@@ -171,6 +173,77 @@ describe('acceptDelta: other checks', () => {
     expect(r.accepted).toBe(false);
     expect(r.findings).toContainEqual(
       expect.objectContaining({ check: 'scope', property: 'shop.search_products/items.id.unique' }),
+    );
+  });
+
+  it("rejects removing a known-good input other than the trigger's (get_product price.notNull)", () => {
+    // p-1002 is not the trigger: dropping it turns price.notNull off for p-1002, which the trigger
+    // does not violate and none of the trigger's variants exercises.
+    const delta: ContractDelta = {
+      rationale: 'x',
+      ops: [
+        ...widenProduct(3000).ops,
+        { op: 'removeKnownGoodInput', contractId: 'shop.get_product', input: { id: 'p-1002' } },
+      ],
+    };
+    const r = acceptDelta(delta, ctx(premiumProduct(), productVariants()));
+    expect(r.accepted).toBe(false);
+    expect(r.findings).toEqual([
+      expect.objectContaining({ check: 'scope', message: expect.stringContaining('"p-1002"') }),
+    ]);
+    expect(r.reasons[0]).toContain(PRODUCT_NOT_NULL);
+    expect(r.reasons[0]).toContain('off');
+  });
+
+  it("rejects removing a known-good input other than the trigger's (search_products items.nonEmpty)", () => {
+    const delta: ContractDelta = {
+      rationale: 'x',
+      ops: [
+        ...widenSearch(3000).ops,
+        { op: 'removeKnownGoodInput', contractId: 'shop.search_products', input: { query: 'monitor' } },
+      ],
+    };
+    const r = acceptDelta(delta, ctx(premiumSearch(), searchVariants()));
+    expect(r.accepted).toBe(false);
+    expect(r.findings).toEqual([
+      expect.objectContaining({ check: 'scope', message: expect.stringContaining('"monitor"') }),
+    ]);
+    expect(r.reasons[0]).toContain('shop.search_products/items.nonEmpty');
+  });
+
+  it("rejects adding a known-good input other than the trigger's", () => {
+    // Adding p-2001 would switch price.notNull on for it: a false positive the corpus cannot see.
+    const delta: ContractDelta = {
+      rationale: 'x',
+      ops: [
+        ...widenProduct(3000).ops,
+        { op: 'addKnownGoodInput', contractId: 'shop.get_product', input: { id: 'p-2001' } },
+      ],
+    };
+    const r = acceptDelta(delta, ctx(premiumProduct(), productVariants()));
+    expect(r.accepted).toBe(false);
+    expect(r.findings).toEqual([
+      expect.objectContaining({ check: 'scope', message: expect.stringContaining('adds known-good input') }),
+    ]);
+    expect(r.reasons[0]).toContain(`${PRODUCT_NOT_NULL} on`);
+  });
+
+  it('rejects a known-good pattern that matches every input, even though it matches the trigger', () => {
+    const contracts = structuredClone(SHOP_CONTRACTS);
+    const c = contracts.contracts.find((x) => x.id === 'shop.get_product');
+    if (!c) throw new Error('fixture');
+    c.knownGoodInputs = [...(c.knownGoodInputs ?? []), {}];
+    const delta: ContractDelta = {
+      rationale: 'x',
+      ops: [
+        ...widenProduct(3000).ops,
+        { op: 'removeKnownGoodInput', contractId: 'shop.get_product', input: {} },
+      ],
+    };
+    const r = acceptDelta(delta, ctx(premiumProduct(), productVariants(), { contracts }));
+    expect(r.accepted).toBe(false);
+    expect(r.findings).toContainEqual(
+      expect.objectContaining({ check: 'scope', message: expect.stringContaining('matches every input') }),
     );
   });
 
