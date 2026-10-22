@@ -199,7 +199,8 @@ def build():
         losses = sum(1 for t in pb if pd[t] and not pb[t])
         M[f'pairWins{suffix}'] = str(wins)
         M[f'pairLosses{suffix}'] = str(losses)
-        M[f'pairP{suffix}'] = f'{sign_test_two_sided(wins, losses):.2f}'
+        # round half up (Python's format rounds half to even: 0.625 -> 0.62)
+        M[f'pairP{suffix}'] = f'{math.floor(sign_test_two_sided(wins, losses) * 100 + 0.5) / 100:.2f}'
     wrong_tasks = sorted({t for t, v in S['Bd']['perTask'].items()} & {
         t for t in S['Bd']['perTask'] if any(
             tr['outcome'] == 'wrong' and tr.get('answer') is not None for tr in load_run(RUNS['Bd'])[1] if tr['taskId'] == t)})
