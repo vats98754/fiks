@@ -377,3 +377,46 @@ describe('identical budget, trace format and guard across repair arms', () => {
     expect(existsSync(p2) ? readFileSync(p2, 'utf8') : '').toContain('without changing any file');
   }, 120_000);
 });
+
+describe('fiks arm argument checks (exit 2 before any container starts)', () => {
+  const base = ['--trace', D2_TRACE, '--base', 'seed-v1', '--ci', 'local', '--no-pr'];
+  const argMain = async (argv: string[]) => {
+    const { armMain } = await import('../src/cli.ts');
+    let err = '';
+    const write = process.stderr.write.bind(process.stderr);
+    process.stderr.write = ((s: string) => {
+      err += s;
+      return true;
+    }) as typeof process.stderr.write;
+    try {
+      return { code: await armMain(argv, { out: () => {} }), err };
+    } finally {
+      process.stderr.write = write;
+    }
+  };
+  test('IV arms need the sidecar; --pr and --ci github are refused; the run key must match --name', async () => {
+    const noSide = await argMain([
+      '--name',
+      'L1',
+      ...base,
+      '--run-key',
+      'u/L1/m/shop/D2/1',
+      '--sidecar',
+      join(tmp, 'none.iv.json'),
+    ]);
+    expect(noSide).toMatchObject({ code: 2 });
+    expect(noSide.err).toContain('IV sidecar required');
+    expect(
+      (await argMain(['--name', 'COMP', ...base, '--run-key', 'u/COMP/m/shop/D2/1', '--pr'])).err,
+    ).toContain('never opens a PR');
+    expect(
+      (await argMain(['--name', 'COMP', ...base, '--ci', 'github', '--run-key', 'u/COMP/m/shop/D2/1'])).code,
+    ).toBe(2);
+    expect((await argMain(['--name', 'L1', ...base, '--run-key', 'u/COMP/m/shop/D2/1'])).err).toContain(
+      "run key's arm",
+    );
+    expect((await argMain(['--name', 'FIKS', ...base, '--run-key', 'u/FIKS/m/shop/D2/1'])).code).toBe(2);
+    const noTools = await argMain(['--name', 'L1-noIV', ...base, '--run-key', 'u/L1-noIV/m/shop/D2/1']);
+    if (!process.env.FIKS_TOOLS_IMAGE) expect(noTools.err).toContain('--tools-image');
+  }, 60_000);
+});

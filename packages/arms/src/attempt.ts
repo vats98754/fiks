@@ -2,7 +2,7 @@
 // through SAFE's runner (or its stub), the arm's checks in the per-attempt container, and the
 // records (AttemptRecord, CandidateRecord, ReproTestRecord, RerecordLog, events).
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type {
   AttemptRecord,
@@ -109,6 +109,13 @@ export async function runArm(opts: RunArmOptions): Promise<ArmRunResult> {
     throw new Error(`run key domain ${opts.runKey.domain} != --domain ${opts.domain.id}`);
   if (spec.evidence !== 'issue' && !opts.trace) throw new Error(`${spec.name} needs --trace`);
   if (spec.evidence === 'issue' && !opts.issue) throw new Error(`${spec.name} needs --issue`);
+  if (opts.domain.id !== 'shop' && !existsSync(opts.domain.contractsPath)) {
+    // CORE rerecord() (behind every rerecord-head call) starts the harness with the Domain's frozen
+    // contracts; without the file every replay-based check would fail (and the CLI would not exit).
+    throw new Error(
+      `${spec.name} on ${opts.domain.id}: rerecord-head needs the domain's frozen contracts at ${opts.domain.contractsPath}, which do not exist yet`,
+    );
+  }
   if (spec.ivPlacement !== 'none' && !opts.contracts)
     throw new Error(`${spec.name} needs the frozen contracts for IV`);
 
