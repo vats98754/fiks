@@ -85,6 +85,12 @@ importers:
       '@fiks/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@fiks/domains':
+        specifier: workspace:*
+        version: link:../domains
+      '@fiks/interfaces':
+        specifier: workspace:*
+        version: link:../interfaces
       '@fiks/proxy':
         specifier: workspace:*
         version: link:../proxy
@@ -106,11 +112,26 @@ importers:
 
   packages/contracts: {}
 
+  packages/domains:
+    dependencies:
+      '@fiks/interfaces':
+        specifier: workspace:*
+        version: link:../interfaces
+
+  packages/interfaces:
+    dependencies:
+      '@fiks/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
   packages/proxy:
     dependencies:
       '@fiks/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@fiks/interfaces':
+        specifier: workspace:*
+        version: link:../interfaces
       '@modelcontextprotocol/sdk':
         specifier: 1.32.0
         version: 1.32.0(zod@4.6.5)
