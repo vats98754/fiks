@@ -1,6 +1,6 @@
 # CU build log
 
-Branch `ws/CU`, based on main `c144b03`. Wave 1, depends on CORE-SEED. No external actions; the
+Branch `ws/CU`, based on main `a585b65` (round 5; originally `c144b03`). Wave 1, depends on CORE-SEED. No external actions; the
 only network use was the read-only `scripts/ensure-shop-mcp.mjs` clone into the worktree's
 `.work/` (needed because `packages/cli/vitest.config.ts` loads it for every `vitest run`).
 
@@ -38,12 +38,13 @@ only network use was the read-only `scripts/ensure-shop-mcp.mjs` clone into the 
    that it violates under the current contract (a target it no longer violates there is a note).
 4. **corpus**: no clean v1 case violates a property it did not already violate (pre-existing
    violations are notes, not blamed on the delta).
-5. **mutation**: each variant is still rejected on every property that rejected it before, the
-   amended ones included (round 4; CU design choice, stricter than the P12 sentence, which exempts
-   the amended property): an amendment admits the trigger, never its mutants, so "amend" cannot
-   mean "disable". Rounds 1-3 only required an amended property to keep rejecting at least one
-   variant. A `replaceInvariant` keeps the invariant's `kind` and paths and a
-   `replacePostcondition` its `probeTool` (round 4, a `delta` error otherwise).
+5. **mutation**: each variant is still rejected on every property that rejected it before, except
+   on the amended properties (P12 as written; BA6, round 5). An amended property that rejected at
+   least one variant before must still reject at least one after (the rounds 1-3 rule), so "amend"
+   cannot mean "disable". A `replaceInvariant` keeps the invariant's `kind` and paths and a
+   `replacePostcondition` its `probeTool` (round 4, a `delta` error otherwise). Round 4 had
+   required every variant to stay rejected on the amended properties too; BA6 rejected that as a
+   change to a pre-registered gate rule.
 6. **input**: empty stored/corpus/variant lists and cases without a tool result fail closed, and so
    does every mutation variant that is not a call of the trigger's tool with the trigger's
    arguments (round 4; it is skipped, not evaluated).
@@ -199,6 +200,40 @@ fail.
 Evidence: `pnpm vitest run packages/contract-update` -> 2 files, 38 tests passed (the three P12
 acceptance tests included and unchanged); `pnpm typecheck` exit 0; `pnpm lint` exit 0 ("Checked
 173 files ... No fixes applied").
+
+## Round 5 (orchestrator decision BA6)
+
+Discarded the uncommitted SETUP lockfile edit, then `git rebase main` onto `a585b65` (BA1-BA7
+amendments): 4 commits replayed cleanly. SETUP re-run: `node scripts/apply-dep-fragments.mjs` ->
+"nothing to apply"; `pnpm install --no-frozen-lockfile` exit 0 (lockfile edit left uncommitted).
+
+**BA6 (PLAN §0.B): P12 is binding as written.** The round-4 rule (every variant stays rejected on
+the amended property too) was stricter than P12's "mutation variants are still rejected except on
+the amended property" and is withdrawn (option a):
+- `gate.ts`: the per-variant check skips amended properties again; a variant that stops being
+  rejected on a property the delta does not amend is still a `[mutation]` finding. Kept: an
+  amended property that rejected n > 0 variants before and none after is one `[mutation]` finding
+  ("disables the property instead of amending it"); the `applyDelta` identity check (`kind`,
+  `path`, `itemsPath`, `totalPath`, `upstreamPath`, `probeTool`) that blocks kind swaps; the
+  foreign-variant and vacuous-pass `input` checks.
+- `index.ts` header and this log's rule 5 restate the rule.
+- Tests (`describe('acceptDelta: amend, not disable (P12 as written; BA6)')`): the round-4
+  partial-neutralisation test is now `accepts an amendment that stops rejecting one variant on the
+  amended property while it still rejects another (P12; BA6)`. The verifier's premium-search repro
+  (`items.price.range` -> [20, 300000], D1 trace withheld) is now accepted with no reasons; M1
+  violates `items.price.range` under the current contract and not under the proposed one, M2 still
+  violates it under the proposed one. New: the same delta with the D1 trace given is rejected by
+  the stored check alone (one `[stored]` finding on `tr_b47c5b77c6`). The kind swap, neutralisation
+  ([0, 1e9]), outputSchema override and foreign-variant tests are unchanged and still reject.
+
+Self-check (temporary local edits, each reverted): at-least-one rule disabled -> 3 tests fail
+(neutralisation, foreign-variant control, outputSchema override); amended exemption removed (round-4
+rule) -> 4 tests fail, the new BA6 acceptance test among them.
+
+Evidence: `pnpm --reporter=default vitest run packages/contract-update` -> 2 files, 39 tests passed;
+`-t "PLAN P12"` -> the 4 acceptance tests pass (D1 silencing rejected, its D1-as-trigger variant
+rejected, benign $2,500 widening accepted with D1 still violating, M5-on-another-property delta
+rejected); `pnpm typecheck` exit 0; `pnpm lint` exit 0 ("Checked 382 files ... No fixes applied").
 
 ## For ORCH (`--arm fiks+cu`)
 

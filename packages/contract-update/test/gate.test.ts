@@ -424,7 +424,7 @@ describe('acceptDelta: other checks', () => {
   });
 });
 
-describe('acceptDelta: amend, not disable (round 4)', () => {
+describe('acceptDelta: amend, not disable (P12 as written; BA6)', () => {
   it('rejects a kind swap under an existing id (range -> notNull on price.range)', () => {
     // Under the same id, a notNull would reject M5 (null price) on price.range while M1 (x100
     // cents, the D1 operator) went from rejected to verified: the range check would be deleted.
@@ -479,26 +479,31 @@ describe('acceptDelta: amend, not disable (round 4)', () => {
     expect(r2.reasons[0]).toContain('changes probeTool');
   });
 
-  it('rejects an amendment that stops rejecting one variant on the amended property while it still rejects another', () => {
+  it('accepts an amendment that stops rejecting one variant on the amended property while it still rejects another (P12; BA6)', () => {
     // [20, 300000] admits M1 (x100: the premium laptop at 250,000) but still rejects M2 (/100).
-    // The D1 trace is withheld so that the mutation check alone decides.
+    // P12 exempts the amended property from the per-variant check (BA6), so with the D1 trace
+    // withheld (the mutation check alone decides) the delta is accepted.
     const stored = storedTraces().filter((t) => t.id !== D1().id);
-    const r = acceptDelta(
-      widenSearch(300_000),
-      ctx(premiumSearch(), searchVariants(), { storedViolations: stored }),
-    );
+    const ctx300 = ctx(premiumSearch(), searchVariants(), { storedViolations: stored });
+    const r = acceptDelta(widenSearch(300_000), ctx300);
+    expect(r.reasons).toEqual([]);
+    expect(r.accepted).toBe(true);
+    if (!r.proposed) throw new Error('no proposal');
+    // M1 is no longer rejected on the amended property; M2 still is.
+    const m1 = searchVariants().find((v) => v.mutant === 'M1');
+    const m2 = searchVariants().find((v) => v.mutant === 'M2');
+    if (!m1 || !m2) throw new Error('missing M1/M2');
+    expect(violatedIds(m1)).toContain(SEARCH_RANGE);
+    expect(violatedIds(m1, r.proposed)).not.toContain(SEARCH_RANGE);
+    expect(violatedIds(m2, r.proposed)).toContain(SEARCH_RANGE);
+  });
+
+  it('still rejects the 300,000 widening when the stored D1 trace is given (stored check)', () => {
+    const r = acceptDelta(widenSearch(300_000), ctx(premiumSearch(), searchVariants()));
     expect(r.accepted).toBe(false);
     expect(r.findings).toEqual([
-      expect.objectContaining({
-        check: 'mutation',
-        caseId: 'benign-premium-search~M1',
-        property: SEARCH_RANGE,
-      }),
+      expect.objectContaining({ check: 'stored', caseId: D1().id, property: SEARCH_RANGE }),
     ]);
-    expect(r.reasons[0]).toContain('disables the property instead of amending it');
-    // M2 is still rejected on the amended property after the delta.
-    const m2 = searchVariants().find((v) => v.mutant === 'M2');
-    expect(m2 && r.proposed && violatedIds(m2, r.proposed)).toContain(SEARCH_RANGE);
   });
 
   it('fails closed on mutation variants of another tool than the trigger', () => {
