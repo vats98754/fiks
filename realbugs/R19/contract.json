@@ -1,0 +1,22 @@
+{
+  "server": "mongodb-mcp-server",
+  "version": 1,
+  "contracts": [
+    {
+      "id": "mongodb.atlas-list-clusters",
+      "tool": "atlas-list-clusters",
+      "invariants": [
+        {
+          "id": "count.matchesRows",
+          "kind": "crossField",
+          "left": "reportedCount",
+          "op": "==",
+          "right": "rowCount"
+        },
+        { "id": "reportedCount.notNull", "kind": "notNull", "path": "reportedCount", "onlyKnownGood": true },
+        { "id": "clusters.nonEmpty", "kind": "nonEmpty", "path": "clusters", "onlyKnownGood": true }
+      ],
+      "knownGoodInputs": [{ "projectId": "68c8a1f2e4b0a1b2c3d4e5f6" }]
+    }
+  ]
+}

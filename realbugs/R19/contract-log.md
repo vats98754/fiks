@@ -1,0 +1,12 @@
+# R19 contract log (blind contract, PLAN 5.10 step 2)
+
+Session log of the RB-R19 builder. Timestamps are UTC from `date -u` at the time of each step.
+Rule: the contract is written from the symptom only, before the fix diff (PR #561 changes) is read.
+
+| Time (UTC) | Step |
+|---|---|
+| 2026-10-22T11:46:48Z | Session start. Inputs read so far: PLAN 5.10, WORKSTREAMS RB-R19, `paper/research/real-bugs-mcp.md` row 22 and the candidates.json row for mongodb-js/mongodb-mcp-server PR #561 (symptom: "'Found N clusters' used rows.length after join(), i.e. string length, so count was wrong"; tool `atlas-list-clusters`; upstream MongoDB Atlas Admin API; prefix_sha 62a57d815107d6cfb9ec9a436b82abe376ca10f1). The fix diff has not been read. |
+| 2026-10-22T11:47Z | Cloned upstream mongodb-js/mongodb-mcp-server into the builder scratchpad (not into fiks). `gh pr view 561 --json mergeCommit,baseRefOid,state,mergedAt,number` only (no title, body or files): merged 2025-09-16, squash commit `7fa4a2f21865ac0bcd824bfb0875b0523afecfe2`, base = prefix `62a57d815107d6cfb9ec9a436b82abe376ca10f1`; `git log -1 --format='%H %P %s' 7fa4a2f` shows the single parent = prefix (subject line "fix: incorrect number of clusters found (#561)"). No diff read. |
+| 2026-10-22T11:47Z | Read prefix sources only (at `62a57d8`), to learn the tool's output format and upstream calls: `src/tools/atlas/read/listClusters.ts`, `src/common/atlas/cluster.ts`, `src/common/atlas/apiClient.ts` (OAuth client-credentials token at `/api/oauth/token`, Atlas v2 paths), `src/common/config.ts` (`MDB_MCP_*` env), `formatUntrustedData` in `src/tools/tool.ts`. The tool returns text only: a summary line "Found N clusters in project ..." plus a `|`-separated table inside untrusted-data tags. |
+| 2026-10-22T11:48Z | Wrote `harness/project.ts`: text -> `{reportedCount, rowCount, clusters[]}` (summary regex `Found (\d+) clusters?`, rows = lines after the `---|---` separator until a blank line or closing tag). It is part of the contract. |
+| 2026-10-22T11:49:08Z | Wrote `contract.json` (blind, from the symptom "the 'Found N clusters' count is not the number of clusters"): `mongodb.atlas-list-clusters/count.matchesRows` = crossField `reportedCount == rowCount` (the named count property), plus two known-good guards so a head cannot pass by dropping the summary or the table: `reportedCount.notNull` and `clusters.nonEmpty`, `onlyKnownGood` for the fixture project `68c8a1f2e4b0a1b2c3d4e5f6`. Contract frozen here; committed before any read of the fix diff. |
