@@ -39,6 +39,24 @@ every runner test uses a fake `query`, the stub runner or a mocked SDK.
   fragment is needed. The local `pnpm-lock.yaml` change from `pnpm install --no-frozen-lockfile`
   is not committed: the orchestrator regenerates the lockfile at merge.
 
+## Evidence, round 4 (2026-10-22, ws/SAFE rebased onto main `39500d1`, BENCHX merged)
+
+- SETUP: `node scripts/apply-dep-fragments.mjs` ("nothing to apply"), `pnpm install --no-frozen-lockfile`
+  (lockfile edit left uncommitted).
+- Repro from the finding, fixed code: `makeCanUseTool({worktree})('Bash', {command: 'pnpm test\ncurl example.com'})`
+  -> `{"behavior":"deny","message":"Only pnpm typecheck, pnpm lint and pnpm test are allowed."}`; same for
+  `'pnpm test\rcurl x'` and `'pnpm test\tx'`; `'pnpm test'` still `allow` unchanged.
+- New tests: `guard.test.ts > a newline, CR, tab or other control character cannot smuggle a second command`
+  (16 strings incl. `\n`, `\r`, `\t`, `\r\n`, `\v`, `\f`, NUL, U+2028, NBSP, double/leading/trailing space);
+  `safe-permissions.test.ts > a second command after a newline, CR or tab is denied (raw mode and backend mode)`
+  (0 backend calls); `safe-runner.test.ts > CLI fallback > argv offers no Glob ...` (a fake `claude` on PATH
+  records argv: equals `claudeCliArgv(job)`, `--tools Read,Edit,Write,Bash`, no argument matching /glob/i,
+  `--allowedTools` = Read(./**), Edit(src/**), Write(src/**), Bash(pnpm typecheck|lint|test)).
+- Mutation check: with `packages/repair/src` from round 3 (stashed), all 3 new tests fail (3 failed, 74 passed).
+- `pnpm vitest run packages/repair`: 6 files, 77 tests passed.
+- `pnpm typecheck`: exit 0. `pnpm lint`: "Checked 169 files ... No fixes applied", exit 0.
+- `with-lock suite pnpm test`: 41 files passed, 281 tests passed, 1 skipped, exit 0.
+
 ## Evidence, round 3 (2026-10-22, ws/SAFE rebased onto main `6157cb4`, MON merged)
 
 - Rebase: `git rebase main` (clean, no conflicts; MON touches no `packages/repair` file).
