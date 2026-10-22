@@ -8,6 +8,11 @@ export interface Receipt {
   contractId: string | null;
   checked: string[];
   violations: Violation[];
+  /**
+   * Properties the contract marks `disabled` (not evaluated; never in `checked`). Present only
+   * when non-empty, so receipts for contracts without disabled properties are unchanged.
+   */
+  disabled?: string[];
   /** Recovery facts observed upstream (see hints.ts). */
   hints?: string[];
   /** False when no tap saw the upstream HTTP: upstream-based checks were skipped. */
@@ -17,7 +22,7 @@ export interface Receipt {
 }
 
 export function makeReceipt(
-  e: EvalResult,
+  e: EvalResult & { disabled?: string[] },
   at: Date,
   upstreamObserved: boolean,
   traceId?: string,
@@ -29,6 +34,7 @@ export function makeReceipt(
     contractId: e.contractId,
     checked: e.checked,
     violations: e.violations,
+    ...(e.disabled?.length ? { disabled: e.disabled } : {}),
     ...(hints.length ? { hints } : {}),
     upstreamObserved,
     ...(traceId ? { traceId } : {}),

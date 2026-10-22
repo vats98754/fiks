@@ -1,0 +1,8 @@
+{
+  "stream": "MON",
+  "add": {
+    "packages/proxy": {
+      "@fiks/interfaces": "workspace:*"
+    }
+  }
+}

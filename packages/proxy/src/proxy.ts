@@ -1,12 +1,12 @@
 import {
   buildProbeArgs,
   type ContractFile,
-  evaluate,
   findContract,
   type HttpExchange,
   type JsonSchema,
   type ToolResultLike,
 } from '@fiks/contracts';
+import type { Monitor, MonitorResult, MonitorToolDef } from '@fiks/interfaces';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { getDefaultEnvironment, StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
@@ -22,6 +22,7 @@ import {
   type Tool,
 } from '@modelcontextprotocol/sdk/types.js';
 import { receiptHints } from './hints.ts';
+import { asEvalResult, CONTRACTS_MONITOR_ID, contractsMonitor, monitorId, NO_MONITOR } from './monitor.ts';
 import { makeReceipt, RECEIPT_META_KEY, type Receipt, receiptText } from './receipt.ts';
 import { startTap, type Tap } from './tap.ts';
 
@@ -31,20 +32,54 @@ export type UpstreamConfig =
   /** Any MCP transport, e.g. in-memory for tests. */
   | { transport: 'custom'; create: () => Transport };
 
-export interface CallRecord {
+/** One proxied tool call as recorded, whether or not a monitor evaluated it. */
+export interface RecordedCall {
   tool: string;
   args: Record<string, unknown>;
   /** The upstream result exactly as received. */
   result: ToolResultLike;
-  receipt: Receipt;
+  /** The monitor's verdict on the call; absent under `--monitor none`. */
+  receipt?: Receipt;
   http: HttpExchange[];
   probe?: { tool: string; args: Record<string, unknown>; result: ToolResultLike; http: HttpExchange[] };
+  /**
+   * The evaluation instant: the `now()` passed to the monitor (under `--monitor none`, the
+   * instant that would have been used). Offline replay evaluates with exactly this `now`
+   * (`CallRecord.capturedAt` in the paper's record format).
+   */
   at: string;
+  /** Monitor id (`contracts`, `none` or the module's id). */
+  monitor: string;
+  /** Wall time the monitor took, in milliseconds (0 under `--monitor none`). */
+  monitorMs: number;
+  /** False when no tap saw the upstream HTTP (upstream-based checks are skipped). */
+  upstreamObserved: boolean;
+  /** The tool as the upstream declared it in tools/list (its outputSchema is checked). */
+  toolDef?: MonitorToolDef;
+  /** Log-only mode: the agent got the upstream result untouched. */
+  logOnly?: true;
+  /** Set when a module monitor threw; the receipt is then `unverifiable`. */
+  monitorError?: string;
+  costUsd?: number;
+  tokens?: number;
+}
+
+/** A call a monitor evaluated (every call unless `--monitor none`). */
+export interface CallRecord extends RecordedCall {
+  receipt: Receipt;
 }
 
 export interface ProxyOptions {
   upstream: UpstreamConfig;
-  contracts: ContractFile;
+  /** Required unless `monitor` is `'none'` (then it is never read). */
+  contracts?: ContractFile;
+  /**
+   * Checks every result (default: the contract evaluator). `'none'` records calls with no
+   * evaluation, no read-back probe and no receipt.
+   */
+  monitor?: Monitor | typeof NO_MONITOR;
+  /** Evaluate and record, but return every upstream result (and tools/list) untouched. */
+  logOnly?: boolean;
   /** stdio upstream only: put a recording tap in front of the URL in this env var. */
   tapEnvVar?: string;
   /** A tap the caller owns (e.g. when the upstream is a separate HTTP process). */
@@ -55,6 +90,8 @@ export interface ProxyOptions {
    * (after persisting a trace) to have it named in the receipt.
    */
   onCall?: (rec: CallRecord) => Promise<{ traceId?: string } | undefined> | { traceId?: string } | undefined;
+  /** Called for every tools/call (also under `--monitor none`), after `onCall`, with the final record. */
+  onRecord?: (rec: RecordedCall) => Promise<void> | void;
   /**
    * Name of the field fiks adds to `structuredContent` with the receipt text (default
    * `fiks_receipt`; `null` to disable). Clients such as Claude Code show the model only
@@ -96,6 +133,15 @@ const errorResult = (message: string): CallToolResult => ({
   content: [{ type: 'text', text: message }],
 });
 
+/** Recording problems (e.g. a full disk) must not break the agent's call. */
+async function safely(what: string, fn: () => unknown): Promise<void> {
+  try {
+    await fn();
+  } catch (e) {
+    console.error(`[fiks-proxy] ${what} failed: ${e instanceof Error ? e.message : String(e)}`);
+  }
+}
+
 export const DEFAULT_RECEIPT_FIELD = 'fiks_receipt';
 
 /** The declared outputSchema plus fiks's optional receipt field, so clients that validate accept it. */
@@ -114,9 +160,34 @@ export function withReceiptField(schema: unknown, field: string): unknown {
   };
 }
 
+/** A tools/list entry as monitors see it. */
+function toolDefOf(t: Tool): MonitorToolDef {
+  return {
+    name: t.name,
+    ...(t.description !== undefined ? { description: t.description } : {}),
+    inputSchema: t.inputSchema as JsonSchema,
+    ...(t.outputSchema !== undefined ? { outputSchema: t.outputSchema as JsonSchema } : {}),
+  };
+}
+
+const NO_CONTRACTS: ContractFile = { server: '', version: 1, contracts: [] };
+
 export async function startProxy(opts: ProxyOptions): Promise<FiksProxy> {
-  validateContracts(opts.contracts);
-  const receiptField = opts.receiptField === undefined ? DEFAULT_RECEIPT_FIELD : opts.receiptField;
+  const monitor = opts.monitor ?? contractsMonitor();
+  const unmonitored = monitor === NO_MONITOR;
+  if (!opts.contracts && !unmonitored && monitorId(monitor, '') === CONTRACTS_MONITOR_ID) {
+    throw new Error('the contracts monitor needs contracts');
+  }
+  const contracts = unmonitored ? NO_CONTRACTS : (opts.contracts ?? NO_CONTRACTS);
+  validateContracts(contracts);
+  const id = unmonitored ? NO_MONITOR : monitorId(monitor, 'custom');
+  // Log-only and unmonitored proxies return upstream results (and tools/list) untouched.
+  const decorate = !opts.logOnly && !unmonitored;
+  const receiptField = !decorate
+    ? null
+    : opts.receiptField === undefined
+      ? DEFAULT_RECEIPT_FIELD
+      : opts.receiptField;
   const now = opts.now ?? (() => new Date());
   let tap = opts.tap;
   let ownTap: Tap | undefined;
@@ -152,7 +223,7 @@ export async function startProxy(opts: ProxyOptions): Promise<FiksProxy> {
   await upstream.connect(transport);
   const info = upstream.getServerVersion() ?? { name: 'upstream', version: '0' };
   const capabilities = upstream.getServerCapabilities() ?? {};
-  const schemas = new Map<string, JsonSchema | undefined>();
+  const tools = new Map<string, Tool>();
   const lock = mutex();
 
   // Raw requests, not client.callTool/listTools: the SDK client validates results against
@@ -167,18 +238,21 @@ export async function startProxy(opts: ProxyOptions): Promise<FiksProxy> {
     upstream.request({ method: 'tools/list', params }, ListToolsResultSchema);
 
   async function refreshTools(): Promise<Tool[]> {
-    const { tools } = await listUpstream();
-    for (const t of tools) schemas.set(t.name, t.outputSchema as JsonSchema | undefined);
-    return tools;
+    const { tools: listed } = await listUpstream();
+    for (const t of listed) tools.set(t.name, t);
+    return listed;
   }
 
   async function handleCall(name: string, args: Record<string, unknown>): Promise<CallToolResult> {
     return lock(async () => {
-      if (!schemas.has(name)) await refreshTools();
+      if (!tools.has(name)) await refreshTools();
       tap?.take();
       const result = await callUpstream(name, args);
       const http = tap?.take() ?? [];
-      const contract = findContract(opts.contracts, name);
+      // Under --monitor none no contract is consulted, so no read-back probe runs either.
+      const contract = unmonitored ? undefined : findContract(contracts, name);
+      const def = tools.get(name);
+      const toolDef = def ? toolDefOf(def) : undefined;
 
       let probe: CallRecord['probe'];
       const post = contract?.postconditions?.[0];
@@ -194,17 +268,47 @@ export async function startProxy(opts: ProxyOptions): Promise<FiksProxy> {
         probe = { tool: post.probeTool, args: probeArgs, result: probeResult, http: tap?.take() ?? [] };
       }
 
+      // The evaluation instant; recorded as `at` even when no monitor runs.
       const at = now();
-      // Without a tap the upstream is unknown: upstream-based checks are skipped, not failed.
-      const evaluation = evaluate(contract, {
-        args,
-        result,
-        now: at,
-        declaredOutputSchema: schemas.get(name),
-        probe: probe && { ...probe, upstream: tap ? probe.http : undefined },
-        upstream: tap ? http : undefined,
-      });
       const observed = Boolean(tap);
+      const facts = {
+        at: at.toISOString(),
+        monitor: id,
+        monitorMs: 0,
+        upstreamObserved: observed,
+        ...(toolDef ? { toolDef } : {}),
+        ...(opts.logOnly ? { logOnly: true as const } : {}),
+      };
+
+      if (monitor === NO_MONITOR) {
+        const record: RecordedCall = { tool: name, args, result, http, ...facts };
+        await safely('onRecord', () => opts.onRecord?.(record));
+        return result;
+      }
+
+      // Without a tap the upstream is unknown: upstream-based checks are skipped, not failed.
+      const started = performance.now();
+      let outcome: MonitorResult;
+      let monitorError: string | undefined;
+      try {
+        outcome = await monitor({
+          args,
+          result,
+          now: at,
+          declaredOutputSchema: toolDef?.outputSchema,
+          probe: probe && { ...probe, upstream: tap ? probe.http : undefined },
+          upstream: tap ? http : undefined,
+          tool: name,
+          contract: contract ?? null,
+          toolDef: toolDef ?? null,
+        });
+      } catch (e) {
+        monitorError = e instanceof Error ? e.message : String(e);
+        console.error(`[fiks-proxy] monitor ${id} failed: ${monitorError}`);
+        outcome = { verdict: 'unverifiable', checked: [], violations: [], disabled: [] };
+      }
+      const monitorMs = Math.round((performance.now() - started) * 1000) / 1000;
+      const evaluation = asEvalResult(outcome, contract);
       const hints = receiptHints({
         contract,
         evaluation,
@@ -213,15 +317,26 @@ export async function startProxy(opts: ProxyOptions): Promise<FiksProxy> {
         probeUpstream: tap ? probe?.http : undefined,
       });
       let receipt = makeReceipt(evaluation, at, observed, undefined, hints);
-      const record: CallRecord = { tool: name, args, result, receipt, http, probe, at: at.toISOString() };
-      try {
+      const record: CallRecord = {
+        tool: name,
+        args,
+        result,
+        receipt,
+        http,
+        probe,
+        ...facts,
+        monitorMs,
+        ...(monitorError !== undefined ? { monitorError } : {}),
+        ...(outcome.costUsd !== undefined ? { costUsd: outcome.costUsd } : {}),
+        ...(outcome.tokens !== undefined ? { tokens: outcome.tokens } : {}),
+      };
+      await safely('onCall', async () => {
         const extra = await opts.onCall?.(record);
         if (extra?.traceId) receipt = makeReceipt(evaluation, at, observed, extra.traceId, hints);
-      } catch (e) {
-        // Recording problems (e.g. a full disk) must not break the agent's call.
-        console.error(`[fiks-proxy] onCall failed: ${e instanceof Error ? e.message : String(e)}`);
-      }
+      });
       record.receipt = receipt;
+      await safely('onRecord', () => opts.onRecord?.(record));
+      if (opts.logOnly) return result;
 
       const reason = !contract
         ? 'no contract for this tool'
@@ -251,7 +366,7 @@ export async function startProxy(opts: ProxyOptions): Promise<FiksProxy> {
     const server = new Server(info, { capabilities, instructions: upstream.getInstructions() });
     server.setRequestHandler(ListToolsRequestSchema, async (req) => {
       const res = await listUpstream(req.params);
-      for (const t of res.tools) schemas.set(t.name, t.outputSchema as JsonSchema | undefined);
+      for (const t of res.tools) tools.set(t.name, t);
       if (!receiptField) return res;
       return {
         ...res,
