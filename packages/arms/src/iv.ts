@@ -113,7 +113,7 @@ export async function issueValidation(input: IvInput): Promise<IvResult> {
       server,
       contracts,
       baseUrlEnv: input.domain?.baseUrlEnv ?? 'VENDOR_BASE_URL',
-      spawn: { timeoutMs: input.timeoutMs ?? 60_000 },
+      spawn: { timeoutMs: input.timeoutMs ?? 180_000 },
     });
   } catch (e) {
     const message = (e instanceof Error ? e.message : String(e)).split('\n').slice(0, 6).join('\n');

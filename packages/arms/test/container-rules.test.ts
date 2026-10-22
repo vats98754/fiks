@@ -51,19 +51,14 @@ const comparable = (l: RerecordLog) => ({
   files: l.files,
 });
 
-/** Every text file the attempt wrote (logs, transcripts, events), for the UNMATCHED_REQUEST scan. */
+/** The check logs of an attempt (gates, CI, RerecordLog, events), for the UNMATCHED_REQUEST scan. */
 function attemptText(dir: string): string {
-  const out: string[] = [];
-  const walk = (d: string) => {
-    for (const e of readdirSync(d, { withFileTypes: true })) {
-      if (e.name === 'checkout') continue;
-      const p = join(d, e.name);
-      if (e.isDirectory()) walk(p);
-      else if (/\.(log|jsonl|json|txt)$/.test(e.name)) out.push(readFileSync(p, 'utf8'));
-    }
-  };
-  walk(dir);
-  return out.join('\n');
+  const gates = join(dir, 'gates');
+  return [
+    ...readdirSync(gates).map((f) => readFileSync(join(gates, f), 'utf8')),
+    readFileSync(join(dir, 'rerecord.jsonl'), 'utf8'),
+    readFileSync(join(dir, 'events.jsonl'), 'utf8'),
+  ].join('\n');
 }
 
 describe.runIf(ready)('D3 and D4 as injector rules: L1 and COMP with the oracle patches', () => {

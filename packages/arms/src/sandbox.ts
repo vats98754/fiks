@@ -122,7 +122,15 @@ export class DockerArmSandbox implements ArmSandbox {
     return path;
   }
 
-  cleanup(): Promise<void> {
-    return this.backend.cleanup();
+  async cleanup(): Promise<void> {
+    try {
+      await this.backend.cleanup();
+    } catch (e) {
+      // SBX puts the checkout's node_modules link back after removing the container; when Docker
+      // has not yet released the mountpoint, that fails with EEXIST. The checkout is disposable
+      // (and its node_modules is never part of a candidate), so only that case is tolerated.
+      const err = e as NodeJS.ErrnoException & { dest?: string };
+      if (!(err.code === 'EEXIST' && String(err.path ?? err.dest ?? '').endsWith('/node_modules'))) throw e;
+    }
   }
 }
