@@ -76,8 +76,17 @@ export async function sastOnDiff(opts: {
   const added = new Map(changed.map((f) => [f.newPath as string, new Set(f.added)]));
 
   const newFindings: SastFinding[] = [];
+  // One scan per tool over both sides (base files under base/, head files under head/).
+  const both = [
+    ...heads.map((f) => ({ ...f, path: `head/${f.path}` })),
+    ...bases.map((f) => ({ ...f, path: `base/${f.path}` })),
+  ];
   for (const tool of tools) {
-    const [h, b] = await Promise.all([tool.scan(heads), tool.scan(bases)]);
+    const all = await tool.scan(both);
+    const side = (prefix: string) =>
+      all.filter((x) => x.file.startsWith(prefix)).map((x) => ({ ...x, file: x.file.slice(prefix.length) }));
+    const h = side('head/');
+    const b = side('base/');
     const baseKeys = new Set(
       b.map((x) => `${x.category}\u0000${x.file}\u0000${lineAt(baseSrc.get(x.file) ?? '', x.line)}`),
     );

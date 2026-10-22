@@ -264,7 +264,8 @@ async function sandboxFrom(values: Values, domain: string, base: string): Promis
   const tools = values['tools-image'];
   if (typeof tools !== 'string') throw new Error('--tools-image <img> is required (the fiks-tools image)');
   const given = values['repo-image'];
-  const repo = typeof given === 'string' ? given : await heldout.repoImageFor(getDomain(domain).repo.dir(), base);
+  const repo =
+    typeof given === 'string' ? given : await heldout.repoImageFor(getDomain(domain).repo.dir(), base);
   return heldout.dockerSandboxFactory({
     repoImage: repo,
     toolsImage: tools,

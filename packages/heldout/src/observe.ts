@@ -80,12 +80,13 @@ export interface ObserveDeps {
   domain: Domain;
   /** The CLI harness (vendor -> [injector] -> tap -> server), started on the candidate head. */
   startHarness(opts: { injector?: InjectorRule; clock: Date; shopDir: string }): Promise<HarnessLike>;
+  /** Runs the hidden test files in one vitest process; default `vitestRunner`. */
   runVitest?: (
-    file: string,
+    files: readonly string[],
     env: Record<string, string>,
     cwd: string,
     timeoutMs: number,
-  ) => Promise<HiddenRun>;
+  ) => Promise<HiddenRun[]>;
 }
 
 export function trim(result: unknown): ObservedOutput {
@@ -140,25 +141,46 @@ async function startChain(
 }
 
 interface VitestJson {
-  numPassedTests?: number;
-  numFailedTests?: number;
-  numTotalTests?: number;
-  testResults?: { status?: string; message?: string; name?: string }[];
+  testResults?: {
+    name?: string;
+    status?: string;
+    message?: string;
+    assertionResults?: { status?: string }[];
+  }[];
 }
 
-/** `vitest run <file>` in the worktree with the given env; the JSON report decides. */
+/** Per-file results of a vitest JSON report; a file with no result or no test failed to load. */
+export function hiddenRunsFromReport(
+  report: VitestJson | null,
+  files: readonly string[],
+  cwd: string,
+  why = 'no report',
+): HiddenRun[] {
+  return files.map((path) => {
+    const t = report?.testResults?.find((r) => r.name === `${cwd}/${path}` || r.name?.endsWith(`/${path}`));
+    const passed = (t?.assertionResults ?? []).filter((a) => a.status === 'passed').length;
+    const failed = (t?.assertionResults ?? []).filter((a) => a.status === 'failed').length;
+    const run: HiddenRun = { path, renamed: false, pass: false, passed, failed };
+    if (!t) run.error = why;
+    else if (passed + failed === 0) run.error = (t.message ?? 'no test ran').slice(0, 1000);
+    run.pass = !!t && t.status === 'passed' && failed === 0 && passed > 0;
+    return run;
+  });
+}
+
+/** `vitest run <files...>` in the worktree with the given env; the JSON report decides per file. */
 export function vitestRunner(
-  file: string,
+  files: readonly string[],
   env: Record<string, string>,
   cwd: string,
   timeoutMs: number,
-): Promise<HiddenRun> {
+): Promise<HiddenRun[]> {
   const dir = mkdtempSync(join(tmpdir(), 'fiks-hidden-'));
   const report = join(dir, 'report.json');
   return new Promise((resolve) => {
     const child = spawn(
       join(cwd, 'node_modules/.bin/vitest'),
-      ['run', file, '--reporter=json', `--outputFile=${report}`],
+      ['run', ...files, '--reporter=json', `--outputFile=${report}`],
       { cwd, env, stdio: ['ignore', 'ignore', 'pipe'] },
     );
     let stderr = '';
@@ -168,54 +190,55 @@ export function vitestRunner(
     const timer = setTimeout(() => child.kill('SIGKILL'), timeoutMs);
     child.on('close', (code) => {
       clearTimeout(timer);
-      const run: HiddenRun = { path: file, renamed: false, pass: false, passed: 0, failed: 0 };
+      let j: VitestJson | null = null;
       try {
-        const j = JSON.parse(readFileSync(report, 'utf8')) as VitestJson;
-        run.passed = j.numPassedTests ?? 0;
-        run.failed = j.numFailedTests ?? 0;
-        const suiteFailed = (j.testResults ?? []).some(
-          (t) => t.status === 'failed' && (j.numTotalTests ?? 0) === 0,
-        );
-        run.pass = code === 0 && run.failed === 0 && run.passed > 0 && !suiteFailed;
-        if (!run.pass && run.passed + run.failed === 0) {
-          run.error =
-            (j.testResults ?? [])
-              .map((t) => t.message ?? '')
-              .join('\n')
-              .slice(0, 1000) || 'no tests ran';
-        }
+        j = JSON.parse(readFileSync(report, 'utf8')) as VitestJson;
       } catch {
-        run.error = `no report (exit ${code}): ${stderr.slice(-600)}`;
+        j = null;
       }
       rmSync(dir, { recursive: true, force: true });
-      resolve(run);
+      resolve(hiddenRunsFromReport(j, files, cwd, `no report (exit ${code}): ${stderr.slice(-600)}`));
     });
   });
 }
 
+/**
+ * Every hidden test file (plain and renamed-id) gets its own fresh upstream chains (vendor v1 +
+ * the injector rule, and vendor v1; renamed files behind the renaming link); one vitest process
+ * runs them all, each file finding its chains in FIKS_HELDOUT_UPSTREAMS.
+ */
 async function hiddenRuns(req: ObserveRequest, deps: ObserveDeps, clock: Date): Promise<HiddenRun[]> {
+  if (req.hidden.length === 0) return [];
   const run = deps.runVitest ?? vitestRunner;
-  const out: HiddenRun[] = [];
-  for (const h of req.hidden) {
-    const rename = h.renamed && req.rename ? [renameMiddleware(req.rename)] : [];
-    const drifted = await startChain(deps.domain, clock, [deps.domain.injectorHook(req.rule), ...rename]);
-    const v1 = await startChain(deps.domain, clock, rename);
-    try {
-      const env = {
-        PATH: process.env.PATH ?? '/usr/local/bin:/usr/bin:/bin',
-        HOME: process.env.HOME ?? '/tmp',
-        CI: '1',
-        FIKS_HELDOUT_UPSTREAM: drifted.url,
-        FIKS_HELDOUT_UPSTREAM_V1: v1.url,
-      };
-      const r = await run(h.path, env, req.worktree, req.vitestTimeoutMs ?? 180_000);
-      out.push({ ...r, path: h.path, renamed: h.renamed });
-    } finally {
-      await drifted.close();
-      await v1.close();
+  const chains: { close(): Promise<void> }[] = [];
+  const upstreams: Record<string, { drifted: string; v1: string }> = {};
+  try {
+    for (const h of req.hidden) {
+      const rename = h.renamed && req.rename ? [renameMiddleware(req.rename)] : [];
+      const drifted = await startChain(deps.domain, clock, [deps.domain.injectorHook(req.rule), ...rename]);
+      chains.push(drifted);
+      const v1 = await startChain(deps.domain, clock, rename);
+      chains.push(v1);
+      upstreams[h.path] = { drifted: drifted.url, v1: v1.url };
     }
+    const env = {
+      PATH: process.env.PATH ?? '/usr/local/bin:/usr/bin:/bin',
+      HOME: process.env.HOME ?? '/tmp',
+      CI: '1',
+      FIKS_HELDOUT_UPSTREAMS: JSON.stringify(upstreams),
+    };
+    const files = req.hidden.map((h) => h.path);
+    const runs = await run(files, env, req.worktree, req.vitestTimeoutMs ?? 20 * 60_000);
+    return req.hidden.map((h) => {
+      const r = runs.find((x) => x.path === h.path);
+      return {
+        ...(r ?? { path: h.path, pass: false, passed: 0, failed: 0, error: 'no result' }),
+        renamed: h.renamed,
+      };
+    });
+  } finally {
+    for (const c of chains) await c.close();
   }
-  return out;
 }
 
 /** Replays call sequences on fresh vendor state, one harness per setting. */

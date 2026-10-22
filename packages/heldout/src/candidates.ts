@@ -196,3 +196,17 @@ export async function typecheckCandidates(
   }
   return { kept, dropped };
 }
+
+/** Model calls through LLMR's complete() (Agent SDK on the OAuth token; PLAN P14). Runs only. */
+export function liveCandidateLlm(label: string): CandidateLlm {
+  return async (req) => {
+    const { complete } = await import('@fiks/llm');
+    const r = await complete({
+      model: req.model,
+      system: req.system,
+      prompt: req.prompt,
+      label: `${label}:${req.kind}:${req.sample}`,
+    });
+    return r.text;
+  };
+}
