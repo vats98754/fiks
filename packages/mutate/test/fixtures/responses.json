@@ -1,0 +1,87 @@
+{
+  "_note": "shop-* entries: recorded from @fiks/vendor-api v1 (createVendor({version:'v1', now: 2026-10-01T12:00:00.000Z})), volatile headers removed. tracker-* entries: synthetic, hand-written to cover epoch timestamps, numeric ids and arrays longer than 5 until DOM2's tracker vendor exists.",
+  "exchanges": {
+    "shop-search-cable": {
+      "request": {
+        "method": "GET",
+        "url": "/products?q=cable"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-01-01"
+        },
+        "body": "{\"items\":[{\"id\":\"p-1101\",\"name\":\"Thunderbolt 5 Cable 1m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":100,\"price\":69},{\"id\":\"p-1102\",\"name\":\"Thunderbolt 5 Cable 2m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":80,\"price\":89},{\"id\":\"p-1103\",\"name\":\"USB4 Cable 1m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":120,\"price\":60},{\"id\":\"p-1104\",\"name\":\"USB4 Cable 2m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":90,\"price\":64},{\"id\":\"p-1105\",\"name\":\"Active Optical HDMI Cable 10m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":35,\"price\":99},{\"id\":\"p-1106\",\"name\":\"DisplayPort 2.1 Cable 3m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":60,\"price\":72},{\"id\":\"p-1107\",\"name\":\"Braided Power Cable 2m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":75,\"price\":61.5}],\"total\":7,\"next_cursor\":null}"
+      }
+    },
+    "shop-get-product": {
+      "request": {
+        "method": "GET",
+        "url": "/products/p-1004"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-01-01"
+        },
+        "body": "{\"id\":\"p-1004\",\"name\":\"Nimbus 15 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":18,\"price\":749.5}"
+      }
+    },
+    "shop-create-order": {
+      "request": {
+        "method": "POST",
+        "url": "/orders"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-01-01"
+        },
+        "body": "{\"id\":\"o-5002\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1101\",\"quantity\":2,\"unit_price\":69}],\"total\":138,\"created_at\":\"2026-10-01T12:00:00.000Z\"}"
+      }
+    },
+    "shop-get-order": {
+      "request": {
+        "method": "GET",
+        "url": "/orders/o-5001"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-01-01"
+        },
+        "body": "{\"id\":\"o-5001\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1005\",\"quantity\":2,\"unit_price\":329}],\"total\":658,\"created_at\":\"2026-09-29T12:00:00.000Z\"}"
+      }
+    },
+    "tracker-list-issues": {
+      "request": {
+        "method": "GET",
+        "url": "/issues?state=all&per_page=8"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"issues\":[{\"id\":\"TRK-101\",\"title\":\"Login fails on Safari\",\"state\":\"open\",\"priority\":\"high\",\"labels\":[\"bug\",\"auth\"],\"assignee\":\"alice\",\"created_at\":1790000000,\"updated_at\":\"2026-09-10T08:30:00Z\"},{\"id\":\"TRK-102\",\"title\":\"Export CSV truncates\",\"state\":\"in_progress\",\"priority\":\"low\",\"labels\":[\"bug\"],\"assignee\":\"bob\",\"created_at\":1790086400,\"updated_at\":\"2026-09-11T08:30:00Z\"},{\"id\":\"TRK-103\",\"title\":\"Dark mode contrast\",\"state\":\"open\",\"priority\":\"medium\",\"labels\":[\"ui\"],\"assignee\":\"carol\",\"created_at\":1790172800,\"updated_at\":\"2026-09-12T08:30:00Z\"},{\"id\":\"TRK-104\",\"title\":\"Webhook retries twice\",\"state\":\"closed\",\"priority\":\"high\",\"labels\":[\"bug\",\"api\"],\"assignee\":\"dave\",\"created_at\":1790259200,\"updated_at\":\"2026-09-13T08:30:00Z\"},{\"id\":\"TRK-105\",\"title\":\"Search ignores accents\",\"state\":\"open\",\"priority\":\"low\",\"labels\":[\"search\"],\"assignee\":\"erin\",\"created_at\":1790345600,\"updated_at\":\"2026-09-14T08:30:00Z\"},{\"id\":\"TRK-106\",\"title\":\"Billing page 500\",\"state\":\"blocked\",\"priority\":\"medium\",\"labels\":[\"bug\",\"billing\"],\"assignee\":\"frank\",\"created_at\":1790432000,\"updated_at\":\"2026-09-15T08:30:00Z\"},{\"id\":\"TRK-107\",\"title\":\"Slow dashboard load\",\"state\":\"open\",\"priority\":\"high\",\"labels\":[\"perf\"],\"assignee\":\"grace\",\"created_at\":1790518400,\"updated_at\":\"2026-09-16T08:30:00Z\"},{\"id\":\"TRK-108\",\"title\":\"Typo in onboarding email\",\"state\":\"in_progress\",\"priority\":\"low\",\"labels\":[\"copy\"],\"assignee\":\"heidi\",\"created_at\":1790604800,\"updated_at\":\"2026-09-17T08:30:00Z\"}],\"total\":12,\"page\":1}"
+      }
+    },
+    "tracker-create-issue": {
+      "request": {
+        "method": "POST",
+        "url": "/issues"
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"id\":4021,\"title\":\"Crash on empty project\",\"state\":\"open\",\"priority\":\"high\",\"project_id\":77,\"created_at\":1790500000000,\"due_date\":\"2026-11-15\"}"
+      }
+    }
+  }
+}

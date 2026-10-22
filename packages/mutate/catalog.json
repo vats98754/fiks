@@ -1,0 +1,240 @@
+{
+  "name": "fiks mutation operators",
+  "frozenAt": "F1",
+  "plan": "paper/PLAN.md 5.4",
+  "conventions": {
+    "site": "A normalized JSON path (array indices as [*], root as $). An operator draws one eligible site with the seeded PRNG (mulberry32 keyed by sha256('<op>:<seed>')) from the eligible sites sorted by path, and changes every concrete value at that site.",
+    "idKey": "An object key matching ^(id|uuid)$ (case-insensitive), ending in _id, or ending in a lowercase letter followed by Id.",
+    "timestamp": "An ISO-8601 date or date-time string that Date.parse accepts, or an integer number in [1e9, 1e10) (epoch seconds) or [1e12, 1e13) (epoch milliseconds).",
+    "enumLike": "A string matching ^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$ or ^[A-Z][A-Z0-9_]{1,15}$, at most 32 characters, under a key that is not an idKey.",
+    "notApplicable": "When no site is eligible the operator returns the input unchanged with applicable = false; callers count these, never drop them silently.",
+    "serialization": "Body-changing operators serialize with JSON.stringify (compact). mutateRecordedResponse keeps the recorded body bytes when the body does not change."
+  },
+  "response": [
+    {
+      "id": "M1",
+      "name": "numeric x100",
+      "definition": "Multiply every number at the site by 100 (15 significant digits).",
+      "eligible": "Finite non-zero numbers that are not timestamps, under a key that is not an idKey.",
+      "coupledProperty": "range"
+    },
+    {
+      "id": "M2",
+      "name": "numeric /100",
+      "definition": "Divide every number at the site by 100 (15 significant digits).",
+      "eligible": "Finite non-zero numbers that are not timestamps, under a key that is not an idKey.",
+      "coupledProperty": "range"
+    },
+    {
+      "id": "M3",
+      "name": "rename (fixed synonym table)",
+      "definition": "Rename the object key at the site to one synonym from `synonyms`, the same synonym in every object at the site, keeping the key's position. Synonyms are tried in a seeded order; the first that no object at the site already has is used.",
+      "eligible": "Object properties whose key is in `synonyms` and that have a non-colliding synonym.",
+      "coupledProperty": null
+    },
+    {
+      "id": "M4",
+      "name": "drop field",
+      "definition": "Delete the object property at the site.",
+      "eligible": "Every object property.",
+      "coupledProperty": null
+    },
+    {
+      "id": "M5",
+      "name": "null field",
+      "definition": "Set the object property at the site to null.",
+      "eligible": "Object properties whose value is not null.",
+      "coupledProperty": null
+    },
+    {
+      "id": "M6",
+      "name": "truncate array to 5, keeping total",
+      "definition": "Keep the first 5 elements of every array at the site. Sibling counters such as `total` are left as recorded.",
+      "eligible": "Arrays with more than 5 elements (the root included).",
+      "coupledProperty": "countMatchesTotal"
+    },
+    {
+      "id": "M7",
+      "name": "number to string",
+      "definition": "Replace every number at the site by String(number).",
+      "eligible": "Finite numbers under a key that is not an idKey.",
+      "coupledProperty": null
+    },
+    {
+      "id": "M8",
+      "name": "ISO-8601 to epoch ms",
+      "definition": "Replace every ISO-8601 string at the site by Date.parse(string), a number of epoch milliseconds.",
+      "eligible": "ISO-8601 timestamp strings.",
+      "coupledProperty": "freshness"
+    },
+    {
+      "id": "M9",
+      "name": "epoch s <-> ms",
+      "definition": "Epoch seconds become milliseconds (x1000); epoch milliseconds become seconds (floor(/1000)).",
+      "eligible": "Numeric timestamps.",
+      "coupledProperty": "freshness"
+    },
+    {
+      "id": "M10",
+      "name": "unknown enum value",
+      "definition": "Replace every enumLike string at the site by one value outside any recorded enum: fiks_unknown_<4 hex> (FIKS_UNKNOWN_<4 HEX> when the recorded value is upper case).",
+      "eligible": "enumLike strings that are not timestamps.",
+      "coupledProperty": "enum"
+    },
+    {
+      "id": "M11",
+      "name": "string perturbation",
+      "definition": "In every string at the site, replace one letter (seeded position) by the next letter of the alphabet with the same case (z -> a, Z -> A).",
+      "eligible": "Strings containing an ASCII letter that are not timestamps and not enumLike, under a key that is not an idKey.",
+      "coupledProperty": null
+    },
+    {
+      "id": "M12",
+      "name": "identity swap",
+      "definition": "For an array of objects that share an idKey with at least two distinct values: swap that key's values between two seeded elements. For an idKey outside any array whose value is an integer or a string ending in digits: replace it by the next identity (integer + 1, or the trailing number + 1 with its zero padding).",
+      "eligible": "Arrays of at least two objects sharing an idKey with distinct values; idKey properties outside arrays with an integer or digit-suffixed string value.",
+      "coupledProperty": null
+    },
+    {
+      "id": "M13",
+      "name": "stale timestamp (-400 d)",
+      "definition": "Move every timestamp at the site 400 days into the past, in the recorded format (ISO string with the same precision and offset style, or epoch s / ms).",
+      "eligible": "Timestamps.",
+      "coupledProperty": "freshness"
+    },
+    {
+      "id": "M14",
+      "name": "phantom write",
+      "definition": "Write response (request method POST, PUT or PATCH): keep the 2xx acknowledgement but replace the root idKey value by a phantom identity that was never persisted (trailing digits redrawn with the same width, first digit 9; otherwise '<value>-phantom'). Read response (any other method, or no method given): the acknowledged resource is absent, so the status becomes 404 and the body {\"error\":\"not_found\",\"message\":\"Not found.\"}.",
+      "eligible": "Object roots with an idKey whose value is a string or an integer.",
+      "coupledProperty": "readAfterWrite"
+    }
+  ],
+  "benign": [
+    {
+      "id": "B1",
+      "name": "reorder array",
+      "definition": "Apply one seeded permutation that changes the order to every array at the site (Fisher-Yates; when the draw keeps the order, rotate by one).",
+      "eligible": "Arrays with at least two elements that are not all equal.",
+      "keeps": "The multiset of elements of every array; every other value."
+    },
+    {
+      "id": "B2",
+      "name": "add unknown field",
+      "definition": "Append the property fiks_extra_<4 hex> with a string value of 8 hex characters to every object at the site.",
+      "eligible": "Every object (the root included).",
+      "keeps": "Every recorded property and value."
+    },
+    {
+      "id": "B3",
+      "name": "JSON whitespace",
+      "definition": "Re-serialize the body with seeded whitespace: indentation of 1-4 spaces or a tab, and a trailing newline when the draw says so.",
+      "eligible": "Every JSON body.",
+      "keeps": "The parsed JSON value."
+    },
+    {
+      "id": "B4",
+      "name": "extra header",
+      "definition": "Add the response header x-fiks-benign-<4 hex> with a value of 8 hex characters; the body bytes are unchanged.",
+      "eligible": "Every response.",
+      "keeps": "The status and the body bytes."
+    }
+  ],
+  "patch": [
+    {
+      "id": "P1",
+      "name": "clamp to contract range",
+      "prompt": "prompts/P1.md"
+    },
+    {
+      "id": "P2",
+      "name": "constant in-range value",
+      "prompt": "prompts/P2.md"
+    },
+    {
+      "id": "P3",
+      "name": "special-case the recorded id/args",
+      "prompt": "prompts/P3.md"
+    },
+    {
+      "id": "P4",
+      "name": "partial fix",
+      "prompt": "prompts/P4.md"
+    },
+    {
+      "id": "P5",
+      "name": "version-unaware fix",
+      "prompt": "prompts/P5.md"
+    },
+    {
+      "id": "P6",
+      "name": "refuse / return null",
+      "prompt": "prompts/P6.md"
+    },
+    {
+      "id": "P7",
+      "name": "coerce anything",
+      "prompt": "prompts/P7.md"
+    },
+    {
+      "id": "P8",
+      "name": "echo the request without persisting",
+      "prompt": "prompts/P8.md"
+    }
+  ],
+  "patchFrame": {
+    "system": "prompts/system.md",
+    "user": "prompts/frame.md",
+    "wrapper": "One llm call per (op, reference diff). The first ```diff fenced block of the reply (else the whole reply) is parsed as a unified diff. Hunk header counts are recomputed from the hunk bodies; a blank line inside a hunk is read as an empty context line. With base files, each hunk is located by exact match of its old lines nearest to its stated start, applied in memory, and the start lines are rewritten. Files outside the allowed set, renames, new, deleted and binary files are rejected. No retries."
+  },
+  "synonyms": {
+    "amount": ["total", "value"],
+    "assignee": ["owner", "assigned_to"],
+    "category": ["kind", "type"],
+    "count": ["n", "size"],
+    "created_at": ["created", "createdAt", "creation_time"],
+    "currency": ["currency_code", "ccy"],
+    "description": ["desc", "body"],
+    "due_date": ["due", "deadline"],
+    "email": ["email_address", "mail"],
+    "id": ["uid", "identifier"],
+    "items": ["results", "data"],
+    "labels": ["tags"],
+    "name": ["title", "label"],
+    "price": ["unit_amount", "amount", "cost"],
+    "priority": ["severity", "rank"],
+    "product_id": ["productId", "sku"],
+    "quantity": ["qty", "count"],
+    "state": ["status"],
+    "status": ["state"],
+    "stock": ["inventory", "qty_available"],
+    "tags": ["labels"],
+    "title": ["name", "summary"],
+    "total": ["total_count", "count"],
+    "unit_price": ["price", "unit_amount"],
+    "updated_at": ["updated", "updatedAt", "modified_at"],
+    "url": ["href", "link"]
+  },
+  "implementation": {
+    "prompts/P1.md": "40cafc592985b6ef7c41f63eae70ca6c589140f58b006e0734586e99cb8c6c63",
+    "prompts/P2.md": "336ed98436698c59bb45a4bb1e56d8fc13e0b57d729660d2b62857af6b7f11e4",
+    "prompts/P3.md": "07c81c88dad63381bd647e7506814f71b163e6640dbcf94a7bb224b24cdc9d42",
+    "prompts/P4.md": "45eb5ddf4a29009edef022dc77d5251bbd4471d0a92fe8cc843fc424511e2ac2",
+    "prompts/P5.md": "de30984d055896662b825b71fd086cc11fdbd5fda5a8d8d1628107caeefc3b9a",
+    "prompts/P6.md": "1cdfac7f825977095635a59a2a3b8af3415dd796097cbdbc3d5bc81cfe9bbcb5",
+    "prompts/P7.md": "ab1c5645111e1cf64061a151ecd8ee4422e4909453ef88f647e1fde48bc34a95",
+    "prompts/P8.md": "1fd8d4b566fd985daa6d9ffa21e38e5d309ed72e999038b221c61e8112eae919",
+    "prompts/frame.md": "fd78c74d6e1d4d537cdf57875af3cda7dc8a0f6da86ae5560ba54915b779a3b2",
+    "prompts/system.md": "1f060dc7b05a528f092654dd69692b3b535dbf04f6424e684d4b7cb73fb0678f",
+    "src/catalog-hash.ts": "05efd88623caa54fac6f5f1c4663d386c8f4e735829783d923d090615a2c57a1",
+    "src/catalog.ts": "a863f626e2d6251be2ba8e4cadd4ef0296390fdc9587e840d121d9da26a1cdbe",
+    "src/diff.ts": "c351a0708c3ad02f05d6427f8a27490a259d1d56afafebd75d0f7846b48188db",
+    "src/git.ts": "274b6c1b88a99f1d3c957f0c1b1b6200b6ff4b86a90f1d3ff150217979c83731",
+    "src/index.ts": "2fadbf0bba62f7ecbd3e6987ecfbb915b24513485a28b84f57adc78e0fa8c202",
+    "src/patch.ts": "9b3eda1462a7c79f623360087169ccee2be4da0b2930872c60a46fb0f05016a1",
+    "src/response.ts": "97efa2bd5e2b331e78b36a5c470817b85d5589035766d2848796052acde8ce05",
+    "src/util.ts": "21cb2869fc95bfa702b765157db1cefac715e683936f8b79615b49384f704c59",
+    "src/walk.ts": "be9bce5e7673056502cf627bed3b234d09276cfd2a42bf0a8533cdd9dfdb157e"
+  },
+  "hash": "f8a55b1603946055d9962f59943decd3f4702fcd7d213d329d0734a8298e0801"
+}
