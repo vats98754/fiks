@@ -1,0 +1,14 @@
+diff --git a/README.md b/README.md
+index 310f398..9756684 100644
+--- a/README.md
++++ b/README.md
+@@ -1 +1,2 @@
+ # shop
++++ b/src/x.ts
+diff --git a/src/x.ts b/src/x.ts
+index ad1d380..6ce4dd4 100644
+--- a/src/x.ts
++++ b/src/x.ts
+@@ -1 +1,2 @@
+ export const x = 1;
++++ b/README.md

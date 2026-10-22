@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { detectInDiff } from '../src/ast.ts';
 import { addedLines, addedLinesAll, parseUnifiedDiff } from '../src/diff.ts';
@@ -68,6 +69,20 @@ describe('unified diff parsing', () => {
     expect(files[1]?.source).toEqual({ kind: 'copy', of: 'src/b.ts' });
     expect(addedLines(files[1]?.diff ?? '')).toBe('');
     expect(addedLinesAll(diff)).toBe('fetch(url);');
+  });
+
+  // Real `git diff` output (git 2.51): README.md gains the line `++ b/src/x.ts` and src/x.ts gains
+  // `++ b/README.md`, so each hunk holds a line that reads like a `+++ b/` header.
+  const realGit = readFileSync(
+    new URL('./fixtures/real-git-plusplus-hunk-line.patch', import.meta.url),
+    'utf8',
+  );
+
+  it('a hunk line that reads like a +++ b/ header does not rename the file (real git diff)', () => {
+    expect(realGit).toContain('\n+++ b/src/x.ts\n');
+    expect(realGit).toContain('\n+++ b/README.md');
+    expect(parseUnifiedDiff(realGit).map((f) => f.path)).toEqual(['README.md', 'src/x.ts']);
+    expect(addedLinesAll(realGit).split('\n')).toEqual(['++ b/src/x.ts', '++ b/README.md']);
   });
 
   it('an ordinary modification yields exactly one entry', () => {

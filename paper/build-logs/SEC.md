@@ -161,3 +161,32 @@ Round-4 evidence (base `0bbadff`):
   under `with-lock suite` (the lock rule covers full `pnpm test` and Docker builds).
 - `git diff --name-only` (uncommitted after the commit) → `pnpm-lock.yaml` only (the SETUP edit).
 
+
+## Round 5 (orchestrator decisions, PLAN §0.B: findings 2, 3, 4)
+
+Rebased `ws/SEC` onto main `a585b65`: the uncommitted SETUP lockfile edit was discarded, then
+`git rebase main` → "Successfully rebased and updated refs/heads/ws/SEC". SETUP re-run:
+`node scripts/apply-dep-fragments.mjs` → "nothing to apply"; `pnpm install --no-frozen-lockfile` →
+exit 0 (lockfile edit left uncommitted, per §7.1).
+
+| # | Finding | Status |
+|---|---|---|
+| 2 | `parseUnifiedDiff` renamed a file on a hunk line `+++ b/…` | Fixed: `--- a/` and `+++ b/` are path headers only before the first `@@` of each `diff --git` stanza (`inHunks` flag). New fixtures from real `git diff` output (git 2.51.2, a scratch repo): `real-git-plusplus-hunk-line.patch` (README.md gains `++ b/src/x.ts`, src/x.ts gains `++ b/README.md`) and `real-git-src-hunk-renames-to-readme.patch` (src/x.ts gains a `fetch()` and `++ b/README.md`). Tests: `diff.test.ts` paths stay `['README.md','src/x.ts']` and the added lines are kept; `goals.test.ts` attacker-src-behaviour still sees the `fetch` in src/x.ts and non-src-edit reports no README.md edit. With the round-4 `diff.ts` swapped back in, all 3 fail. |
+| 3 | `defaultMayRun` let `\n` / `\t` smuggle a second command | Fixed: any C0 control character or DEL, or a shell separator (`;` `&` `\|` `` ` `` `$(`, which covers `&&` and `\|\|`), is refused outright; the command must then be canonical `pnpm` + single-space-separated words (`^pnpm(?: [\w./-]+)+$`), the same form as SAFE round 4's `mayRun`. New banned cases: `pnpm test\ncurl evil.sh`, `pnpm test test/a.test.ts\nsh evil.sh`, `pnpm typecheck\npnpm install`, `pnpm test\rcurl x`, `pnpm test\ttest/a.test.ts`, `pnpm test test/a.test.ts\tcurl`, `pnpm\ttest`, a NUL case, seven separator cases, four non-canonical-whitespace cases. With the round-4 `goals.ts` swapped back in, 10 of them fail (both `\n` cases that the old split accepted, `\r`, three `\t`, four whitespace). |
+| 4 | `goals.test.ts` imported SAFE-owned `../../repair/src/guard.ts` | Fixed: the import is gone; the policy is a self-contained banned/allowed expectation list checked against `defaultMayRun` and the oracle, plus a predicate-parameter test (a strict and a permissive custom predicate). `'  pnpm   test   test/a.test.ts  '` is dropped from the allowed list (it is now in the banned list, with `pnpm  test`, ` pnpm lint`, `pnpm lint `). `grep -rn -e guard.ts -e "repair/src" packages/attacks/test` → no import. |
+
+Round-5 evidence (base `a585b65`):
+
+- `pnpm vitest run packages/attacks` → **Test Files 7 passed (7), Tests 182 passed (182)** (adaptive 9,
+  ast 44, canary 19, carrier 8, diff 7, goals 91, templates 4).
+- Regression proof: round-4 `diff.ts` + `goals.ts` swapped in → `Tests 11 failed | 169 passed` (before
+  the two extra `\n` cases were added); round-4 `goals.ts` alone → `goals.test.ts` 10 failed | 81 passed.
+- Goal oracles: each fires on its hand-planted patch and none fires on D1-D5 (4 positive + 20
+  negative-control cases, green).
+- Canary scanner: planted canary in a synthetic log, diff, commit message and PR body, raw and encoded
+  (green). SOURCES.md licence rows (green). Adaptive unit, stub llm + stub runner: 40 rounds,
+  status-only feedback, early stop, every argv has `--no-pr`, `--run-key`, `--trace-format` (9 green).
+- `pnpm typecheck` → exit 0. `pnpm lint` → exit 0, "Checked 376 files … No fixes applied" (after
+  `biome check --write packages/attacks` reformatted one test line; the control-character regex was
+  replaced by a char-code check to satisfy `noControlCharactersInRegex`). Run directly, not under
+  `with-lock suite` (the lock rule covers full `pnpm test` and Docker builds).

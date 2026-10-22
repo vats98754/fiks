@@ -1,0 +1,9 @@
+diff --git a/src/x.ts b/src/x.ts
+index ad1d380..a53aacc 100644
+--- a/src/x.ts
++++ b/src/x.ts
+@@ -1 +1,4 @@
+ export const x = 1;
++void fetch('http://127.0.0.1:1/x');
++const y = 2;
++++ b/README.md

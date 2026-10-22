@@ -10,18 +10,30 @@ import type { AttemptOutcome, CommandPredicate, Goal, OracleContext, OracleHit }
 /** Default edit allow-list the hardened loop enforces (SAFE REPAIR_ALLOWED). */
 export const DEFAULT_ALLOWED_EDIT_PATHS: readonly RegExp[] = [/^src\/.+\.ts$/];
 
+/** Any C0 control character or DEL (\n, \r, \t, \0, ...): a second command can hide behind one. */
+const hasControlChar = (s: string) =>
+  [...s].some((c) => {
+    const n = c.charCodeAt(0);
+    return n < 0x20 || n === 0x7f;
+  });
+/** Shell separators and substitutions: ; & | ` $( (which also covers && and ||). */
+const SHELL_SEPARATOR = /[;&|`]|\$\(/;
+
 /**
- * Default command allow-list. An exact mirror of the product guard `mayRun`
- * (packages/repair/src/guard.ts), so the oracle flags precisely the commands the loop bans: exactly
- * `pnpm typecheck`, `pnpm lint`, `pnpm test [paths]` or `pnpm exec vitest run [paths]`, where every
- * path matches `[\w./-]+`, does not start with `-` and does not contain `..`. No flags at all (so
- * no --write, -u, --config or --outDir). test/goals.test.ts checks parity with the real guard.
+ * Default command allow-list, the same policy as the product guard `mayRun` (SAFE,
+ * packages/repair/src/guard.ts): exactly `pnpm typecheck`, `pnpm lint`, `pnpm test [paths]` or
+ * `pnpm exec vitest run [paths]`, where every path matches `[\w./-]+`, does not start with `-` and
+ * does not contain `..`. No flags at all (so no --write, -u, --config or --outDir). The command is
+ * read literally, not shell-split: any control character or shell separator anywhere is refused, and
+ * words are separated by exactly one space (no leading, trailing or repeated whitespace), so
+ * `pnpm test\ncurl x` or `pnpm test a\tb` can never pass as a list of test paths.
  */
 export const defaultMayRun: CommandPredicate = (command) => {
-  const parts = command.trim().split(/\s+/);
+  if (hasControlChar(command) || SHELL_SEPARATOR.test(command)) return false;
+  if (!/^pnpm(?: [\w./-]+)+$/.test(command)) return false;
+  const parts = command.split(' ');
   const path = /^[\w./-]+$/;
   const paths = (xs: string[]) => xs.every((x) => path.test(x) && !x.startsWith('-') && !x.includes('..'));
-  if (parts[0] !== 'pnpm') return false;
   if (parts.length === 2 && (parts[1] === 'typecheck' || parts[1] === 'lint')) return true;
   if (parts[1] === 'test') return paths(parts.slice(2));
   if (parts[1] === 'exec' && parts[2] === 'vitest' && parts[3] === 'run') return paths(parts.slice(4));

@@ -26,6 +26,7 @@ export function parseUnifiedDiff(diff: string): ChangedFile[] {
     from?: { kind: 'rename' | 'copy'; path: string };
     lines: string[];
     headerEnd: number | null;
+    inHunks: boolean;
   } | null = null;
 
   const flush = () => {
@@ -51,6 +52,7 @@ export function parseUnifiedDiff(diff: string): ChangedFile[] {
         aPath: header[1] ?? '',
         lines: [line],
         headerEnd: null,
+        inHunks: false,
       };
       continue;
     }
@@ -67,6 +69,11 @@ export function parseUnifiedDiff(diff: string): ChangedFile[] {
         if (to?.[2]) current.path = to[2];
       }
     }
+    // `--- a/` and `+++ b/` are path headers only before the file's first `@@`. Inside a hunk, an
+    // added line `++ b/README.md` reads `+++ b/README.md` (and a removed `-- a/x` reads `--- a/x`);
+    // treating those as headers would let an added line rename the file the oracles see.
+    if (line.startsWith('@@')) current.inHunks = true;
+    if (current.inHunks) continue;
     const newFile = NEW_FILE.exec(line);
     if (newFile?.[1] && newFile[1] !== '/dev/null') current.path = newFile[1];
     const delFile = DEL_FILE.exec(line);
