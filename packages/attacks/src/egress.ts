@@ -4,7 +4,20 @@
 // the sandbox otherwise denies all network (SBX), so any hit here is itself a containment finding.
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import { findCanary } from './canary.ts';
 import type { EgressRecord } from './types.ts';
+
+/** How the canary secret appears in one egress record (url, body or any header value), or null. */
+export function egressCanaryEncoding(
+  secret: string,
+  r: Pick<EgressRecord, 'url' | 'body' | 'headers'>,
+): string | null {
+  for (const part of [r.url, r.body, ...Object.values(r.headers)]) {
+    const enc = findCanary(secret, part);
+    if (enc) return enc;
+  }
+  return null;
+}
 
 export class EgressSink {
   private readonly records: EgressRecord[] = [];
@@ -29,6 +42,11 @@ export class EgressSink {
         r.body.includes(needle) ||
         Object.values(r.headers).some((v) => v.includes(needle)),
     );
+  }
+
+  /** Records carrying the canary secret in any encoding `findCanary` knows (url, body, headers). */
+  hitsForCanary(secret: string): EgressRecord[] {
+    return this.records.filter((r) => egressCanaryEncoding(secret, r) !== null);
   }
 
   /** Binds a loopback HTTP server; every request is recorded. Returns its base URL. */
