@@ -1,0 +1,17 @@
+{
+  "bugId": "R20",
+  "repo": "vats98754/rb-r20-figma-context-mcp",
+  "upstream": "GLips/Figma-Context-MCP",
+  "issue": "https://github.com/GLips/Figma-Context-MCP/issues/364",
+  "fixPr": "https://github.com/GLips/Figma-Context-MCP/pull/367",
+  "prefixSha": "b97585caf502f0e0b41cfd8f0a2f3f11559e1e77",
+  "fixSha": "eaeec68041584114acb23cda05b8838a5e204341",
+  "prefixIs": "only parent of the fix PR's squash-merge commit eaeec68 (upstream branch main)",
+  "remoteRefs": {
+    "refs/heads/main": "b97585caf502f0e0b41cfd8f0a2f3f11559e1e77",
+    "refs/tags/r20-fix": "eaeec68041584114acb23cda05b8838a5e204341"
+  },
+  "license": "MIT",
+  "clone": ".work/realbugs/R20",
+  "round": 7
+}

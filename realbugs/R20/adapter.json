@@ -1,0 +1,50 @@
+{
+  "bugId": "R20",
+  "repoDir": ".work/realbugs/R20",
+  "prefixSha": "b97585caf502f0e0b41cfd8f0a2f3f11559e1e77",
+  "fixSha": "eaeec68041584114acb23cda05b8838a5e204341",
+  "serverCommand": "node dist/bin.js --stdio --figma-api-key=fiks-replay-dummy --no-telemetry",
+  "baseUrlEnv": "",
+  "testCommand": "pnpm exec vitest run",
+  "testRunner": "vitest",
+  "suiteScope": [
+    "src/tests/benchmark.test.ts",
+    "src/tests/config.test.ts",
+    "src/tests/error-meta.test.ts",
+    "src/tests/image-processing.test.ts",
+    "src/tests/layout-alignment.test.ts",
+    "src/tests/path-validation.test.ts",
+    "src/tests/rich-text.test.ts",
+    "src/tests/serialization.test.ts",
+    "src/tests/tree-walker.test.ts",
+    "src/tests/validation-reject.test.ts"
+  ],
+  "allowedEditPaths": [
+    "^src/(?!tests/)(?:[^/]+/)*[^/]+\\.ts$",
+    "^src/tests/[^/]+\\.test\\.ts$",
+    "^README\\.md$"
+  ],
+  "humanFixTests": ["src/tests/path-validation.test.ts"],
+  "heldoutCommand": "pnpm tsx realbugs/R20/heldout/run.ts --worktree {worktree}",
+  "issuePath": "realbugs/R20/issue.md",
+  "contractPath": "realbugs/R20/contract.json",
+  "fixtures": [
+    { "path": "realbugs/R20/fixtures/trigger.json", "label": "synthesized" },
+    { "path": "realbugs/R20/heldout/cases.json", "label": "synthesized" }
+  ],
+  "namedProperty": "figma.download_figma_images/fileWritten",
+  "triggerFixture": "realbugs/R20/fixtures/trigger.json",
+  "harnessCommand": "pnpm tsx realbugs/R20/harness/run.ts (--sha {sha} | --worktree {worktree}) --runs {runs}",
+  "installCommand": "pnpm install --frozen-lockfile --offline",
+  "buildCommand": "node_modules/.bin/tsup",
+  "upstreamHosts": ["api.figma.com", "figma-alpha-api.s3.us-west-2.amazonaws.com", "s3-alpha-sig.figma.com"],
+  "notes": [
+    "Paths: realbugs/* and harness commands are relative to the fiks root; serverCommand, testCommand, installCommand, buildCommand, suiteScope, allowedEditPaths and humanFixTests are relative to the clone (repo root). {worktree} = a checked-out head of the clone; {sha} = prefix, fix or a commit in .work/realbugs/R20.",
+    "Everything from the clone runs only in the SBX per-repo image (packages/sandbox build.ts: pnpm repo, lockfile node_modules, --network none, HOME=/tmp). harness/server.ts builds dist with buildCommand (tsup without --dts; the package's own 'pnpm build' adds --dts, which takes ~2 min in the sandbox and changes no JS) and runs each case through harness/sandbox/case-runner.mjs in that container.",
+    "No base-URL env: the server hard-codes https://api.figma.com/v1 and downloads the S3 URLs the API returns, so baseUrlEnv is empty and the upstream is replayed through a loopback HTTPS CONNECT proxy in the container (HTTPS_PROXY, honoured by the server's undici EnvHttpProxyAgent; NODE_EXTRA_CA_CERTS = a throwaway CA from @fiks/replay-proc). FIGMA_API_KEY is passed as a CLI flag with a dummy value (the SBX backend refuses *API_KEY* env names); telemetry is off (--no-telemetry, DO_NOT_TRACK=1).",
+    "The contract property is a filesystem postcondition (kind fileWrittenRequested), evaluated by harness/check.ts evaluateCase over the listing of the case root the runner takes after the call, not by @fiks/contracts evaluate (see contract-log.md, vocabulary gap). A repro check module should call runHarness (or R20Sandbox.runCase + evaluateCase) on the trigger fixture and assert violations[].propertyId includes namedProperty.",
+    "suiteScope = the repo's tests that pass deterministically in the SBX image, offline. Excluded: src/tests/stdio.test.ts and src/tests/server.test.ts (each spawns 'tsx src/bin.ts'; cold tsx startup of the server takes ~80 s in the sandbox, so their 15 s / 30 s timeouts fail on both heads), src/tests/integration.test.ts (needs a real FIGMA_API_KEY and network; skipped without one).",
+    "humanFixTests pin the human fix's implementation (a new module src/utils/local-path.ts with resolveLocalPath/isWithin and its exact rejection reasons); a correct fix that writes absolute paths where asked without that module fails them on import. heldoutCommand is the direction-neutral oracle (write where asked, or refuse with isError).",
+    "allowedEditPaths: any TypeScript source under src/ (the bug spans the tool handler, src/utils/common.ts and possibly a new src/utils module), the repo's tests, and README.md."
+  ]
+}

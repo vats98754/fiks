@@ -93,3 +93,50 @@ listing taken after the call, with the same property id form (`<contract id>/<na
 same `Violation`/`EvalResult` shapes as `@fiks/contracts`. This is a real limit of the frozen
 vocabulary for this bug class (a side effect outside the server's own API), recorded for the
 paper's limitations, not a change to `@fiks/contracts`.
+
+## After the contract (contract.json was not edited after 12:31:40Z)
+
+| Time (UTC) | Step |
+|---|---|
+| 2026-10-22T12:32:16Z | Contract committed on `ws/RB-R20` (`28484c1`, "blind contract ... before reading the fix diff"). |
+| 2026-10-22T12:32:21Z | Read the prefix implementation (`download-figma-images-tool.ts`, `services/download-figma-images.ts`, `services/figma.ts`, `utils/common.ts`, `utils/image-processing.ts`, `utils/fetch-json.ts`, `server.ts` proxy setup, telemetry opt-out). |
+| 2026-10-22T12:32:50Z | **First read of the fix diff** (`git diff --stat` and `git diff` prefix..fix of `src/`). |
+| 2026-10-22T12:34:54Z | Private repo `vats98754/rb-r20-figma-context-mcp` created (`gh repo create --private`, not a fork); pushed `main` = prefix and tag `r20-fix` = fix. Clone recreated from it by `node scripts/ensure-realbugs.mjs --id R20` (origin = the private repo only; local tags `prefix`, `fix`). |
+| 2026-10-22T12:39:18Z–12:43:06Z | `harness/run.ts --runs 1`: prefix violated (both nodes), fix verified. |
+| ~12:45Z–12:48Z (no exact stamp taken) | `heldout/run.ts`: prefix 2/8 ok (incorrect), fix 8/8 ok (correct). |
+
+What the human fix does (read after the contract): the prefix resolved `localPath` with
+`path.join(imageDir, localPath)` on purpose ("a leading `/` is treated as relative"), so an
+absolute `localPath` inside the project was re-rooted under the image directory
+(`/tmp/r20/project` + `/tmp/r20/project/public/...` = `/tmp/r20/project/tmp/r20/project/public/...`):
+the files were written, just not where the caller asked, and the reply said "Downloaded 2
+images" with bare file names. The fix adds `src/utils/local-path.ts` (`resolveLocalPath`,
+`isWithin`): absolute paths are accepted when they resolve inside the image directory and written
+there; absolute paths elsewhere, leading-slash paths outside it and Windows drive letters on POSIX
+are refused with `isError` and a hint; the success text now echoes the resolved directory; stdio
+mode warns when `--image-dir` is unset.
+
+So the blind contract's two directions both occur in the fix: the trigger (absolute, inside the
+project) verifies because the files land where asked; held-out cases H2, H3 and H8 are refused
+(`isError`, unverifiable, no fire).
+
+### One interpretation fixed while implementing check.ts (after the fix diff was read)
+
+The rule says "every file path the response reports (absolute, or relative to imageDir)". In
+`check.ts` a *path* is a token that contains a separator (`/` or `\`) and ends in `.png`, `.svg`
+or `.gif`; a bare file name such as `- retry-bitmap-162-4324.png: 8x6` is a name, not a path.
+This was decided between 12:32:50Z (first read of the fix diff) and 12:39:18Z (first harness
+run), i.e. after the fix diff was read, and is recorded as such. Effect: under the literal alternative (bare names resolved against imageDir) the property
+would fire on every successful reply of both heads, including correct writes to a relative
+`localPath`, because both list bare names; the F result on the prefix does not depend on the
+choice (the per-node clause fires on both nodes either way). The issue's own example of a
+reported path (case 2) contains separators.
+
+### Results with this contract
+
+- Trigger, prefix: violated on both nodes (`args.nodes[0]`, `args.nodes[1]`), the files exist at
+  `/tmp/r20/project/tmp/r20/project/public/figma-assets/retry-final/`. Fix: verified.
+- Held-out: the contract fires exactly on the six cases the held-out oracle fails on the prefix
+  (H1–H3, H5–H7); on the fix it never fires (5 verified, 3 unverifiable = refused). No false
+  positive observed. Known false-positive class kept from the blind choices: a correct server that
+  reports a failed node only by count would fire.

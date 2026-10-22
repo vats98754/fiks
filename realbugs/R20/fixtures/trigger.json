@@ -1,0 +1,81 @@
+{
+  "id": "r20-trigger",
+  "label": "synthesized",
+  "capturedAt": "2026-10-22T12:40:00.000Z",
+  "source": "Arguments from issue #364 (fileKey, nodeIds 162:4324 and 162:4334, imageRef, fileNames); the reporter's absolute localPath C:\\Users\\xl\\Desktop\\figma\\public\\figma-assets\\retry-final rendered as the absolute POSIX path of the same directory inside the project (the reporter says Unix-style paths fail the same way). Upstream exchanges synthesized (private file, no token).",
+  "tool": "download_figma_images",
+  "args": {
+    "fileKey": "3QAuo1d9LT32Cxju6o7xDt",
+    "nodes": [
+      {
+        "nodeId": "162:4324",
+        "imageRef": "55e0390ce0dc43e63d023aacfdb023e03ee04644",
+        "fileName": "retry-bitmap-162-4324.png"
+      },
+      {
+        "nodeId": "162:4334",
+        "fileName": "retry-vector-162-4334.svg"
+      }
+    ],
+    "localPath": "/tmp/r20/project/public/figma-assets/retry-final"
+  },
+  "server": {
+    "root": "/tmp/r20",
+    "cwd": "/tmp/r20/project",
+    "args": []
+  },
+  "upstream": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.figma.com/v1/files/3QAuo1d9LT32Cxju6o7xDt/images"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": "{\"error\":false,\"status\":200,\"meta\":{\"images\":{\"55e0390ce0dc43e63d023aacfdb023e03ee04644\":\"https://s3-alpha-sig.figma.com/img/55e0/390c/55e0390ce0dc43e63d023aacfdb023e03ee04644?Expires=1793750400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=fiks-synthesized\"}}}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://s3-alpha-sig.figma.com/img/55e0/390c/55e0390ce0dc43e63d023aacfdb023e03ee04644?Expires=1793750400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=fiks-synthesized"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "image/png"
+        },
+        "bodyBase64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAAEklEQVR42mMwTpv5Hx9mGAoKAHKGaTECo0N+AAAAAElFTkSuQmCC"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.figma.com/v1/images/3QAuo1d9LT32Cxju6o7xDt?ids=162%3A4334&format=svg&svg_outline_text=true&svg_include_id=false&svg_simplify_stroke=true"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": "{\"err\":null,\"images\":{\"162:4334\":\"https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/0b5a1c4e-0000-4000-8000-000000000001\"},\"status\":200}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/0b5a1c4e-0000-4000-8000-000000000001"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "image/svg+xml"
+        },
+        "bodyBase64": "PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTAgMEgyNFYyNEgwVjBaIiBmaWxsPSIjMUUxRTFFIi8+Cjwvc3ZnPgo="
+      }
+    }
+  ]
+}

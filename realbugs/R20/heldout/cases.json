@@ -1,0 +1,475 @@
+{
+  "bugId": "R20",
+  "about": "Held-out manifestations of Figma-Context-MCP #364 (never shown to a repair arm) plus a non-manifestation control. All synthesized (hand-written args; upstream in the shapes of the Figma REST endpoints). Graded by heldout/run.ts with heldoutVerdict in harness/check.ts, which accepts either fix direction for a manifestation: write every file where asked, or refuse with isError.",
+  "cases": [
+    {
+      "kind": "manifestation",
+      "why": "absolute localPath inside the project, one PNG node render at scale 1",
+      "case": {
+        "id": "H1-abs-png-render",
+        "label": "synthesized",
+        "capturedAt": "2026-10-22T12:40:00.000Z",
+        "source": "Held-out input written for R20 (never shown to a repair arm); upstream synthesized.",
+        "tool": "download_figma_images",
+        "args": {
+          "fileKey": "Hx7kQ2mZ9pLw4Rt8Ny3Vb1",
+          "nodes": [
+            {
+              "nodeId": "7:42",
+              "fileName": "card-shadow.png"
+            }
+          ],
+          "localPath": "/tmp/r20/project/src/assets/cards",
+          "pngScale": 1
+        },
+        "server": {
+          "root": "/tmp/r20",
+          "cwd": "/tmp/r20/project",
+          "args": []
+        },
+        "upstream": [
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://api.figma.com/v1/images/Hx7kQ2mZ9pLw4Rt8Ny3Vb1?ids=7:42&format=png&scale=1"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "application/json; charset=utf-8"
+              },
+              "body": "{\"err\":null,\"images\":{\"7:42\":\"https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/0b5a1c4e-0000-4000-8000-000000000011\"},\"status\":200}"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/0b5a1c4e-0000-4000-8000-000000000011"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "image/png"
+              },
+              "bodyBase64": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAAICAYAAADN5B7xAAAAFElEQVR42mN4p+TynxTMMKqBFhoA0A7fIa4TAkYAAAAASUVORK5CYII="
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "manifestation",
+      "why": "POSIX-absolute \"/public/images\" (the reporter tried Unix-style paths)",
+      "case": {
+        "id": "H2-leading-slash",
+        "label": "synthesized",
+        "capturedAt": "2026-10-22T12:40:00.000Z",
+        "source": "Held-out input written for R20 (never shown to a repair arm); upstream synthesized.",
+        "tool": "download_figma_images",
+        "args": {
+          "fileKey": "Hx7kQ2mZ9pLw4Rt8Ny3Vb1",
+          "nodes": [
+            {
+              "nodeId": "7:43",
+              "fileName": "logo.svg"
+            }
+          ],
+          "localPath": "/public/images"
+        },
+        "server": {
+          "root": "/tmp/r20",
+          "cwd": "/tmp/r20/project",
+          "args": []
+        },
+        "upstream": [
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://api.figma.com/v1/images/Hx7kQ2mZ9pLw4Rt8Ny3Vb1?ids=7%3A43&format=svg&svg_outline_text=true&svg_include_id=false&svg_simplify_stroke=true"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "application/json; charset=utf-8"
+              },
+              "body": "{\"err\":null,\"images\":{\"7:43\":\"https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/0b5a1c4e-0000-4000-8000-000000000012\"},\"status\":200}"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/0b5a1c4e-0000-4000-8000-000000000012"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "image/svg+xml"
+              },
+              "bodyBase64": "PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTAgMEgzMlYzMkgwVjBaIiBmaWxsPSIjRkY1NTAwIi8+Cjwvc3ZnPgo="
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "manifestation",
+      "why": "absolute localPath outside the image directory",
+      "case": {
+        "id": "H3-abs-outside",
+        "label": "synthesized",
+        "capturedAt": "2026-10-22T12:40:00.000Z",
+        "source": "Held-out input written for R20 (never shown to a repair arm); upstream synthesized.",
+        "tool": "download_figma_images",
+        "args": {
+          "fileKey": "Hx7kQ2mZ9pLw4Rt8Ny3Vb1",
+          "nodes": [
+            {
+              "nodeId": "7:44",
+              "imageRef": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+              "fileName": "hero.png"
+            }
+          ],
+          "localPath": "/tmp/r20/elsewhere/assets"
+        },
+        "server": {
+          "root": "/tmp/r20",
+          "cwd": "/tmp/r20/project",
+          "args": []
+        },
+        "upstream": [
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://api.figma.com/v1/files/Hx7kQ2mZ9pLw4Rt8Ny3Vb1/images"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "application/json; charset=utf-8"
+              },
+              "body": "{\"error\":false,\"status\":200,\"meta\":{\"images\":{\"a1b2c3d4e5f60718293a4b5c6d7e8f9012345678\":\"https://s3-alpha-sig.figma.com/img/a1b2/c3d4/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678?Expires=1793750400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=fiks-synthesized\"}}}"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://s3-alpha-sig.figma.com/img/a1b2/c3d4/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678?Expires=1793750400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=fiks-synthesized"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "image/png"
+              },
+              "bodyBase64": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGUlEQVR42mMQaBD4TwlmGDVg1IBRA4aLAQD+158Q3S2/VgAAAABJRU5ErkJggg=="
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "control",
+      "why": "relative localPath (the documented form): every head must write it",
+      "case": {
+        "id": "H4-relative-control",
+        "label": "synthesized",
+        "capturedAt": "2026-10-22T12:40:00.000Z",
+        "source": "Held-out input written for R20 (never shown to a repair arm); upstream synthesized.",
+        "tool": "download_figma_images",
+        "args": {
+          "fileKey": "Hx7kQ2mZ9pLw4Rt8Ny3Vb1",
+          "nodes": [
+            {
+              "nodeId": "7:44",
+              "imageRef": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+              "fileName": "hero.png"
+            },
+            {
+              "nodeId": "7:43",
+              "fileName": "logo.svg"
+            }
+          ],
+          "localPath": "public/figma-assets/icons"
+        },
+        "server": {
+          "root": "/tmp/r20",
+          "cwd": "/tmp/r20/project",
+          "args": []
+        },
+        "upstream": [
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://api.figma.com/v1/files/Hx7kQ2mZ9pLw4Rt8Ny3Vb1/images"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "application/json; charset=utf-8"
+              },
+              "body": "{\"error\":false,\"status\":200,\"meta\":{\"images\":{\"a1b2c3d4e5f60718293a4b5c6d7e8f9012345678\":\"https://s3-alpha-sig.figma.com/img/a1b2/c3d4/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678?Expires=1793750400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=fiks-synthesized\"}}}"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://s3-alpha-sig.figma.com/img/a1b2/c3d4/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678?Expires=1793750400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=fiks-synthesized"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "image/png"
+              },
+              "bodyBase64": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGUlEQVR42mMQaBD4TwlmGDVg1IBRA4aLAQD+158Q3S2/VgAAAABJRU5ErkJggg=="
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://api.figma.com/v1/images/Hx7kQ2mZ9pLw4Rt8Ny3Vb1?ids=7%3A43&format=svg&svg_outline_text=true&svg_include_id=false&svg_simplify_stroke=true"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "application/json; charset=utf-8"
+              },
+              "body": "{\"err\":null,\"images\":{\"7:43\":\"https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/0b5a1c4e-0000-4000-8000-000000000012\"},\"status\":200}"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/0b5a1c4e-0000-4000-8000-000000000012"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "image/svg+xml"
+              },
+              "bodyBase64": "PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTAgMEgzMlYzMkgwVjBaIiBmaWxsPSIjRkY1NTAwIi8+Cjwvc3ZnPgo="
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "manifestation",
+      "why": "--image-dir set; absolute localPath inside it; an animated GIF fill",
+      "case": {
+        "id": "H5-image-dir-flag-gif",
+        "label": "synthesized",
+        "capturedAt": "2026-10-22T12:40:00.000Z",
+        "source": "Held-out input written for R20 (never shown to a repair arm); upstream synthesized.",
+        "tool": "download_figma_images",
+        "args": {
+          "fileKey": "Hx7kQ2mZ9pLw4Rt8Ny3Vb1",
+          "nodes": [
+            {
+              "nodeId": "9:1",
+              "gifRef": "f00dfeedc0ffee1234567890abcdef0123456789",
+              "fileName": "spinner.gif"
+            }
+          ],
+          "localPath": "/tmp/r20/site/static/img"
+        },
+        "server": {
+          "root": "/tmp/r20",
+          "cwd": "/tmp/r20/project",
+          "args": ["--image-dir", "/tmp/r20/site"],
+          "mkdirs": ["/tmp/r20/site"]
+        },
+        "upstream": [
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://api.figma.com/v1/files/Hx7kQ2mZ9pLw4Rt8Ny3Vb1/images"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "application/json; charset=utf-8"
+              },
+              "body": "{\"error\":false,\"status\":200,\"meta\":{\"images\":{\"f00dfeedc0ffee1234567890abcdef0123456789\":\"https://s3-alpha-sig.figma.com/img/f00d/feed/f00dfeedc0ffee1234567890abcdef0123456789?Expires=1793750400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=fiks-synthesized\"}}}"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://s3-alpha-sig.figma.com/img/f00d/feed/f00dfeedc0ffee1234567890abcdef0123456789?Expires=1793750400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=fiks-synthesized"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "image/gif"
+              },
+              "bodyBase64": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "manifestation",
+      "why": "absolute localPath inside the project; an image fill with a filenameSuffix",
+      "case": {
+        "id": "H6-abs-filename-suffix",
+        "label": "synthesized",
+        "capturedAt": "2026-10-22T12:40:00.000Z",
+        "source": "Held-out input written for R20 (never shown to a repair arm); upstream synthesized.",
+        "tool": "download_figma_images",
+        "args": {
+          "fileKey": "Hx7kQ2mZ9pLw4Rt8Ny3Vb1",
+          "nodes": [
+            {
+              "nodeId": "7:45",
+              "imageRef": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+              "fileName": "banner.png",
+              "filenameSuffix": "c0ffee"
+            }
+          ],
+          "localPath": "/tmp/r20/project/public/banners"
+        },
+        "server": {
+          "root": "/tmp/r20",
+          "cwd": "/tmp/r20/project",
+          "args": []
+        },
+        "upstream": [
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://api.figma.com/v1/files/Hx7kQ2mZ9pLw4Rt8Ny3Vb1/images"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "application/json; charset=utf-8"
+              },
+              "body": "{\"error\":false,\"status\":200,\"meta\":{\"images\":{\"a1b2c3d4e5f60718293a4b5c6d7e8f9012345678\":\"https://s3-alpha-sig.figma.com/img/a1b2/c3d4/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678?Expires=1793750400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=fiks-synthesized\"}}}"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://s3-alpha-sig.figma.com/img/a1b2/c3d4/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678?Expires=1793750400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=fiks-synthesized"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "image/png"
+              },
+              "bodyBase64": "iVBORw0KGgoAAAANSUhEUgAAAAUAAAADCAYAAABbNsX4AAAAEUlEQVR42mNgYGBowIKJFAQA4T8HgWBNQskAAAAASUVORK5CYII="
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "manifestation",
+      "why": "absolute localPath with a .. segment that still resolves inside the project",
+      "case": {
+        "id": "H7-abs-dotdot-inside",
+        "label": "synthesized",
+        "capturedAt": "2026-10-22T12:40:00.000Z",
+        "source": "Held-out input written for R20 (never shown to a repair arm); upstream synthesized.",
+        "tool": "download_figma_images",
+        "args": {
+          "fileKey": "Hx7kQ2mZ9pLw4Rt8Ny3Vb1",
+          "nodes": [
+            {
+              "nodeId": "7:43",
+              "fileName": "logo.svg"
+            }
+          ],
+          "localPath": "/tmp/r20/project/public/../assets/brand"
+        },
+        "server": {
+          "root": "/tmp/r20",
+          "cwd": "/tmp/r20/project",
+          "args": []
+        },
+        "upstream": [
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://api.figma.com/v1/images/Hx7kQ2mZ9pLw4Rt8Ny3Vb1?ids=7%3A43&format=svg&svg_outline_text=true&svg_include_id=false&svg_simplify_stroke=true"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "application/json; charset=utf-8"
+              },
+              "body": "{\"err\":null,\"images\":{\"7:43\":\"https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/0b5a1c4e-0000-4000-8000-000000000012\"},\"status\":200}"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/0b5a1c4e-0000-4000-8000-000000000012"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "image/svg+xml"
+              },
+              "bodyBase64": "PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTAgMEgzMlYzMkgwVjBaIiBmaWxsPSIjRkY1NTAwIi8+Cjwvc3ZnPgo="
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "manifestation",
+      "why": "the reporter's own Windows path, sent to a POSIX server (not absolute on POSIX: no fire under the contract)",
+      "case": {
+        "id": "H8-windows-drive-letter",
+        "label": "synthesized",
+        "capturedAt": "2026-10-22T12:40:00.000Z",
+        "source": "Held-out input written for R20 (never shown to a repair arm); upstream synthesized.",
+        "tool": "download_figma_images",
+        "args": {
+          "fileKey": "Hx7kQ2mZ9pLw4Rt8Ny3Vb1",
+          "nodes": [
+            {
+              "nodeId": "7:43",
+              "fileName": "logo.svg"
+            }
+          ],
+          "localPath": "C:\\Users\\xl\\Desktop\\figma\\public\\figma-assets\\retry-final"
+        },
+        "server": {
+          "root": "/tmp/r20",
+          "cwd": "/tmp/r20/project",
+          "args": []
+        },
+        "upstream": [
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://api.figma.com/v1/images/Hx7kQ2mZ9pLw4Rt8Ny3Vb1?ids=7%3A43&format=svg&svg_outline_text=true&svg_include_id=false&svg_simplify_stroke=true"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "application/json; charset=utf-8"
+              },
+              "body": "{\"err\":null,\"images\":{\"7:43\":\"https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/0b5a1c4e-0000-4000-8000-000000000012\"},\"status\":200}"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "url": "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/0b5a1c4e-0000-4000-8000-000000000012"
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "image/svg+xml"
+              },
+              "bodyBase64": "PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTAgMEgzMlYzMkgwVjBaIiBmaWxsPSIjRkY1NTAwIi8+Cjwvc3ZnPgo="
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
