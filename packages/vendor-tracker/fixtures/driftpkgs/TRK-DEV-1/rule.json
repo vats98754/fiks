@@ -1,0 +1,11 @@
+{
+  "id": "TRK-DEV-1",
+  "domain": "tracker",
+  "match": {
+    "method": "GET",
+    "pathPattern": "^/issues/[^/]+/comments$"
+  },
+  "transform": "transform.ts",
+  "clockFrozen": true,
+  "hash": "1aacac9e98ca7ecc5cda2223da0606965303ba9ccc4355e4b8fee4fc17b7c851"
+}

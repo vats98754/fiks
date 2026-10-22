@@ -1,0 +1,26 @@
+{
+  "id": "TRK-DEV-1",
+  "domain": "tracker",
+  "base": "dev-tracker-stub",
+  "stratum": "dev",
+  "ideationFamily": "builder",
+  "authorSession": "DOM2 builder (dev only; never confirmatory)",
+  "injectorRule": {
+    "path": "TRK-DEV-1/rule.json",
+    "hash": "1aacac9e98ca7ecc5cda2223da0606965303ba9ccc4355e4b8fee4fc17b7c851"
+  },
+  "hiddenTests": [
+    "TRK-DEV-1/hidden/comments-other-issue.test.ts",
+    "TRK-DEV-1/hidden/comments-single.test.ts",
+    "TRK-DEV-1/hidden/comments-none.test.ts",
+    "TRK-DEV-1/hidden/comment-roundtrip.test.ts",
+    "TRK-DEV-1/hidden/comments-v1-preserved.test.ts"
+  ],
+  "refA": "TRK-DEV-1/refA.patch",
+  "refB": "TRK-DEV-1/refB.patch",
+  "renamedIdVariant": "TRK-DEV-1/hidden-renamed",
+  "generators": [
+    "TRK-DEV-1/generators.ts"
+  ],
+  "changelog": "API 2026-10-01: the comment list of GET /issues/{key}/comments is returned under `comments` (previously `items`)."
+}

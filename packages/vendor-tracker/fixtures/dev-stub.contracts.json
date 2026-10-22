@@ -1,0 +1,46 @@
+{
+  "server": "tracker-mcp",
+  "version": 1,
+  "contracts": [
+    {
+      "id": "tracker.search_issues",
+      "tool": "search_issues",
+      "invariants": [
+        {
+          "id": "countMatchesTotal",
+          "kind": "countMatchesTotal",
+          "itemsPath": "items",
+          "totalPath": "total"
+        },
+        { "id": "items.key.unique", "kind": "unique", "path": "items[*].key" }
+      ]
+    },
+    {
+      "id": "tracker.get_issue",
+      "tool": "get_issue",
+      "invariants": [
+        { "id": "key.notNull", "kind": "notNull", "path": "key" },
+        {
+          "id": "comment_count.equalsUpstream",
+          "kind": "equalsUpstream",
+          "path": "comment_count",
+          "upstreamPath": "comment_count"
+        }
+      ]
+    },
+    {
+      "id": "tracker.list_comments",
+      "tool": "list_comments",
+      "invariants": [
+        {
+          "id": "countMatchesTotal",
+          "kind": "countMatchesTotal",
+          "itemsPath": "items",
+          "totalPath": "total"
+        },
+        { "id": "total.equalsUpstream", "kind": "equalsUpstream", "path": "total", "upstreamPath": "total" },
+        { "id": "items.id.unique", "kind": "unique", "path": "items[*].id" }
+      ]
+    }
+  ]
+}

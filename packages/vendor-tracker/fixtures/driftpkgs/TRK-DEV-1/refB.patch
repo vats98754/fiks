@@ -1,0 +1,24 @@
+diff --git a/src/tools/list_comments.ts b/src/tools/list_comments.ts
+index 6c3d42a..3f99d25 100644
+--- a/src/tools/list_comments.ts
++++ b/src/tools/list_comments.ts
+@@ -35,12 +35,16 @@ export async function handler(args: { issue_key: string }, vendor: VendorClient)
+   const res = await vendor.get(`${issuePath(args.issue_key)}/comments`);
+   if (res.status === 404) return fail(`No issue ${args.issue_key}.`);
+   if (res.status !== 200) return fail(`Could not load comments: ${errorMessage(res)}`);
+-  const body = res.body as { items?: VendorComment[]; total: number };
+-  const items = (body.items ?? []).map((c) => ({
++  const body = res.body as Record<string, unknown>;
++  // Accept the comment list under either envelope name; refuse a response that has none
++  // rather than reporting an empty list.
++  const list = [body.items, body.comments].find((v): v is VendorComment[] => Array.isArray(v));
++  if (!list) return fail('Could not load comments: the response has no comment list.');
++  const items = list.map((c) => ({
+     id: c.id,
+     author: c.author,
+     body: c.body,
+     created_at: c.created_at,
+   }));
+-  return ok({ issue_key: args.issue_key, items, count: items.length, total: body.total });
++  return ok({ issue_key: args.issue_key, items, count: items.length, total: Number(body.total) });
+ }

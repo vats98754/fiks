@@ -1,0 +1,16 @@
+diff --git a/src/tools/list_comments.ts b/src/tools/list_comments.ts
+index 6c3d42a..23b7343 100644
+--- a/src/tools/list_comments.ts
++++ b/src/tools/list_comments.ts
+@@ -35,8 +35,9 @@ export async function handler(args: { issue_key: string }, vendor: VendorClient)
+   const res = await vendor.get(`${issuePath(args.issue_key)}/comments`);
+   if (res.status === 404) return fail(`No issue ${args.issue_key}.`);
+   if (res.status !== 200) return fail(`Could not load comments: ${errorMessage(res)}`);
+-  const body = res.body as { items?: VendorComment[]; total: number };
+-  const items = (body.items ?? []).map((c) => ({
++  // Since API 2026-10-01 the list is returned under `comments` (it was `items`).
++  const body = res.body as { items?: VendorComment[]; comments?: VendorComment[]; total: number };
++  const items = (body.comments ?? body.items ?? []).map((c) => ({
+     id: c.id,
+     author: c.author,
+     body: c.body,

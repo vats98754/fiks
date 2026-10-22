@@ -1,0 +1,8 @@
+{
+  "repo": "vats98754/tracker-mcp",
+  "branch": "main",
+  "tag": null,
+  "ref": "bfc0e1ea1b13b4d03d1fc43ce19977a7013ecceb",
+  "requiredTags": ["dev-tracker-stub"],
+  "note": "tracker-mcp main at DOM2 (no contracts). scripts/ensure-tracker-mcp.mjs checks this commit out (detached) in .work/tracker-mcp. tracker-mcp main moves only at DOM2's merge or by a run step (seed-tag cuts seed-tracker-v1 at A0), and this pin is updated in the same fiks commit (PLAN 7.1 merge discipline)."
+}
