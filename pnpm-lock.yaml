@@ -201,6 +201,9 @@ importers:
       '@fiks/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@fiks/interfaces':
+        specifier: workspace:*
+        version: link:../interfaces
       '@fiks/repro':
         specifier: workspace:*
         version: link:../repro
