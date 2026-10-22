@@ -1,0 +1,710 @@
+{
+  "source": "paper/PLAN.md section 9.6, 'Power check manifest (round 7)'",
+  "count": 72,
+  "rule": "decimals: |computed - printed| <= 0.5 * 10^-d (d = printed decimals); ge/le: inequality; exact: integer equality",
+  "entries": [
+    {
+      "id": 1,
+      "section": "3.1",
+      "label": "H1 crit at N_E = 1,500",
+      "printed": "18",
+      "check": "exact",
+      "command": "binom --n 1500 --p0 0.02 --alpha 0.0125 --p1 0.01 0.005",
+      "key": ["crit"]
+    },
+    {
+      "id": 2,
+      "section": "3.1",
+      "label": "H1 exact size at N_E = 1,500",
+      "printed": "0.0123",
+      "check": "decimals",
+      "command": "binom --n 1500 --p0 0.02 --alpha 0.0125 --p1 0.01 0.005",
+      "key": ["size"]
+    },
+    {
+      "id": 3,
+      "section": "3.1",
+      "label": "H1 power at pi = 0.01, N_E = 1,500",
+      "printed": "0.821",
+      "check": "decimals",
+      "command": "binom --n 1500 --p0 0.02 --alpha 0.0125 --p1 0.01 0.005",
+      "key": ["power", "0.01"]
+    },
+    {
+      "id": 4,
+      "section": "3.1",
+      "label": "H1 power at pi = 0.005, N_E = 1,500",
+      "printed": "≥ 0.99",
+      "check": "ge",
+      "value": 0.99,
+      "command": "binom --n 1500 --p0 0.02 --alpha 0.0125 --p1 0.01 0.005",
+      "key": ["power", "0.005"]
+    },
+    {
+      "id": 5,
+      "section": "3.1",
+      "label": "H1 crit at N_E = 1,000",
+      "printed": "10",
+      "check": "exact",
+      "command": "binom --n 1000 --p0 0.02 --alpha 0.0125 --p1 0.01",
+      "key": ["crit"]
+    },
+    {
+      "id": 6,
+      "section": "3.1",
+      "label": "H1 exact size at N_E = 1,000",
+      "printed": "0.0102",
+      "check": "decimals",
+      "command": "binom --n 1000 --p0 0.02 --alpha 0.0125 --p1 0.01",
+      "key": ["size"]
+    },
+    {
+      "id": 7,
+      "section": "3.1",
+      "label": "H1 power at pi = 0.01, N_E = 1,000",
+      "printed": "0.583",
+      "check": "decimals",
+      "command": "binom --n 1000 --p0 0.02 --alpha 0.0125 --p1 0.01",
+      "key": ["power", "0.01"]
+    },
+    {
+      "id": 8,
+      "section": "3.1",
+      "label": "minimum N_E at which the exact test can reject",
+      "printed": "217",
+      "check": "exact",
+      "command": "binom-min --p0 0.02 --alpha 0.0125",
+      "key": ["min_n"]
+    },
+    {
+      "id": 9,
+      "section": "3.1",
+      "label": "pi0 rationale: power at pi = 0.01, pi0 = 0.019",
+      "printed": "0.665",
+      "check": "decimals",
+      "command": "binom --n 1500 --p0 0.019 --alpha 0.0125 --p1 0.01",
+      "key": ["power", "0.01"]
+    },
+    {
+      "id": 10,
+      "section": "3.1",
+      "label": "pi0 rationale: power at pi = 0.01, pi0 = 0.020",
+      "printed": "0.821",
+      "check": "decimals",
+      "command": "binom --n 1500 --p0 0.02 --alpha 0.0125 --p1 0.01",
+      "key": ["power", "0.01"]
+    },
+    {
+      "id": 11,
+      "section": "0.0",
+      "label": "M1 erratum: exact power at N_E = 1,500, pi = 0.01",
+      "printed": "0.82054",
+      "check": "decimals",
+      "command": "binom --n 1500 --p0 0.02 --alpha 0.0125 --p1 0.01",
+      "key": ["power", "0.01"]
+    },
+    {
+      "id": 12,
+      "section": "3.0",
+      "label": "P(>= 1 FP entity in 50) at pi = 0.02",
+      "printed": "0.636",
+      "check": "decimals",
+      "command": "anyfp --n 50 --pi 0.02 0.01",
+      "key": ["anyfp", "0.02"]
+    },
+    {
+      "id": 13,
+      "section": "3.0",
+      "label": "P(>= 1 FP entity in 50) at pi = 0.01",
+      "printed": "0.395",
+      "check": "decimals",
+      "command": "anyfp --n 50 --pi 0.02 0.01",
+      "key": ["anyfp", "0.01"]
+    },
+    {
+      "id": 14,
+      "section": "3.2",
+      "label": "H2 MDE, n = 61, sd_d = 0.25",
+      "printed": "0.1069",
+      "check": "decimals",
+      "command": "mde --n 61 --sd-diff 0.25 --alpha 0.0125",
+      "key": ["mde"]
+    },
+    {
+      "id": 15,
+      "section": "3.2",
+      "label": "H2 MDE, n = 61, sd_d = 0.35",
+      "printed": "0.1496",
+      "check": "decimals",
+      "command": "mde --n 61 --sd-diff 0.35 --alpha 0.0125",
+      "key": ["mde"]
+    },
+    {
+      "id": 16,
+      "section": "3.2",
+      "label": "H2 MDE, n = 51, sd_d = 0.25",
+      "printed": "0.1169",
+      "check": "decimals",
+      "command": "mde --n 51 --sd-diff 0.25 --alpha 0.0125",
+      "key": ["mde"]
+    },
+    {
+      "id": 17,
+      "section": "3.2",
+      "label": "H2 MDE, n = 40, sd_d = 0.25",
+      "printed": "0.1320",
+      "check": "decimals",
+      "command": "mde --n 40 --sd-diff 0.25 --alpha 0.0125",
+      "key": ["mde"]
+    },
+    {
+      "id": 18,
+      "section": "3.3",
+      "label": "sampling floor of sd_d at m*a = 9",
+      "printed": "0.236",
+      "check": "decimals",
+      "command": "floor --ma 9 12 8 6",
+      "key": ["floor", "9"]
+    },
+    {
+      "id": 19,
+      "section": "3.3",
+      "label": "sampling floor of sd_d at m*a = 12",
+      "printed": "0.204",
+      "check": "decimals",
+      "command": "floor --ma 9 12 8 6",
+      "key": ["floor", "12"]
+    },
+    {
+      "id": 20,
+      "section": "3.3",
+      "label": "sampling floor of sd_d at m*a = 8",
+      "printed": "0.250",
+      "check": "decimals",
+      "command": "floor --ma 9 12 8 6",
+      "key": ["floor", "8"]
+    },
+    {
+      "id": 21,
+      "section": "3.3",
+      "label": "sampling floor of sd_d at m*a = 6",
+      "printed": "0.289",
+      "check": "decimals",
+      "command": "floor --ma 9 12 8 6",
+      "key": ["floor", "6"]
+    },
+    {
+      "id": 22,
+      "section": "3.3",
+      "label": "S0 harm MDE, n = 61 (sd_d 0.177)",
+      "printed": "0.0757",
+      "check": "decimals",
+      "command": "mde --n 61 --sd-diff 0.177 --alpha 0.0125",
+      "key": ["mde"]
+    },
+    {
+      "id": 23,
+      "section": "3.3",
+      "label": "S0 harm MDE, n = 40 (sd_d 0.177)",
+      "printed": "0.0935",
+      "check": "decimals",
+      "command": "mde --n 40 --sd-diff 0.177 --alpha 0.0125",
+      "key": ["mde"]
+    },
+    {
+      "id": 24,
+      "section": "3.3",
+      "label": "S2 harm MDE, n = 61 (sd_d 0.196)",
+      "printed": "0.0838",
+      "check": "decimals",
+      "command": "mde --n 61 --sd-diff 0.196 --alpha 0.0125",
+      "key": ["mde"]
+    },
+    {
+      "id": 25,
+      "section": "3.3",
+      "label": "S2 harm MDE, n = 40 (sd_d 0.196)",
+      "printed": "0.1035",
+      "check": "decimals",
+      "command": "mde --n 40 --sd-diff 0.196 --alpha 0.0125",
+      "key": ["mde"]
+    },
+    {
+      "id": 26,
+      "section": "3.3",
+      "label": "S3 harm MDE, n = 61 (sd_d 0.229)",
+      "printed": "0.0979",
+      "check": "decimals",
+      "command": "mde --n 61 --sd-diff 0.229 --alpha 0.0125",
+      "key": ["mde"]
+    },
+    {
+      "id": 27,
+      "section": "3.3",
+      "label": "S3 harm MDE, n = 40 (sd_d 0.229)",
+      "printed": "0.1209",
+      "check": "decimals",
+      "command": "mde --n 40 --sd-diff 0.229 --alpha 0.0125",
+      "key": ["mde"]
+    },
+    {
+      "id": 28,
+      "section": "3.3",
+      "label": "S0 NI power, n = 61 (sd_d 0.253)",
+      "printed": "0.801",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --alpha 0.0125",
+      "key": ["power", "sd=0.253,n=61,theta=0"]
+    },
+    {
+      "id": 29,
+      "section": "3.3",
+      "label": "S0 NI power, n = 40 (sd_d 0.253)",
+      "printed": "0.602",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --alpha 0.0125",
+      "key": ["power", "sd=0.253,n=40,theta=0"]
+    },
+    {
+      "id": 30,
+      "section": "3.3",
+      "label": "S2 NI power, n = 61 (sd_d 0.279)",
+      "printed": "0.712",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --alpha 0.0125",
+      "key": ["power", "sd=0.279,n=61,theta=0"]
+    },
+    {
+      "id": 31,
+      "section": "3.3",
+      "label": "S2 NI power, n = 40 (sd_d 0.279)",
+      "printed": "0.510",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --alpha 0.0125",
+      "key": ["power", "sd=0.279,n=40,theta=0"]
+    },
+    {
+      "id": 32,
+      "section": "3.3",
+      "label": "S3 NI power, n = 61 (sd_d 0.325)",
+      "printed": "0.564",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --alpha 0.0125",
+      "key": ["power", "sd=0.325,n=61,theta=0"]
+    },
+    {
+      "id": 33,
+      "section": "3.3",
+      "label": "S3 NI power, n = 40 (sd_d 0.325)",
+      "printed": "0.384",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --alpha 0.0125",
+      "key": ["power", "sd=0.325,n=40,theta=0"]
+    },
+    {
+      "id": 34,
+      "section": "3.3",
+      "label": "S0 harm power at Delta = 0.10, n = 61 (sd_d 0.177)",
+      "printed": "0.972",
+      "check": "decimals",
+      "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.10 --alpha 0.0125",
+      "key": ["power", "sd=0.177,n=61,effect=0.1"]
+    },
+    {
+      "id": 35,
+      "section": "3.3",
+      "label": "S0 harm power at Delta = 0.10, n = 40 (sd_d 0.177)",
+      "printed": "0.859",
+      "check": "decimals",
+      "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.10 --alpha 0.0125",
+      "key": ["power", "sd=0.177,n=40,effect=0.1"]
+    },
+    {
+      "id": 36,
+      "section": "3.3",
+      "label": "S2 harm power at Delta = 0.10, n = 61 (sd_d 0.196)",
+      "printed": "0.9315",
+      "check": "decimals",
+      "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.10 --alpha 0.0125",
+      "key": ["power", "sd=0.196,n=61,effect=0.1"]
+    },
+    {
+      "id": 37,
+      "section": "3.3",
+      "label": "S2 harm power at Delta = 0.10, n = 40 (sd_d 0.196)",
+      "printed": "0.767",
+      "check": "decimals",
+      "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.10 --alpha 0.0125",
+      "key": ["power", "sd=0.196,n=40,effect=0.1"]
+    },
+    {
+      "id": 38,
+      "section": "3.3",
+      "label": "S3 harm power at Delta = 0.10, n = 61 (sd_d 0.229)",
+      "printed": "0.819",
+      "check": "decimals",
+      "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.10 --alpha 0.0125",
+      "key": ["power", "sd=0.229,n=61,effect=0.1"]
+    },
+    {
+      "id": 39,
+      "section": "3.3",
+      "label": "S3 harm power at Delta = 0.10, n = 40 (sd_d 0.229)",
+      "printed": "0.604",
+      "check": "decimals",
+      "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.10 --alpha 0.0125",
+      "key": ["power", "sd=0.229,n=40,effect=0.1"]
+    },
+    {
+      "id": 40,
+      "section": "3.3",
+      "label": "S0 joint IUT power (product), n = 61",
+      "printed": "0.779",
+      "check": "decimals",
+      "terms": [
+        {
+          "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --alpha 0.0125",
+          "key": ["power", "sd=0.253,n=61,theta=0"]
+        },
+        {
+          "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.10 --alpha 0.0125",
+          "key": ["power", "sd=0.177,n=61,effect=0.1"]
+        }
+      ],
+      "combine": "product"
+    },
+    {
+      "id": 41,
+      "section": "3.3",
+      "label": "S0 joint IUT power (product), n = 40",
+      "printed": "0.517",
+      "check": "decimals",
+      "terms": [
+        {
+          "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --alpha 0.0125",
+          "key": ["power", "sd=0.253,n=40,theta=0"]
+        },
+        {
+          "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.10 --alpha 0.0125",
+          "key": ["power", "sd=0.177,n=40,effect=0.1"]
+        }
+      ],
+      "combine": "product"
+    },
+    {
+      "id": 42,
+      "section": "3.3",
+      "label": "S2 joint IUT power (product), n = 61",
+      "printed": "0.663",
+      "check": "decimals",
+      "terms": [
+        {
+          "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --alpha 0.0125",
+          "key": ["power", "sd=0.279,n=61,theta=0"]
+        },
+        {
+          "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.10 --alpha 0.0125",
+          "key": ["power", "sd=0.196,n=61,effect=0.1"]
+        }
+      ],
+      "combine": "product"
+    },
+    {
+      "id": 43,
+      "section": "3.3",
+      "label": "S2 joint IUT power (product), n = 40",
+      "printed": "0.391",
+      "check": "decimals",
+      "terms": [
+        {
+          "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --alpha 0.0125",
+          "key": ["power", "sd=0.279,n=40,theta=0"]
+        },
+        {
+          "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.10 --alpha 0.0125",
+          "key": ["power", "sd=0.196,n=40,effect=0.1"]
+        }
+      ],
+      "combine": "product"
+    },
+    {
+      "id": 44,
+      "section": "3.3",
+      "label": "S3 joint IUT power (product), n = 61",
+      "printed": "0.462",
+      "check": "decimals",
+      "terms": [
+        {
+          "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --alpha 0.0125",
+          "key": ["power", "sd=0.325,n=61,theta=0"]
+        },
+        {
+          "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.10 --alpha 0.0125",
+          "key": ["power", "sd=0.229,n=61,effect=0.1"]
+        }
+      ],
+      "combine": "product"
+    },
+    {
+      "id": 45,
+      "section": "3.3",
+      "label": "S3 joint IUT power (product), n = 40",
+      "printed": "0.232",
+      "check": "decimals",
+      "terms": [
+        {
+          "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --alpha 0.0125",
+          "key": ["power", "sd=0.325,n=40,theta=0"]
+        },
+        {
+          "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.10 --alpha 0.0125",
+          "key": ["power", "sd=0.229,n=40,effect=0.1"]
+        }
+      ],
+      "combine": "product"
+    },
+    {
+      "id": 46,
+      "section": "3.3",
+      "label": "reference NI power, sd_d 0.25, n = 61",
+      "printed": "0.811",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.25 0.30 --delta 0.10 --alpha 0.0125",
+      "key": ["power", "sd=0.25,n=61,theta=0"]
+    },
+    {
+      "id": 47,
+      "section": "3.3",
+      "label": "reference NI power, sd_d 0.25, n = 40",
+      "printed": "0.613",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.25 0.30 --delta 0.10 --alpha 0.0125",
+      "key": ["power", "sd=0.25,n=40,theta=0"]
+    },
+    {
+      "id": 48,
+      "section": "3.3",
+      "label": "reference NI power, sd_d 0.30, n = 61",
+      "printed": "0.641",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.25 0.30 --delta 0.10 --alpha 0.0125",
+      "key": ["power", "sd=0.3,n=61,theta=0"]
+    },
+    {
+      "id": 49,
+      "section": "3.3",
+      "label": "reference NI power, sd_d 0.30, n = 40",
+      "printed": "0.447",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.25 0.30 --delta 0.10 --alpha 0.0125",
+      "key": ["power", "sd=0.3,n=40,theta=0"]
+    },
+    {
+      "id": 50,
+      "section": "3.3",
+      "label": "NI n for power 0.8 at delta = 0.10, sd_d 0.25",
+      "printed": "60",
+      "check": "exact",
+      "command": "mde --target 0.10 --sd-diff 0.25 --alpha 0.025",
+      "key": ["n_required"]
+    },
+    {
+      "id": 51,
+      "section": "3.3",
+      "label": "NI n for power 0.8 at delta = 0.10, sd_d 0.30",
+      "printed": "86",
+      "check": "exact",
+      "command": "mde --target 0.10 --sd-diff 0.30 --alpha 0.025",
+      "key": ["n_required"]
+    },
+    {
+      "id": 52,
+      "section": "3.3",
+      "label": "NI n for power 0.8 at delta = 0.10, sd_d 0.253",
+      "printed": "61",
+      "check": "exact",
+      "command": "mde --target 0.10 --sd-diff 0.253 --alpha 0.025",
+      "key": ["n_required"]
+    },
+    {
+      "id": 53,
+      "section": "3.3",
+      "label": "NI n for power 0.8 at delta = 0.10, sd_d 0.279",
+      "printed": "74",
+      "check": "exact",
+      "command": "mde --target 0.10 --sd-diff 0.279 --alpha 0.025",
+      "key": ["n_required"]
+    },
+    {
+      "id": 54,
+      "section": "3.3",
+      "label": "NI n for power 0.8 at delta = 0.05, sd_d 0.253 (margin rationale)",
+      "printed": "244",
+      "check": "exact",
+      "command": "mde --target 0.05 --sd-diff 0.253 --alpha 0.025",
+      "key": ["n_required"]
+    },
+    {
+      "id": 55,
+      "section": "3.3",
+      "label": "S0 NI power at theta = -0.03, n = 61",
+      "printed": "0.468",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --theta -0.03 -0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.253,n=61,theta=-0.03"]
+    },
+    {
+      "id": 56,
+      "section": "3.3",
+      "label": "S0 NI power at theta = -0.03, n = 40",
+      "printed": "0.312",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --theta -0.03 -0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.253,n=40,theta=-0.03"]
+    },
+    {
+      "id": 57,
+      "section": "3.3",
+      "label": "S2 NI power at theta = -0.03, n = 61",
+      "printed": "0.389",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --theta -0.03 -0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.279,n=61,theta=-0.03"]
+    },
+    {
+      "id": 58,
+      "section": "3.3",
+      "label": "S2 NI power at theta = -0.03, n = 40",
+      "printed": "0.256",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --theta -0.03 -0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.279,n=40,theta=-0.03"]
+    },
+    {
+      "id": 59,
+      "section": "3.3",
+      "label": "S3 NI power at theta = -0.03, n = 61",
+      "printed": "0.288",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --theta -0.03 -0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.325,n=61,theta=-0.03"]
+    },
+    {
+      "id": 60,
+      "section": "3.3",
+      "label": "S3 NI power at theta = -0.03, n = 40",
+      "printed": "0.190",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --theta -0.03 -0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.325,n=40,theta=-0.03"]
+    },
+    {
+      "id": 61,
+      "section": "3.3",
+      "label": "S0 NI power at theta = -0.05, n = 61",
+      "printed": "0.243",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --theta -0.03 -0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.253,n=61,theta=-0.05"]
+    },
+    {
+      "id": 62,
+      "section": "3.3",
+      "label": "S0 NI power at theta = -0.05, n = 40",
+      "printed": "0.161",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --theta -0.03 -0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.253,n=40,theta=-0.05"]
+    },
+    {
+      "id": 63,
+      "section": "3.3",
+      "label": "S2 NI power at theta = -0.05, n = 61",
+      "printed": "0.200",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --theta -0.03 -0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.279,n=61,theta=-0.05"]
+    },
+    {
+      "id": 64,
+      "section": "3.3",
+      "label": "S2 NI power at theta = -0.05, n = 40",
+      "printed": "0.134",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --theta -0.03 -0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.279,n=40,theta=-0.05"]
+    },
+    {
+      "id": 65,
+      "section": "3.3",
+      "label": "S3 NI power at theta = -0.05, n = 61",
+      "printed": "0.149",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --theta -0.03 -0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.325,n=61,theta=-0.05"]
+    },
+    {
+      "id": 66,
+      "section": "3.3",
+      "label": "S3 NI power at theta = -0.05, n = 40",
+      "printed": "0.102",
+      "check": "decimals",
+      "command": "ni --n 61 40 --sd-diff 0.253 0.279 0.325 --delta 0.10 --theta -0.03 -0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.325,n=40,theta=-0.05"]
+    },
+    {
+      "id": 67,
+      "section": "3.3",
+      "label": "S0 harm power at Delta = 0.05, n = 61",
+      "printed": "0.385",
+      "check": "decimals",
+      "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.177,n=61,effect=0.05"]
+    },
+    {
+      "id": 68,
+      "section": "3.3",
+      "label": "S0 harm power at Delta = 0.05, n = 40",
+      "printed": "0.239",
+      "check": "decimals",
+      "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.177,n=40,effect=0.05"]
+    },
+    {
+      "id": 69,
+      "section": "3.3",
+      "label": "S2 harm power at Delta = 0.05, n = 61",
+      "printed": "0.307",
+      "check": "decimals",
+      "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.196,n=61,effect=0.05"]
+    },
+    {
+      "id": 70,
+      "section": "3.3",
+      "label": "S2 harm power at Delta = 0.05, n = 40",
+      "printed": "0.188",
+      "check": "decimals",
+      "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.196,n=40,effect=0.05"]
+    },
+    {
+      "id": 71,
+      "section": "3.3",
+      "label": "S3 harm power at Delta = 0.05, n = 61",
+      "printed": "0.214",
+      "check": "decimals",
+      "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.229,n=61,effect=0.05"]
+    },
+    {
+      "id": 72,
+      "section": "3.3",
+      "label": "S3 harm power at Delta = 0.05, n = 40",
+      "printed": "0.132",
+      "check": "decimals",
+      "command": "harm --n 61 40 --sd-diff 0.177 0.196 0.229 --effect 0.05 --alpha 0.0125",
+      "key": ["power", "sd=0.229,n=40,effect=0.05"]
+    }
+  ]
+}

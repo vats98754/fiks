@@ -1,0 +1,40 @@
+{
+  "drifts": [
+    {
+      "id": "H-a",
+      "requestChanging": false,
+      "fiksTestEmitted": true,
+      "fiksFGate": "failed"
+    },
+    {
+      "id": "H-b",
+      "requestChanging": false,
+      "fiksTestEmitted": false,
+      "fiksFGate": "no-test"
+    },
+    {
+      "id": "H-c",
+      "requestChanging": false,
+      "fiksTestEmitted": true,
+      "fiksFGate": "passed"
+    },
+    {
+      "id": "H-d",
+      "requestChanging": true,
+      "fiksTestEmitted": true,
+      "fiksFGate": "passed"
+    },
+    {
+      "id": "H-e",
+      "requestChanging": true,
+      "fiksTestEmitted": true,
+      "fiksFGate": "passed"
+    },
+    {
+      "id": "H-f",
+      "requestChanging": false,
+      "fiksTestEmitted": true,
+      "fiksFGate": "passed"
+    }
+  ]
+}

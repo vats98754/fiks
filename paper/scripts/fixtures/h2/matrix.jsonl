@@ -1,0 +1,268 @@
+{"accepted": true, "correct": true, "drift": "H-a", "patchId": "H-a/c1", "source": "refA", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-a", "patchId": "H-a/c2", "source": "refB", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-a", "patchId": "H-a/c3", "source": "sonnet-alt", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-a", "patchId": "H-a/c4", "source": "P4", "testSet": "fiks"}
+{"accepted": true, "correct": false, "drift": "H-a", "patchId": "H-a/i1", "source": "P1", "testSet": "fiks"}
+{"accepted": true, "correct": false, "drift": "H-a", "patchId": "H-a/i2", "source": "P2", "testSet": "fiks"}
+{"accepted": false, "correct": false, "drift": "H-a", "patchId": "H-a/i3", "source": "haiku-wrong", "testSet": "fiks"}
+{"accepted": false, "correct": false, "drift": "H-a", "patchId": "H-a/i4", "source": "P8", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-a", "patchId": "H-a/c1", "source": "refA", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-a", "patchId": "H-a/c2", "source": "refB", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-a", "patchId": "H-a/c3", "source": "sonnet-alt", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-a", "patchId": "H-a/c4", "source": "P4", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-a", "patchId": "H-a/i1", "source": "P1", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-a", "patchId": "H-a/i2", "source": "P2", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-a", "patchId": "H-a/i3", "source": "haiku-wrong", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-a", "patchId": "H-a/i4", "source": "P8", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-a", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-a/c1", "source": "refA", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-a", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-a/c2", "source": "refB", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-a", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-a/c3", "source": "sonnet-alt", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": true, "drift": "H-a", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-a/c4", "source": "P4", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-a", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-a/i1", "source": "P1", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-a", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-a/i2", "source": "P2", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-a", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-a/i3", "source": "haiku-wrong", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": false, "drift": "H-a", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-a/i4", "source": "P8", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/c1", "source": "refA", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/c2", "source": "refB", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/c3", "source": "sonnet-alt", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/c4", "source": "P4", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/i1", "source": "P1", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/i2", "source": "P2", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/i3", "source": "haiku-wrong", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": false, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/i4", "source": "P8", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/c1", "source": "refA", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/c2", "source": "refB", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/c3", "source": "sonnet-alt", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/c4", "source": "P4", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/i1", "source": "P1", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/i2", "source": "P2", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/i3", "source": "haiku-wrong", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/i4", "source": "P8", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/c1", "source": "refA", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/c2", "source": "refB", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/c3", "source": "sonnet-alt", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/c4", "source": "P4", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/i1", "source": "P1", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/i2", "source": "P2", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/i3", "source": "haiku-wrong", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-a", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-a/i4", "source": "P8", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-b", "patchId": "H-b/c1", "source": "refA", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-b", "patchId": "H-b/c2", "source": "refB", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-b", "patchId": "H-b/c3", "source": "sonnet-alt", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-b", "patchId": "H-b/c4", "source": "P4", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-b", "patchId": "H-b/i1", "source": "P1", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-b", "patchId": "H-b/i2", "source": "P2", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-b", "patchId": "H-b/i3", "source": "haiku-wrong", "testSet": "empty"}
+{"accepted": false, "correct": false, "drift": "H-b", "patchId": "H-b/i4", "source": "P8", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-b", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-b/c1", "source": "refA", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-b", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-b/c2", "source": "refB", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-b", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-b/c3", "source": "sonnet-alt", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-b", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-b/c4", "source": "P4", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-b", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-b/i1", "source": "P1", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-b", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-b/i2", "source": "P2", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": false, "drift": "H-b", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-b/i3", "source": "haiku-wrong", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": false, "drift": "H-b", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-b/i4", "source": "P8", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/c1", "source": "refA", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/c2", "source": "refB", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/c3", "source": "sonnet-alt", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/c4", "source": "P4", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/i1", "source": "P1", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/i2", "source": "P2", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/i3", "source": "haiku-wrong", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": false, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/i4", "source": "P8", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/c1", "source": "refA", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/c2", "source": "refB", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/c3", "source": "sonnet-alt", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/c4", "source": "P4", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/i1", "source": "P1", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/i2", "source": "P2", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/i3", "source": "haiku-wrong", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/i4", "source": "P8", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/c1", "source": "refA", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/c2", "source": "refB", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/c3", "source": "sonnet-alt", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/c4", "source": "P4", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/i1", "source": "P1", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/i2", "source": "P2", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/i3", "source": "haiku-wrong", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": false, "correct": false, "drift": "H-b", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-b/i4", "source": "P8", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-c", "patchId": "H-c/c1", "source": "refA", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-c", "patchId": "H-c/c2", "source": "refB", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-c", "patchId": "H-c/c3", "source": "sonnet-alt", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-c", "patchId": "H-c/c4", "source": "P4", "testSet": "fiks"}
+{"accepted": false, "correct": false, "drift": "H-c", "patchId": "H-c/i1", "source": "P1", "testSet": "fiks"}
+{"accepted": false, "correct": false, "drift": "H-c", "patchId": "H-c/i2", "source": "P2", "testSet": "fiks"}
+{"accepted": false, "correct": false, "drift": "H-c", "patchId": "H-c/i3", "source": "haiku-wrong", "testSet": "fiks"}
+{"accepted": false, "correct": false, "drift": "H-c", "patchId": "H-c/i4", "source": "P8", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-c", "patchId": "H-c/c1", "source": "refA", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-c", "patchId": "H-c/c2", "source": "refB", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-c", "patchId": "H-c/c3", "source": "sonnet-alt", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-c", "patchId": "H-c/c4", "source": "P4", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-c", "patchId": "H-c/i1", "source": "P1", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-c", "patchId": "H-c/i2", "source": "P2", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-c", "patchId": "H-c/i3", "source": "haiku-wrong", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-c", "patchId": "H-c/i4", "source": "P8", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-c", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-c/c1", "source": "refA", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-c", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-c/c2", "source": "refB", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-c", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-c/c3", "source": "sonnet-alt", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-c", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-c/c4", "source": "P4", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-c", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-c/i1", "source": "P1", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-c", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-c/i2", "source": "P2", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": false, "drift": "H-c", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-c/i3", "source": "haiku-wrong", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": false, "drift": "H-c", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-c/i4", "source": "P8", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/c1", "source": "refA", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/c2", "source": "refB", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/c3", "source": "sonnet-alt", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": true, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/c4", "source": "P4", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/i1", "source": "P1", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": false, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/i2", "source": "P2", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": false, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/i3", "source": "haiku-wrong", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": false, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/i4", "source": "P8", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/c1", "source": "refA", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/c2", "source": "refB", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/c3", "source": "sonnet-alt", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/c4", "source": "P4", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/i1", "source": "P1", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/i2", "source": "P2", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/i3", "source": "haiku-wrong", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": false, "correct": false, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/i4", "source": "P8", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/c1", "source": "refA", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/c2", "source": "refB", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/c3", "source": "sonnet-alt", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/c4", "source": "P4", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/i1", "source": "P1", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/i2", "source": "P2", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/i3", "source": "haiku-wrong", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-c", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-c/i4", "source": "P8", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-d", "patchId": "H-d/c1", "source": "refA", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-d", "patchId": "H-d/c2", "source": "refB", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-d", "patchId": "H-d/c3", "source": "sonnet-alt", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-d", "patchId": "H-d/c4", "source": "P4", "testSet": "fiks"}
+{"accepted": true, "correct": false, "drift": "H-d", "patchId": "H-d/i1", "source": "P1", "testSet": "fiks"}
+{"accepted": false, "correct": false, "drift": "H-d", "patchId": "H-d/i2", "source": "P2", "testSet": "fiks"}
+{"accepted": false, "correct": false, "drift": "H-d", "patchId": "H-d/i3", "source": "haiku-wrong", "testSet": "fiks"}
+{"accepted": false, "correct": false, "drift": "H-d", "patchId": "H-d/i4", "source": "P8", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-d", "patchId": "H-d/c1", "source": "refA", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-d", "patchId": "H-d/c2", "source": "refB", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-d", "patchId": "H-d/c3", "source": "sonnet-alt", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-d", "patchId": "H-d/c4", "source": "P4", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-d", "patchId": "H-d/i1", "source": "P1", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-d", "patchId": "H-d/i2", "source": "P2", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-d", "patchId": "H-d/i3", "source": "haiku-wrong", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-d", "patchId": "H-d/i4", "source": "P8", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-d", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-d/c1", "source": "refA", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-d", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-d/c2", "source": "refB", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-d", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-d/c3", "source": "sonnet-alt", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-d", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-d/c4", "source": "P4", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-d", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-d/i1", "source": "P1", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-d", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-d/i2", "source": "P2", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-d", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-d/i3", "source": "haiku-wrong", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": false, "drift": "H-d", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-d/i4", "source": "P8", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/c1", "source": "refA", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/c2", "source": "refB", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/c3", "source": "sonnet-alt", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/c4", "source": "P4", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/i1", "source": "P1", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/i2", "source": "P2", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": false, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/i3", "source": "haiku-wrong", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": false, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/i4", "source": "P8", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/c1", "source": "refA", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/c2", "source": "refB", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/c3", "source": "sonnet-alt", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/c4", "source": "P4", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/i1", "source": "P1", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/i2", "source": "P2", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/i3", "source": "haiku-wrong", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/i4", "source": "P8", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/c1", "source": "refA", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/c2", "source": "refB", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/c3", "source": "sonnet-alt", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/c4", "source": "P4", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/i1", "source": "P1", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/i2", "source": "P2", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/i3", "source": "haiku-wrong", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": false, "correct": false, "drift": "H-d", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-d/i4", "source": "P8", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-e", "patchId": "H-e/c1", "source": "refA", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-e", "patchId": "H-e/c2", "source": "refB", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-e", "patchId": "H-e/c3", "source": "sonnet-alt", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-e", "patchId": "H-e/c4", "source": "P4", "testSet": "fiks"}
+{"accepted": false, "correct": false, "drift": "H-e", "patchId": "H-e/i1", "source": "P1", "testSet": "fiks"}
+{"accepted": false, "correct": false, "drift": "H-e", "patchId": "H-e/i2", "source": "P2", "testSet": "fiks"}
+{"accepted": false, "correct": false, "drift": "H-e", "patchId": "H-e/i3", "source": "haiku-wrong", "testSet": "fiks"}
+{"accepted": false, "correct": false, "drift": "H-e", "patchId": "H-e/i4", "source": "P8", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-e", "patchId": "H-e/c1", "source": "refA", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-e", "patchId": "H-e/c2", "source": "refB", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-e", "patchId": "H-e/c3", "source": "sonnet-alt", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-e", "patchId": "H-e/c4", "source": "P4", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-e", "patchId": "H-e/i1", "source": "P1", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-e", "patchId": "H-e/i2", "source": "P2", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-e", "patchId": "H-e/i3", "source": "haiku-wrong", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-e", "patchId": "H-e/i4", "source": "P8", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-e", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-e/c1", "source": "refA", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-e", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-e/c2", "source": "refB", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-e", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-e/c3", "source": "sonnet-alt", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-e", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-e/c4", "source": "P4", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-e", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-e/i1", "source": "P1", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-e", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-e/i2", "source": "P2", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-e", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-e/i3", "source": "haiku-wrong", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-e", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-e/i4", "source": "P8", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-e", "fOnBase": "pass", "inlineRecording": true, "patchId": "H-e/c1", "source": "refA", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-e", "fOnBase": "pass", "inlineRecording": true, "patchId": "H-e/c2", "source": "refB", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-e", "fOnBase": "pass", "inlineRecording": true, "patchId": "H-e/c3", "source": "sonnet-alt", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-e", "fOnBase": "pass", "inlineRecording": true, "patchId": "H-e/c4", "source": "P4", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-e", "fOnBase": "pass", "inlineRecording": true, "patchId": "H-e/i1", "source": "P1", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-e", "fOnBase": "pass", "inlineRecording": true, "patchId": "H-e/i2", "source": "P2", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-e", "fOnBase": "pass", "inlineRecording": true, "patchId": "H-e/i3", "source": "haiku-wrong", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": false, "drift": "H-e", "fOnBase": "pass", "inlineRecording": true, "patchId": "H-e/i4", "source": "P8", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-e", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-e/c1", "source": "refA", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-e", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-e/c2", "source": "refB", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-e", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-e/c3", "source": "sonnet-alt", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-e", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-e/c4", "source": "P4", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-e", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-e/i1", "source": "P1", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-e", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-e/i2", "source": "P2", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-e", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-e/i3", "source": "haiku-wrong", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-e", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-e/i4", "source": "P8", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-e", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-e/c1", "source": "refA", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-e", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-e/c2", "source": "refB", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-e", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-e/c3", "source": "sonnet-alt", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-e", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-e/c4", "source": "P4", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-e", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-e/i1", "source": "P1", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-e", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-e/i2", "source": "P2", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-e", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-e/i3", "source": "haiku-wrong", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-e", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-e/i4", "source": "P8", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-f", "patchId": "H-f/c1", "source": "refA", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-f", "patchId": "H-f/c2", "source": "refB", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-f", "patchId": "H-f/c3", "source": "sonnet-alt", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-f", "patchId": "H-f/c4", "source": "P4", "testSet": "fiks"}
+{"accepted": false, "correct": false, "drift": "H-f", "patchId": "H-f/i1", "source": "P1", "testSet": "fiks"}
+{"accepted": false, "correct": false, "drift": "H-f", "patchId": "H-f/i2", "source": "P2", "testSet": "fiks"}
+{"accepted": true, "correct": true, "drift": "H-f", "patchId": "H-f/c1", "source": "refA", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-f", "patchId": "H-f/c2", "source": "refB", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-f", "patchId": "H-f/c3", "source": "sonnet-alt", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-f", "patchId": "H-f/c4", "source": "P4", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-f", "patchId": "H-f/i1", "source": "P1", "testSet": "empty"}
+{"accepted": true, "correct": false, "drift": "H-f", "patchId": "H-f/i2", "source": "P2", "testSet": "empty"}
+{"accepted": true, "correct": true, "drift": "H-f", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-f/c1", "source": "refA", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-f", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-f/c2", "source": "refB", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-f", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-f/c3", "source": "sonnet-alt", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-f", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-f/c4", "source": "P4", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-f", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-f/i1", "source": "P1", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": false, "drift": "H-f", "fOnBase": "fail", "inlineRecording": false, "patchId": "H-f/i2", "source": "P2", "testId": "A", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/c1", "source": "refA", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/c2", "source": "refB", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/c3", "source": "sonnet-alt", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/c4", "source": "P4", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": false, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/i1", "source": "P1", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": false, "correct": false, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/i2", "source": "P2", "testId": "B", "testSet": "agent", "variant": "final"}
+{"accepted": true, "correct": true, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/c1", "source": "refA", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/c2", "source": "refB", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/c3", "source": "sonnet-alt", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/c4", "source": "P4", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/i1", "source": "P1", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/i2", "source": "P2", "testId": "A", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/c1", "source": "refA", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/c2", "source": "refB", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/c3", "source": "sonnet-alt", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": true, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/c4", "source": "P4", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/i1", "source": "P1", "testId": "B", "testSet": "agent", "variant": "first"}
+{"accepted": true, "correct": false, "drift": "H-f", "fOnBase": "pass", "inlineRecording": false, "patchId": "H-f/i2", "source": "P2", "testId": "B", "testSet": "agent", "variant": "first"}

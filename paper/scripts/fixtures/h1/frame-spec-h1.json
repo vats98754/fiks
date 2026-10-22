@@ -1,0 +1,48 @@
+{
+  "domain": ["shop"],
+  "nF": 7,
+  "eligibleInputs": [
+    "in-search-1",
+    "in-get-a",
+    "in-get-b",
+    "in-get-c",
+    "in-get-d",
+    "in-order-a",
+    "in-grid-q1"
+  ],
+  "entities": [
+    { "id": "ext-a", "domain": "shop", "authorBatch": "shop-b001", "eligible": true },
+    { "id": "ext-b", "domain": "shop", "authorBatch": "shop-b001", "eligible": true },
+    { "id": "ext-c", "domain": "shop", "authorBatch": "shop-b002", "eligible": true },
+    { "id": "ext-d", "domain": "shop", "authorBatch": "shop-b002", "eligible": true },
+    { "id": "ext-e", "domain": "shop", "authorBatch": "shop-b002", "eligible": false }
+  ],
+  "NE": 4,
+  "attribution": {
+    "in-search-1": { "items[0].price": "ext-a", "items[1].price": "ext-b", "items[2].price": "ext-c" },
+    "in-get-a": { "price": "ext-a" },
+    "in-get-b": { "price": "ext-b" },
+    "in-get-c": { "price": "ext-c" },
+    "in-get-d": { "price": "ext-d" },
+    "in-order-a": { "total": "ext-a" },
+    "in-grid-q1": { "items": "query:q1" }
+  },
+  "families": {
+    "shop.search_products/items.price.range": "price",
+    "shop.get_product/price.range": "price",
+    "shop.create_order/total.range": "total",
+    "shop.search_products/items.pageComplete": "items"
+  },
+  "cells": [
+    { "contract": "shop.search_products", "property": "items.price.range", "class": "product", "nInputs": 1 },
+    { "contract": "shop.get_product", "property": "price.range", "class": "product", "nInputs": 4 },
+    { "contract": "shop.create_order", "property": "total.range", "class": "product", "nInputs": 1 },
+    { "contract": "shop.search_products", "property": "items.pageComplete", "class": "query", "nInputs": 1 }
+  ],
+  "K": 4,
+  "entailedProps": ["shop.search_products/total.equalsUpstream"],
+  "neRule": { "topUpBatches": 30, "underpowered": true, "m": 3 },
+  "crit": -1,
+  "power": { "pi01": 0, "pi005": 0 },
+  "hash": "synthetic-fixture-h1"
+}

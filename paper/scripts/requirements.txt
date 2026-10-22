@@ -1,0 +1,25 @@
+# Analysis venv for paper/scripts (PLAN 9.1; stream AN). Python 3.12.
+#   python3.12 -m venv paper/.venv && paper/.venv/bin/pip install -r paper/scripts/requirements.txt
+# Every pin (direct and transitive) is an exact version whose first upload to PyPI is on or
+# before 2026-10-07, i.e. >= 14 days before the install date 2026-10-21 (upload dates checked
+# against https://pypi.org/pypi/<name>/json).
+# direct
+numpy==2.5.3
+scipy==1.18.1
+statsmodels==0.15.0
+pytest==9.1.1
+# transitive (statsmodels, pandas, pytest)
+pandas==3.0.6
+patsy==1.0.3
+formulaic==1.2.2
+interface_meta==2.0.1
+narwhals==2.26.0
+wrapt==2.5.0
+typing_extensions==4.16.0
+packaging==26.3
+python-dateutil==2.9.0.post0
+six==1.17.0
+tzdata==2026.5
+iniconfig==2.3.1
+pluggy==1.6.0
+Pygments==2.21.0

@@ -1,0 +1,1 @@
+{"callId":"in-search-1","domain":"shop","drift":null,"stratum":"S-grid","entityClass":"product","originUnit":"ext-a","detector":"contracts","verdict":"violated","property":"shop.search_products/items.price.range","at":null,"elementIndex":null,"confidence":null,"tokens":null,"costUsd":null}
