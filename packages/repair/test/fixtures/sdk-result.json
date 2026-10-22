@@ -1,0 +1,23 @@
+{
+  "type": "result",
+  "subtype": "success",
+  "duration_ms": 84213,
+  "duration_api_ms": 61002,
+  "is_error": false,
+  "num_turns": 14,
+  "result": "Subject: read unit_amount when price is missing\nThe vendor renamed price to unit_amount; read either field.",
+  "stop_reason": "end_turn",
+  "total_cost_usd": 0.8731,
+  "usage": {
+    "input_tokens": 1834,
+    "cache_creation_input_tokens": 21544,
+    "cache_read_input_tokens": 402117,
+    "output_tokens": 6120,
+    "server_tool_use": { "web_search_requests": 0, "web_fetch_requests": 0 },
+    "service_tier": "standard"
+  },
+  "modelUsage": {},
+  "permission_denials": [],
+  "uuid": "6f1d1b8e-36f4-4b8f-9f55-0d5f0b2b9a11",
+  "session_id": "0b7f3c2a-8d1e-4c55-a0f4-1c2e3d4f5a6b"
+}

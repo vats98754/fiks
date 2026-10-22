@@ -1,7 +1,9 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { ToolContract } from '@fiks/contracts';
+import type { Recording, ToolContract } from '@fiks/contracts';
+import type { TraceFormat } from '@fiks/interfaces';
 import type { GateResult, ReproSpec, Trace } from '@fiks/repro';
+import { renderStrictTrace, sanitizeGateOutput, strictTrace } from './strict.ts';
 
 export interface PromptInput {
   trace: Trace;
@@ -11,6 +13,8 @@ export interface PromptInput {
   worktree: string;
   /** Output of a failed previous attempt, if any. */
   previousFailure?: string;
+  /** `raw` (default, the product prompt) or `strict` (E6: typed trace, no vendor free text). */
+  traceFormat?: TraceFormat;
 }
 
 const clip = (s: string, n = 1500) =>
@@ -32,6 +36,7 @@ function baseline(worktree: string, trace: Trace): string | undefined {
 }
 
 export function buildPrompt(p: PromptInput): string {
+  if (p.traceFormat === 'strict') return buildStrictPrompt(p);
   const t = p.trace;
   const target = new Set(p.spec.propertyIds);
   const violations = t.violated.filter((v) => target.has(v.propertyId));
@@ -77,6 +82,62 @@ ${JSON.stringify(p.contract, null, 2)}
 - Check your work with: pnpm typecheck, pnpm lint, pnpm test. Only these pnpm commands are allowed.
 - Keep the change small and in the style of the surrounding code.
 ${p.previousFailure ? `\n## Your previous attempt failed the gate\n${clip(p.previousFailure, 2000)}\nFix this and try again.\n` : ''}
+When you are done, reply in exactly this form:
+Subject: <an imperative commit subject, at most 60 characters, e.g. "read unit_amount when price is missing">
+<one short paragraph: the root cause and the fix>`;
+}
+
+/**
+ * The strict-format prompt (P3, E6 only): the same task and rules, but the trace is the typed
+ * strict view (field paths, typed values, a typed diff against the v1 recording of the same call)
+ * and every piece of gate output is sanitized. Fixtures, traces and alerts are not readable.
+ */
+export function buildStrictPrompt(p: PromptInput): string {
+  const t = p.trace;
+  const basePath = baseline(p.worktree, t);
+  let base: Recording | undefined;
+  try {
+    base = basePath ? (JSON.parse(readFileSync(join(p.worktree, basePath), 'utf8')) as Recording) : undefined;
+  } catch {}
+  const typed = strictTrace({ ...t, target: p.spec.propertyIds }, { baseline: base });
+  const st = renderStrictTrace(typed);
+  const failure = sanitizeGateOutput(p.gateF.evidence.failed[0]?.message ?? '', { traceFormat: 'strict' });
+  const previous = p.previousFailure
+    ? sanitizeGateOutput(p.previousFailure, { traceFormat: 'strict', maxBytes: 2000 })
+    : undefined;
+  return `You are fixing a bug in shop-mcp, an MCP server that wraps a vendor HTTP API. The vendor changed its behavior without changing its published spec, and shop-mcp now returns wrong data to agents without any error.
+
+## What broke (captured from real traffic)
+Tool call: ${typed.tool} (arguments in the typed trace below)
+Violated contract properties (target first):
+${p.spec.propertyIds.map((id) => `- ${id}`).join('\n')}
+
+## Typed trace (strict format)
+Vendor text is not shown. Field paths name JSON locations; values are typed: numbers, booleans and machine tokens (dates, ids, short identifiers) keep their value, other strings show only {fmt: "text", len, h} where h is a hash prefix (equal h = equal string). "diff" compares this call with the recording of the same call against the previous vendor version (2026-01-01).
+${st}
+
+## The failing reproduction test
+${p.spec.testPath} replays that exact call against the recording and fails (output sanitized):
+${clip(failure, 1200)}
+
+## The contract for ${typed.tool}
+${JSON.stringify(p.contract, null, 2)}
+
+## Useful files
+- src/tools/*.ts: one file per tool. src/vendor.ts: the HTTP client.
+- vendor/openapi.json: the vendor's published spec (it did not change).
+- test/fiks/: the replay harness and contract checks.
+- Recorded fixtures, stored traces and alerts are not readable in this run; the typed trace above is your view of them.
+- Responses carry a vendor-api-version header (2026-01-01 before the change, 2026-10-01 after).
+
+## Rules
+- Change only files under src/. Do not edit tests, fixtures, traces, vendored files, CI, package.json or the lockfile.
+- Fix the root cause so the tool returns correct data. Do not return an error instead of data, do not invent or cache values, and do not hide the problem.
+- Keep the old vendor version working: the v1 fixtures must keep producing exactly the same output.
+- If your fix changes which HTTP requests the tool sends (a new header, extra pages), that is fine: the repro test will then report UNMATCHED_REQUEST because the recording lacks those requests, and fiks will re-record the call against the live vendor after you finish. Make sure everything else passes.
+- Check your work with: pnpm typecheck, pnpm lint, pnpm test. Only these pnpm commands are allowed; their output is sanitized.
+- Keep the change small and in the style of the surrounding code.
+${previous ? `\n## Your previous attempt failed the gate\n${previous}\nFix this and try again.\n` : ''}
 When you are done, reply in exactly this form:
 Subject: <an imperative commit subject, at most 60 characters, e.g. "read unit_amount when price is missing">
 <one short paragraph: the root cause and the fix>`;

@@ -1,3 +1,5 @@
+import { execFileSync } from 'node:child_process';
+import type { RunKey } from '@fiks/interfaces';
 import type { GateResult, ReproSpec, Trace } from '@fiks/repro';
 
 export interface PrInput {
@@ -12,6 +14,8 @@ export interface PrInput {
   rerecorded: string[];
   repoUrl: string;
   branch: string;
+  /** sha256 per artifact (trace, repro test, diff, ...), listed under Provenance. */
+  hashes?: Record<string, string>;
 }
 
 /**
@@ -86,9 +90,145 @@ ${p.rerecorded.length ? `\nThe fix changes which upstream requests are sent, so 
 ## Gates
 ${p.gates.map((g) => `- ${g.ok ? '✅' : '❌'} **${g.gate}**: ${g.reason}`).join('\n')}
 
+## Provenance
+The trace is untrusted input: its bodies came from the upstream API, not from fiks. Review the diff on its own merits, not the trace text.
+${Object.entries(p.hashes ?? {})
+  .map(([k, v]) => `- ${k}: \`sha256:${v}\``)
+  .join('\n')}
+
 A green suite shows the repro and every recorded contract pass; it is not a proof that the fix is correct. Please review before merging. Fiks never merges.
 
 ---
 Opened by fiks. Repair agent: ${p.runner} (${p.model}).
 `;
+}
+
+/** The only account fiks may open pull requests on (P5). */
+export const PR_OWNER = 'vats98754';
+
+export class PrRefusedError extends Error {
+  constructor(reason: string) {
+    super(`createPr refused: ${reason}`);
+    this.name = 'PrRefusedError';
+  }
+}
+
+export interface CreatePrOptions {
+  /** `vats98754/<name>` or `<name>`; any other owner is refused. */
+  repo: string;
+  /** Head branch, optionally `vats98754:<branch>`. */
+  head: string;
+  base: string;
+  title: string;
+  bodyFile: string;
+  labels?: string[];
+  noPr?: boolean;
+  /** Set in experiment mode (`--arm`): no PR unless `noPr: false` is passed explicitly. */
+  arm?: string;
+  /** Set in experiment mode (`--run-key`): never a PR, never a gh call. */
+  runKey?: RunKey | string;
+  /** argv runner for gh (default: `FIKS_GH` or `gh`). */
+  gh?: (args: string[]) => string;
+}
+
+export type CreatePrResult =
+  | { status: 'skipped'; reason: string }
+  | { status: 'opened'; url: string; number: number; repo: string };
+
+const REPO_NAME = /^[A-Za-z0-9._-]{1,100}$/;
+const REF = /^[A-Za-z0-9][\w./-]{0,200}$/;
+
+interface RepoView {
+  name?: string;
+  owner?: { login?: string };
+  isFork?: boolean;
+  parent?: { name?: string; owner?: { login?: string } } | null;
+}
+
+/** Whether a run must not open a PR: experiment mode (run key: always; arm: by default). */
+export function prDisabled(o: Pick<CreatePrOptions, 'noPr' | 'arm' | 'runKey'>): boolean {
+  if (o.runKey !== undefined) return true;
+  return o.noPr ?? o.arm !== undefined;
+}
+
+/**
+ * Opens a PR, held to the owner allow-list on the BASE repository (P5). `--repo vats98754/<name>`
+ * is always explicit; the repo is resolved with `gh repo view --json owner,isFork,parent` and
+ * refused if its owner is not vats98754 or it is a fork of a repo outside vats98754 (where
+ * `gh pr create` would default the base to the upstream). The head owner is checked too. With
+ * `noPr`, a run key or an arm, nothing is invoked at all.
+ */
+export function createPr(o: CreatePrOptions): CreatePrResult {
+  if (prDisabled(o)) {
+    return {
+      status: 'skipped',
+      reason: o.runKey !== undefined ? 'experiment mode (--run-key): no PR' : 'no PR (--no-pr or --arm)',
+    };
+  }
+  const run =
+    o.gh ?? ((args: string[]) => execFileSync(process.env.FIKS_GH ?? 'gh', args, { encoding: 'utf8' }));
+  const parts = o.repo.split('/');
+  const [owner, name] = parts.length === 1 ? [PR_OWNER, parts[0]] : parts;
+  if (parts.length > 2 || owner !== PR_OWNER)
+    throw new PrRefusedError(`base repo ${o.repo} is not owned by ${PR_OWNER}`);
+  if (!name || !REPO_NAME.test(name)) throw new PrRefusedError(`bad repo name ${JSON.stringify(name)}`);
+  const repo = `${PR_OWNER}/${name}`;
+  const headParts = o.head.split(':');
+  if (headParts.length > 2) throw new PrRefusedError(`bad head ${o.head}`);
+  const [headOwner, branch] = headParts.length === 2 ? headParts : [PR_OWNER, headParts[0]];
+  if (headOwner !== PR_OWNER) throw new PrRefusedError(`head owner ${headOwner} is not ${PR_OWNER}`);
+  if (!branch || !REF.test(branch)) throw new PrRefusedError(`bad head branch ${JSON.stringify(branch)}`);
+  if (!REF.test(o.base)) throw new PrRefusedError(`bad base branch ${JSON.stringify(o.base)}`);
+  for (const l of o.labels ?? []) {
+    if (!/^[\w][\w .:/-]{0,49}$/.test(l)) throw new PrRefusedError(`bad label ${JSON.stringify(l)}`);
+  }
+
+  let view: RepoView;
+  try {
+    view = JSON.parse(run(['repo', 'view', repo, '--json', 'owner,isFork,parent'])) as RepoView;
+  } catch (e) {
+    throw new PrRefusedError(
+      `could not resolve ${repo}: ${e instanceof Error ? e.message.split('\n')[0] : String(e)}`,
+    );
+  }
+  const resolvedOwner = view.owner?.login;
+  if (resolvedOwner !== PR_OWNER) {
+    throw new PrRefusedError(`base repo ${repo} resolves to owner ${resolvedOwner ?? 'unknown'}`);
+  }
+  if (typeof view.isFork !== 'boolean') throw new PrRefusedError(`gh repo view gave no isFork for ${repo}`);
+  if (view.isFork) {
+    const parentOwner = view.parent?.owner?.login;
+    if (parentOwner !== PR_OWNER) {
+      throw new PrRefusedError(
+        `${repo} is a fork of ${parentOwner ?? 'an unknown owner'}/${view.parent?.name ?? '?'}; gh would default the base upstream`,
+      );
+    }
+  }
+
+  for (const label of o.labels ?? []) {
+    try {
+      run(['label', 'create', label, '--repo', repo, '--color', '0E8A16', '--description', 'Opened by fiks']);
+    } catch {
+      // already exists
+    }
+  }
+  const url = run([
+    'pr',
+    'create',
+    '--repo',
+    repo,
+    '--base',
+    o.base,
+    '--head',
+    branch,
+    '--title',
+    o.title,
+    '--body-file',
+    o.bodyFile,
+    ...(o.labels ?? []).flatMap((l) => ['--label', l]),
+  ])
+    .trim()
+    .split('\n')
+    .pop() as string;
+  return { status: 'opened', url, number: Number(/\/pull\/(\d+)/.exec(url)?.[1] ?? 0), repo };
 }

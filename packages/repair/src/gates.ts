@@ -3,14 +3,23 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { type GateResult, passGate, type ReproSpec } from '@fiks/repro';
+import { candidateDiff } from './env.ts';
 
 function sh(cwd: string, cmd: string, args: string[]) {
   const r = spawnSync(cmd, args, { cwd, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
   return { code: r.status ?? 1, out: `${r.stdout}\n${r.stderr}` };
 }
 
+export interface LocalGateOptions {
+  /** Candidate capture (P11): called with the worktree diff before the gate runs. */
+  onCandidate?: (diff: string, stage: 'gate') => void;
+  /** Diff base for the candidate (default HEAD = the repro commit). */
+  candidateBase?: string;
+}
+
 /** Local gate (C20, C21): repro passes, then typecheck, lint and the full suite. */
-export function localGate(worktree: string, spec: ReproSpec): GateResult {
+export function localGate(worktree: string, spec: ReproSpec, opts: LocalGateOptions = {}): GateResult {
+  opts.onCandidate?.(candidateDiff(worktree, opts.candidateBase), 'gate');
   const p = passGate(worktree, spec);
   if (!p.ok) return { ...p, gate: 'local' };
   for (const script of ['typecheck', 'lint', 'test']) {
