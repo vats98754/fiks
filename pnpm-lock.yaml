@@ -103,6 +103,9 @@ importers:
       '@fiks/vendor-api':
         specifier: workspace:*
         version: link:../vendor-api
+      '@fiks/vendor-tracker':
+        specifier: workspace:*
+        version: link:../vendor-tracker
       '@modelcontextprotocol/sdk':
         specifier: 1.32.0
         version: 1.32.0(zod@4.6.5)
@@ -167,6 +170,18 @@ importers:
         version: link:../vendor-api
 
   packages/vendor-api: {}
+
+  packages/vendor-tracker:
+    dependencies:
+      '@fiks/domains':
+        specifier: workspace:*
+        version: link:../domains
+      '@fiks/interfaces':
+        specifier: workspace:*
+        version: link:../interfaces
+      '@modelcontextprotocol/sdk':
+        specifier: 1.32.0
+        version: 1.32.0(zod@4.6.5)
 
 packages:
 
