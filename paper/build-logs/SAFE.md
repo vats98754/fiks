@@ -39,7 +39,20 @@ every runner test uses a fake `query`, the stub runner or a mocked SDK.
   fragment is needed. The local `pnpm-lock.yaml` change from `pnpm install --no-frozen-lockfile`
   is not committed: the orchestrator regenerates the lockfile at merge.
 
-## Evidence, round 4 (2026-10-22, ws/SAFE rebased onto main `39500d1`, BENCHX merged)
+## Evidence, round 5 (2026-10-22, ws/SAFE rebased onto main `a585b65`: SBX merged, BA1-BA7 amendments)
+
+No code change this round: the previous verification found nothing wrong except the stale base.
+Rebase was clean (5 commits replayed, no conflicts).
+
+- SETUP: `node scripts/apply-dep-fragments.mjs` ("nothing to apply"), `pnpm install --no-frozen-lockfile`
+  (exit 0; the only lockfile change is the `@fiks/interfaces` link for `packages/repair`, left uncommitted
+  per §7.1), `node scripts/ensure-shop-mcp.mjs` (exit 0, `.work/shop-mcp` at `7bf2e66`).
+- `pnpm vitest run packages/repair`: 6 files, 77 tests passed. Every acceptance unit item maps to a named
+  test (safe-guard, safe-strict, safe-permissions, safe-pr, safe-runner, guard).
+- `pnpm typecheck`: exit 0. `pnpm lint`: "Checked 366 files ... No fixes applied", exit 0.
+- Full suite: `with-lock suite pnpm test`: exit 0, 76 files passed + 1 skipped, 601 tests passed + 8 skipped.
+
+## Evidence, round 4 (2026-10-22, ws/SAFE rebased onto main `39500d1`, BENCHX merged; superseded by round 5)
 
 - SETUP: `node scripts/apply-dep-fragments.mjs` ("nothing to apply"), `pnpm install --no-frozen-lockfile`
   (lockfile edit left uncommitted).
