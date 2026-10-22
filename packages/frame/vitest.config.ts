@@ -8,7 +8,8 @@ import { defineProject } from 'vitest/config';
 export default defineProject({
   test: {
     maxWorkers: 2,
-    sequence: { groupOrder: 1 },
+    // Its own group (vitest needs a unique groupOrder when maxWorkers differs), after the CLI group.
+    sequence: { groupOrder: 4 },
     testTimeout: 600_000,
     hookTimeout: 600_000,
     env: {
