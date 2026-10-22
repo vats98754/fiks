@@ -127,6 +127,21 @@ importers:
         specifier: workspace:*
         version: link:../contracts
 
+  packages/llm:
+    dependencies:
+      '@anthropic-ai/claude-agent-sdk':
+        specifier: 0.3.289
+        version: 0.3.289(@anthropic-ai/sdk@0.131.0(zod@4.6.5))(@modelcontextprotocol/sdk@1.32.0(zod@4.6.5))(zod@4.6.5)
+      '@fiks/interfaces':
+        specifier: workspace:*
+        version: link:../interfaces
+      '@modelcontextprotocol/sdk':
+        specifier: 1.32.0
+        version: 1.32.0(zod@4.6.5)
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
+
   packages/mutate: {}
 
   packages/proxy:
