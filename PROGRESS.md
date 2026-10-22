@@ -93,3 +93,9 @@ Plan: `paper/ORCHESTRATION.md` (phases, certification), `paper/PLAN.md` (pre-reg
 1. Re-run the build workflow on waves `[[ORCH, ARMS, DET, BLIND, TRAFFIC, HOLD, RUN, RB-R10, RB-R19, RB-R20, RB-R9], [INTEG, RBA]]`; builders continue from the `ws/<ID>` branches (round 1 rebases onto main and reviews existing work). Create `~/.fiks/build-swarm.active` while it runs.
 2. After INTEG merges, remove the flag and follow PLAN §8.1 from T0.
 3. Then sections → certification (ORCHESTRATION "What certified means") → arXiv package.
+
+## Paper (2026-10-22, written under the weekly usage limit)
+- `paper/main.pdf` (source `paper/main.tex`, 12 pages): system design, pilot evaluation from committed logs only, related work from the verified catalog, and the confirmatory protocol stated as a **pre-registration draft** (not frozen, not run).
+- Numbers: `python3 paper/scripts/pilot_numbers.py --check` (all macros and tables from `bench/results/`, `bench/results/loop/events.jsonl` and `paper/results/pilot/prs.json`). References: `python3 paper/scripts/make_bib.py --check` (50 keys, verified sources only).
+- claims-auditor: FAIL (round 1, 6 issues + citation scope) → FAIL (round 2, 1 sentence) → **PASS** (round 3) on 92197c4.
+- Open: author names (`\TODO` in the title block); confirmatory study (build waves 2–3, runs) per "Paper program status" above.
