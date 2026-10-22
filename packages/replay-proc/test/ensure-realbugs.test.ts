@@ -100,7 +100,7 @@ describe('clone into .work/realbugs/T1 from a local bare repo', () => {
     // The fix exists only under a pull ref, as for an unmerged upstream PR: a plain clone lacks it.
     git(bare, 'update-ref', 'refs/pull/1/head', fix);
     pins = pinsDir('T1', { repo: 'vats98754/rb-t1-test', prefixSha: prefix, fixSha: fix, bug: 'T1' });
-  });
+  }, 60_000);
   afterAll(() => {
     rmSync(clone, { recursive: true, force: true });
     if (tmp) rmSync(tmp, { recursive: true, force: true });
@@ -140,5 +140,6 @@ describe('clone into .work/realbugs/T1 from a local bare repo', () => {
 
     expect(spawnSync('git', ['check-ignore', '-q', '.work/realbugs/T1'], { cwd: ROOT }).status).toBe(0);
     expect(status()).toBe(before);
-  });
+    // git-heavy: 1.5 s alone, over the 5 s default under full-suite load
+  }, 60_000);
 });
