@@ -1,0 +1,60 @@
+{
+  "domain": "shop",
+  "catalog": "original",
+  "note": "Held-out traffic task prompts for the shop (PLAN 5.9), written by the TRAFFIC builder without reading any contract. Only the tool-call arguments the agents send are kept (oracle criterion 5, stratum S-agent); the prompts are not graded. They ask for things a shopper would ask on the original catalog, through all four tools.",
+  "tasks": [
+    { "id": "s01", "prompt": "How much does the Clarity 32 Monitor cost?" },
+    { "id": "s02", "prompt": "List every laptop you sell with its price, cheapest first." },
+    {
+      "id": "s03",
+      "prompt": "I need a Thunderbolt 5 cable. Which lengths do you have and what does each cost?"
+    },
+    { "id": "s04", "prompt": "Is product p-1006 in stock, and what is it called?" },
+    { "id": "s05", "prompt": "Order one Hub Pro Dock for me and tell me the order total." },
+    { "id": "s06", "prompt": "What's the most expensive laptop in the catalog?" },
+    { "id": "s07", "prompt": "What is the status of order o-5001, and what was its total?" },
+    { "id": "s08", "prompt": "Do you sell any keyboards? Give me the name and price of each one." },
+    {
+      "id": "s09",
+      "prompt": "Buy 3 USB4 Cable 1m for me, then check that the order went through and tell me its status."
+    },
+    {
+      "id": "s10",
+      "prompt": "What would two Clarity 27 Monitors cost in total? Don't buy anything, just tell me."
+    },
+    {
+      "id": "s11",
+      "prompt": "Which monitors are available, and how big is the price difference between them?"
+    },
+    { "id": "s12", "prompt": "Find me a DisplayPort cable and tell me its product id." },
+    {
+      "id": "s13",
+      "prompt": "Place an order for one Volt 13 Laptop and one Quiet Mech Keyboard, then read the order back and tell me the total."
+    },
+    {
+      "id": "s14",
+      "prompt": "How many different cables does the shop carry, and which one is the cheapest?"
+    },
+    {
+      "id": "s15",
+      "prompt": "Look up products p-1003 and p-1004 and tell me which one has more units in stock."
+    },
+    {
+      "id": "s16",
+      "prompt": "I'm looking for an HDMI cable that's at least 5 meters long. What do you have?"
+    },
+    {
+      "id": "s17",
+      "prompt": "Search the catalog for anything with 'Aero' in its name and give me its full details."
+    },
+    {
+      "id": "s18",
+      "prompt": "I want to buy 2 Braided Power Cables. Place the order and tell me the order id."
+    },
+    { "id": "s19", "prompt": "What's the cheapest product you sell in any category?" },
+    {
+      "id": "s20",
+      "prompt": "Can you check order o-5001 and tell me which products are in it and when it was placed?"
+    }
+  ]
+}

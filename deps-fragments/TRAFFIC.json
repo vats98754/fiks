@@ -1,0 +1,1 @@
+{ "stream": "TRAFFIC", "add": { "packages/cli": { "@fiks/traffic": "workspace:*" } } }
