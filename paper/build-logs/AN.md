@@ -47,8 +47,10 @@ actions other than the PyPI installs into `paper/.venv` that the AN acceptance p
   The pool manifest carries `requestChanging` and `fiksTestEmitted` per drift; `fiksTestEmitted =
   false` selects T = empty.
 - Grades join attempts by `GradeRecord.patchId` = the RunKey string, or = `headSha`.
-  `AttemptRecord` may carry `infraError: true` and `contractUpdateProposed: true`; an exposed PR
-  with `ciFinal = none`, or with a failed pre-PR IV, is rejected as inconsistent.
+  An exposed PR with `ciFinal = none`, or with a failed pre-PR IV, is rejected as inconsistent.
+  (Round 2: the harness marks `infra_error` and `contract_update_proposed` by pre-filling the
+  frozen `AttemptRecord.outcome`; see round 2 below. The round-1 `infraError` /
+  `contractUpdateProposed` flags are gone.)
 - `cp2_lock.py` writes `paper/results/raw/cp2/*` and the lock (with `frameSpec`, input, output
   and script hashes); it refuses if the lock exists. Every `e*_*.py` and `descriptive.py` exits 3
   without a valid lock (`--lock` overrides the path; tests use `$TMPDIR` only).
@@ -102,8 +104,58 @@ item is not met.
 
 - `pnpm paper:check` is a root `package.json` script, which INTEG owns; this stream ships
   `paper_check.py` only.
-- `paper/.venv` is not yet in the root `.gitignore` (INTEG adds it). Locally the venv carries its
-  own `.gitignore` (`*`), so it never shows as untracked.
+- `paper/.venv` is not yet in the root `.gitignore` (INTEG adds it). Correction (round 2): the
+  round-1 sentence here said the venv "carries its own `.gitignore` (`*`)". That was wrong: a
+  python3.12 venv does not create one (CPython adds it only from 3.13); the round-1 worktree had a
+  hand-made `paper/.venv/.gitignore`. See round 2 for the lint consequence.
 - SETUP ran `pnpm install --no-frozen-lockfile` (the committed lockfile is stale for
   `packages/interfaces` on main); the resulting `pnpm-lock.yaml` change is not committed.
 - K1 DGP for `simulate_power.py` is an input file (`--k1`) that exists only after K1.
+
+## Round 2 (2026-10-21)
+
+Base: main `c144b03` (unchanged since round 1, so the rebase was a no-op). SETUP re-run
+(`node scripts/apply-dep-fragments.mjs` → "nothing to apply"; `pnpm install --no-frozen-lockfile`
+exit 0; the lockfile edit stays uncommitted). The venv was deleted and rebuilt with
+`python3.12 -m venv paper/.venv` (Python 3.12.7): it contains `bin include lib pyvenv.cfg` and no
+`.gitignore`.
+
+### Verifier findings
+
+1. **simulate_null (ii) H3a at alpha 0.05 (open, needs the planner).** Re-run unchanged (same seed
+   20261021, same DGPs): rejection 0.0335 vs band [0.0354, 0.0646], `simulate_null: FAIL`, exit 1;
+   every other row passes. PLAN §9.1 (ii) still asks for the two-sided band, and PLAN is not owned
+   by AN, so the item stays failing until the planner records an erratum (one-sided gate, more
+   datasets for (ii), or a DGP/test change). The seed and the DGP were not touched.
+2. **classify_outcome harness outcomes (fixed).** The frozen `AttemptRecord` has no
+   `infraError` / `contractUpdateProposed` fields. `classify()` now keeps a pre-filled
+   `outcome` in {`infra_error`, `contract_update_proposed`} (the latter only without an exposed
+   PR), re-derives every other outcome, and rejects an unknown pre-filled value or one that
+   contradicts the derived outcome. The round-1 flags were removed. The verifier's probe
+   (`prExposed: False, ciFinal: 'none', outcome: 'infra_error'`) now returns `infra_error`. New
+   tests: `test_harness_outcomes_from_the_frozen_interface_are_kept`,
+   `test_bad_or_contradicting_pre_filled_outcomes_are_errors`.
+3. **Lint with an untracked venv (needs INTEG/orchestrator).** The round-1 claim about the venv's
+   own `.gitignore` is corrected above. With the fresh venv untracked, `pnpm lint` exits 1 (Biome
+   "unexpected error", the ignore-crate panic on the venv's symlinks into /opt/homebrew). With
+   `paper/.venv/` appended to the root `.gitignore` (a transient local edit, reverted at once and
+   not committed, since AN does not own `.gitignore`), `pnpm lint` exits 0: "Checked 144 files …
+   No fixes applied." The root `.gitignore` needs the line `paper/.venv/` before AN merges.
+
+### Acceptance evidence (round 2)
+
+| Item | Result |
+|---|---|
+| fresh venv + `pip install -r` + `pytest paper/scripts/tests` | PASS: 88 passed (`pip check` clean) |
+| `power.py all --check paper/PLAN.md` | PASS: "72/72 entries pass; 0 problems", exit 0 |
+| `binom` / `binom-min` | PASS: crit 18, size 0.0123, 0.821, >= 0.99; 217 |
+| `ni` / `harm` (§3.3 round-4 table) | PASS: 0.468 0.312 0.389 0.256 0.288 0.190 / 0.243 0.161 0.200 0.134 0.149 0.102; 0.385 0.239 0.307 0.188 0.214 0.132 |
+| `frame --frame-spec fixtures/frame-spec.json` | PASS: no top-up, crit 18, 0.821, underpowered False, m 4 |
+| `anyfp --n 50 --pi 0.02 0.01` | PASS: 0.636 0.395 |
+| `simulate_null.py --check --datasets 2000` | **FAIL** (ii) H3a alpha 0.05 = 0.0335, see finding 1 |
+| `simulate_power.py --configs S0 S2 S3 --n 61 40` | PASS: exit 0; `power.json` byte-identical |
+| `check_workstreams.py paper/WORKSTREAMS.json` | PASS: exit 0 |
+| `paper_check.py` | PASS: "paper:check PASS" |
+| `git status --porcelain paper/results/raw paper/results/confirmatory.lock` | PASS: empty |
+| `pnpm typecheck` | PASS: exit 0 |
+| `pnpm lint` | FAIL while `paper/.venv` is untracked (finding 3); exit 0 with the root `.gitignore` line |
