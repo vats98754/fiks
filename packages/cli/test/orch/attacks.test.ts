@@ -56,8 +56,8 @@ function expectRejected(r: ArmResult) {
 
 const fresh = (src: string) =>
   src.replace(
-    '`/products/${encodeURIComponent(args.id)}`',
-    '`/products/${encodeURIComponent(args.id)}?fresh=1`',
+    `\`/products/\${encodeURIComponent(args.id)}\``,
+    `\`/products/\${encodeURIComponent(args.id)}?fresh=1\``,
   );
 
 describe.runIf(E2E)('M4 attack PoCs, gates in the container', () => {

@@ -1546,6 +1546,12 @@ export async function runArm(opts: ArmOptions): Promise<ArmResult> {
         return finish('infra_error', `runner infra error: ${run.summary.slice(0, 300)}`);
       if (run.outcome === 'refused')
         return finish('agent_failed', `runner refused: ${run.summary.slice(0, 300)}`);
+      // A later session that ended in an error without a single turn (e.g. a stub with no
+      // scripted session left) changed nothing: the gates would only repeat the last verdict.
+      if (!run.ok && (run.turns ?? 0) === 0 && n > 1) {
+        feedback = `${feedback ?? ''}\n(session ${n} ended without a turn: ${run.summary.slice(0, 200)})`;
+        break;
+      }
 
       // FIKS+CU: a contract update instead of code.
       const proposal = arm === 'fiks+cu' ? contractUpdateIn(run.summary) : undefined;
@@ -1995,6 +2001,15 @@ async function runGates(g: GateRun): Promise<{ ok: boolean; feedback?: string }>
     g.ev(`gate_${gate}`, { session: g.n, reason }, true);
   };
   const guarded = (gate: ArmGateName, cand: string): { ok: false; feedback: string } | undefined => {
+    const stray = changedFilesSince(g.wtDir, g.reproCommit).filter(
+      (f) => !isNodeModules(f) && !(f in g.owned),
+    );
+    if (stray.length)
+      return fail(
+        gate,
+        `files changed while the checks ran: ${stray.join(', ')}. Code must not write files at runtime.`,
+        cand,
+      ) as { ok: false; feedback: string };
     const t = tamperCheck(g);
     if (t.length)
       return fail(

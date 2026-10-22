@@ -23,11 +23,19 @@ const DRIFTS: Record<string, string> = {
   D5: 'D5-tr_4db46c86e4.json',
 };
 
+/**
+ * Vitest's own stack frames name where node_modules lives: on the host the worktree's symlink
+ * resolves to the clone's install, in the container it is the image's install mounted at
+ * <worktree>/node_modules. That location is the only allowed difference.
+ */
+const NODE_MODULES = /(?:file:\/\/)?\/[^\s"')]*?\/node_modules\//g;
+const normal = (m: string) => m.replace(NODE_MODULES, '<node_modules>/');
+
 /** What must be identical: verdict, reason and every failing test's file, name and message. */
 const view = (g: GateResult) => ({
   ok: g.ok,
   reason: g.reason,
-  failed: g.evidence.failed.map((f) => ({ file: f.file, test: f.test, message: f.message })),
+  failed: g.evidence.failed.map((f) => ({ file: f.file, test: f.test, message: normal(f.message) })),
 });
 
 async function inContainer<T>(wt: string, image: string, fn: (domainId: string) => T): Promise<T> {
