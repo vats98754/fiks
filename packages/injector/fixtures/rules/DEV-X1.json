@@ -1,0 +1,11 @@
+{
+  "id": "DEV-X1",
+  "domain": "shop",
+  "match": {
+    "method": "GET",
+    "pathPattern": "^/products/[^/]+$"
+  },
+  "transform": "../../src/transforms/devx1-product-minor-units.ts",
+  "clockFrozen": true,
+  "hash": "706c230cd1b36dcecb3b1b212ba30c4d5cfbf81acf0009c919d83f2594de60ed"
+}

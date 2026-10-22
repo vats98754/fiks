@@ -1,0 +1,11 @@
+{
+  "id": "D1",
+  "domain": "shop",
+  "match": {
+    "method": "GET",
+    "pathPattern": "^/products$"
+  },
+  "transform": "../../src/transforms/d1-search-price-cents.ts",
+  "clockFrozen": true,
+  "hash": "cd138abed0aaadf1d30b56d87586c12abfe137100d0cf6fff8142bd7c7853aff"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "D2",
+  "domain": "shop",
+  "match": {
+    "method": "GET",
+    "pathPattern": "^/products/[^/]+$"
+  },
+  "transform": "../../src/transforms/d2-price-renamed.ts",
+  "clockFrozen": true,
+  "hash": "59dd45939d2174ab6b9628a5dcfd19cdd27e0bf493e694984517b3a3443fd4fa"
+}

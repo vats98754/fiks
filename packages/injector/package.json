@@ -1,0 +1,15 @@
+{
+  "name": "@fiks/injector",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "validate": "tsx src/validate-rule.ts fixtures/driftpkgs/*.json"
+  },
+  "devDependencies": {
+    "@fiks/vendor-api": "workspace:*"
+  }
+}

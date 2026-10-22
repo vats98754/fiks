@@ -1,0 +1,11 @@
+{
+  "id": "D3",
+  "domain": "shop",
+  "match": {
+    "method": "GET|POST",
+    "pathPattern": "^/orders(/[^/]+)?$"
+  },
+  "transform": "../../src/transforms/d3-lost-write.ts",
+  "clockFrozen": true,
+  "hash": "823a338038feaaa6bb6dbef830c49a339d6b179dfdf9ef9c22fc7ddb834ab0b8"
+}

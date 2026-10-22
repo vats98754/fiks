@@ -1,0 +1,17 @@
+{
+  "id": "D4",
+  "domain": "shop",
+  "base": "seed-v1",
+  "stratum": "dev",
+  "ideationFamily": "pagination",
+  "authorSession": "INJ-builder-r1",
+  "injectorRule": {
+    "path": "../rules/D4.json",
+    "hash": "502098ec4570e9eaf1c3f653016eb9fd0d416156cc051d4901b8f10fef025be0"
+  },
+  "hiddenTests": [],
+  "refA": "",
+  "refB": "",
+  "renamedIdVariant": "",
+  "generators": []
+}

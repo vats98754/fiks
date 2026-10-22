@@ -1,0 +1,17 @@
+{
+  "id": "D3",
+  "domain": "shop",
+  "base": "seed-v1",
+  "stratum": "dev",
+  "ideationFamily": "lost-write",
+  "authorSession": "INJ-builder-r1",
+  "injectorRule": {
+    "path": "../rules/D3.json",
+    "hash": "823a338038feaaa6bb6dbef830c49a339d6b179dfdf9ef9c22fc7ddb834ab0b8"
+  },
+  "hiddenTests": [],
+  "refA": "",
+  "refB": "",
+  "renamedIdVariant": "",
+  "generators": []
+}

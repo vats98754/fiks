@@ -1,0 +1,31 @@
+{
+  "$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+  "root": false,
+  "extends": "//",
+  "linter": {
+    "rules": {
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "patterns": [
+              {
+                "group": [
+                  "@fiks/contract*",
+                  "@fiks/contract*/**",
+                  "@fiks/prox*",
+                  "@fiks/prox*/**",
+                  "**/packages/contract*/**",
+                  "**/packages/prox*/**",
+                  "../../contract*/**",
+                  "../../prox*/**"
+                ],
+                "message": "The injector is built without reading contracts (PLAN 5.2): it may not import the contracts or proxy packages."
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

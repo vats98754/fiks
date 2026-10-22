@@ -1,0 +1,17 @@
+{
+  "id": "D2",
+  "domain": "shop",
+  "base": "seed-v1",
+  "stratum": "dev",
+  "ideationFamily": "rename",
+  "authorSession": "INJ-builder-r1",
+  "injectorRule": {
+    "path": "../rules/D2.json",
+    "hash": "59dd45939d2174ab6b9628a5dcfd19cdd27e0bf493e694984517b3a3443fd4fa"
+  },
+  "hiddenTests": [],
+  "refA": "",
+  "refB": "",
+  "renamedIdVariant": "",
+  "generators": []
+}

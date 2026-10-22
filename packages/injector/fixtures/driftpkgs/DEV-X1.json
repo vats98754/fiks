@@ -1,0 +1,17 @@
+{
+  "id": "DEV-X1",
+  "domain": "shop",
+  "base": "base-shop",
+  "stratum": "dev",
+  "ideationFamily": "unit",
+  "authorSession": "INJ-builder-r1",
+  "injectorRule": {
+    "path": "../rules/DEV-X1.json",
+    "hash": "706c230cd1b36dcecb3b1b212ba30c4d5cfbf81acf0009c919d83f2594de60ed"
+  },
+  "hiddenTests": [],
+  "refA": "",
+  "refB": "",
+  "renamedIdVariant": "",
+  "generators": []
+}
