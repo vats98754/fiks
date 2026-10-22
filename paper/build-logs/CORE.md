@@ -114,11 +114,22 @@ re-checks it at F2.
    text: "every verdict is 'verified' except the deliberate unknown-id call get_product p-0000,
    which is 'unverifiable' as at ec241bc; no verdict is 'violated'; identical to the same command
    without --domain".
-3. **Profile semantics for legacy recordings.** With `ruleId: null` the recording's own upstream
-   (version, drifts, clock) decides, as `rerecord` did at ec241bc; `profile.base` is logged and
-   used only with a rule. The D3/D4 test uses `{domain: 'shop', base: 'v2', ruleId: null}`: the
-   D3/D4 traces were captured under full v2 and the stale v1 fixture under v1, and both must
-   re-record against their own upstream.
+3. **Profile semantics for legacy recordings; single-drift variant (round 4).** With `ruleId: null`
+   the recording's own upstream (version, drifts, clock) decides, as `rerecord` did at ec241bc;
+   `profile.base` is logged and used only with a rule. `RerecordProfile` (CORE-SEED's
+   `@fiks/interfaces`) has no drift field, and the injector rules that would express "v2 single
+   drift" as base + rule belong to another stream and are not on main, so a single-drift upstream
+   can only be carried by the recording. Round 4 therefore runs `rerecord-head.test.ts` in two
+   variants per drift under the same profile `{domain: 'shop', base: 'v2', ruleId: null}`:
+   **full v2** (the committed D3/D4 trace, captured with all five drifts, as its
+   `upstream.drifts` shows) and **single-drift v2** (a trace captured in the test by running the
+   drift's scenario on the pre-fix parent, vendor v2 with only that drift active, frozen clock
+   `2026-10-18T12:00:00.000Z`; the test asserts its `upstream.drifts` is exactly `['D3']` /
+   `['D4']` and its target the drift's property). In the single-drift variant the overlay
+   re-record of `.alerts/<id>.json` runs against the single-drift v2 vendor. The stale recordings
+   of step 1 are the repository's own (`test/fixtures/v1/order-create.json` under v1, the committed
+   `test/repro/tr_*.json` under full v2) and keep their own upstream in both variants (product
+   behaviour). Every assertion of the acceptance item holds in both variants (8 tests).
 4. **Overlay candidates.** Recordings under the product's own folders (`test/fixtures`,
    `test/repro`, `test/traces`) are overlaid only when named with `--recordings`: the suite
    asserts each of them through `expectRecordingHolds`, so step 1 already catches them going
@@ -221,3 +232,31 @@ meanwhile, so CORE rebased onto `67ac4b0` and re-ran SETUP. There,
 acceptance test file and CLI item was re-run on that base. `pnpm typecheck` and `pnpm lint` exit 0. Items 2 (p-0000 `unverifiable`) and 11 (`pnpm fiks`
 exit 1 under the root `.npmrc` `reporter=silent`) still fail as written and wait for an
 orchestrator decision; no decision is recorded in PLAN.md or WORKSTREAMS.json at `67ac4b0`.
+
+## Round 4 (rebased onto `c980341`, PREREG merged)
+
+SETUP re-run (`pnpm install --no-frozen-lockfile`, exit 0; lockfile change not committed).
+
+- **Finding 3 (single-drift profile) fixed in the test**: see interpretation 3.
+  `pnpm vitest run packages/cli/test/core/rerecord-head.test.ts`: 8 passed (D3, D4 x full v2,
+  single-drift v2 x fix head, pre-fix parent), 132 s.
+- **Finding 1 (p-0000 `unverifiable`)**: unchanged product, still needs the orchestrator's
+  amended acceptance text (interpretation 2). Re-checked: `pnpm fiks scenario v1-all --domain shop
+  --json | jq -r '.calls[].receipt.verdict'` gives 9 `verified` and `unverifiable` for
+  `get_product {"id":"p-0000"}`; equal to the run without `--domain` after normalising
+  timestamps and run ids. No amendment is recorded in `paper/PLAN.md` or
+  `paper/WORKSTREAMS.json` at `c980341`.
+- **Finding 2 (exit 2 through `pnpm fiks`)**: unchanged, needs an orchestrator/INTEG decision
+  (interpretation 11). Re-checked: `pnpm fiks rerecord-head --require-sandbox ...` -> 1,
+  `pnpm --reporter=default fiks ...` -> 2, `tsx packages/cli/src/main.ts ...` -> 2, each with
+  "sandbox required" on stderr.
+- **Full suite (round 4)**: `with-lock suite pnpm test -- --reporter=json --outputFile=<tmp>/full1.json`
+  exit 0, 380 passed, 0 failed, 1 skipped (`packages/proxy/test/replay.test.ts`, not CORE's), 381
+  total. CORE files: rerecord-head 8/8, legacy-behaviour 7/7, legacy-help 3/3, loader 2/2,
+  domain-hooks 3/3, clock 1/1, sandbox 2/2, worktree-lock 1/1, repro-concurrent 1/1,
+  shop-domain 4/4, fixtures 1/1, packages/repro 11/11, packages/vendor-api 33/33.
+  `pnpm typecheck` and `pnpm lint` exit 0. CLI items re-run: `repro --scenario D1 --target seed-v1
+  --runs 10` with `.work/shop-mcp` origin `https://invalid.example/x.git` -> F gate PASS 10/10
+  (`items.price.range`), origin restored; `repro --trace .../D2-trace.json --target seed-v1 --runs 3`
+  -> F gate PASS 3/3 (`price.notNull`), fixture sha256 equals `fixtures/README.md`;
+  `grep -c "case '" main.ts` -> 0; the docs bound grep prints nothing.
