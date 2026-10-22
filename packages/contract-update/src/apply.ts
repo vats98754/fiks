@@ -11,8 +11,8 @@ import type { ContractDelta } from './outcome.ts';
 const IDENTITY = ['kind', 'path', 'itemsPath', 'totalPath', 'upstreamPath'] as const;
 
 function identityChanges(cur: Invariant, next: Invariant): string[] {
-  const a = cur as Record<string, unknown>;
-  const b = next as Record<string, unknown>;
+  const a = cur as unknown as Record<string, unknown>;
+  const b = next as unknown as Record<string, unknown>;
   return IDENTITY.filter((k) => !same(a[k], b[k])).map(
     (k) => `${k} (${JSON.stringify(a[k])} -> ${JSON.stringify(b[k])})`,
   );
