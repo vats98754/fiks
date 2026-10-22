@@ -279,3 +279,43 @@ was deleted and rebuilt (Python 3.12.7, `pip check` clean). No code changed this
 | `git status --porcelain paper/results/raw paper/results/confirmatory.lock` | PASS: empty |
 | `pnpm typecheck` | PASS: exit 0 |
 | `pnpm lint` | FAIL with `paper/.venv` present (finding 2); exit 0 with it moved aside |
+
+## Round 5 (2026-10-22)
+
+Base: rebased onto main `a585b65` (build-phase amendments BA1–BA7), clean rebase, no conflicts.
+SETUP re-run: `node scripts/apply-dep-fragments.mjs` → "nothing to apply";
+`pnpm install --no-frozen-lockfile` exit 0, no tracked-file change. The venv was deleted and
+rebuilt (`python3.12 -m venv paper/.venv`, Python 3.12.7, `pip install -r`, `pip check` clean).
+
+### Changes
+
+1. **BA4: one-sided sign-flip size gate (resolves the round 1–4 open finding).** PLAN §9.1 (ii)
+   and the AN acceptance now gate (ii) as rejection <= alpha + 3 MC SE at alpha 0.05 and 0.0125,
+   with the realised size reported. `simulate_null.size_rows()` is now one gate for (ii)–(iv)
+   (the `two_sided_band` switch is gone); each row keeps `rejection` (the realised size), `mcse`,
+   `bound` and `pass`, and `direction` labels a failing row `anti-conservative` and a passing row
+   below alpha − 3 MC SE `conservative` (informational). The (ii) report prints the bound and,
+   for a conservative row, "[realised size …, conservative]". No DGP, test statistic or seed
+   (20261021) changed. New test `test_size_gate_is_one_sided_and_reports_realised_size`
+   (conservative passes and is labelled; anti-conservative fails; on-target unlabelled).
+2. **BA7: `pnpm lint` with the venv present (resolves the round 2–4 open finding).** Main's root
+   `.gitignore` now carries `paper/.venv/`; with the rebuilt venv present `pnpm lint` exits 0.
+
+### Acceptance evidence (round 5, base `a585b65`)
+
+| Item | Result |
+|---|---|
+| fresh venv + `pip install -r` + `pytest paper/scripts/tests` (under `with-lock suite`) | PASS: 91 passed |
+| `power.py all --check paper/PLAN.md` | PASS: "72/72 entries pass; 0 problems", exit 0 |
+| `binom` / `binom-min` | PASS: crit 18, exact size 0.0123, 0.821, >= 0.99; 217 |
+| `ni` / `harm` (§3.3 round-4 table) | PASS: 0.468 0.312 0.389 0.256 0.288 0.190 / 0.243 0.161 0.200 0.134 0.149 0.102; 0.385 0.239 0.307 0.188 0.214 0.132 |
+| `frame --frame-spec fixtures/frame-spec.json` (+ 1,000 / 200 in tests) | PASS: no top-up, crit 18, 0.821, underpowered False, m 4 |
+| `anyfp --n 50 --pi 0.02 0.01` | PASS: 0.636 0.395 |
+| unit items (H1 incl. per-element / first-element refusal, H3/holm opposite direction, classify, h2, h3h4 = eval_stats paired, per-class rows, e*-lock) | PASS (in the 91) |
+| `simulate_null.py --check --datasets 2000` | PASS, exit 0. (i) NE1500 0.0110 vs analytic 0.0123, NE1000 0.0085 vs 0.0102; (ii) H2 0.0505 / 0.0180, H3a 0.0335 (conservative) / 0.0060, H4a 0.0465 / 0.0105, bound alpha + 0.0146 / + 0.0075; (iii) sign-flip selected (symmetric 0.0500 / 0.0125, skewed 0.0410 / 0.0145); (iv) LF-harm 0.0190 / 0.0050, LF-NI 0.0535 / 0.0115 |
+| `simulate_power.py --configs S0 S2 S3 --n 61 40` | PASS: exit 0; `power.json` byte-identical |
+| `paper_check.py` | PASS: "paper:check PASS" |
+| `check_workstreams.py paper/WORKSTREAMS.json` | PASS: exit 0 |
+| `git status --porcelain paper/results/raw paper/results/confirmatory.lock` | PASS: empty |
+| `pnpm typecheck` | PASS: exit 0 |
+| `pnpm lint` (venv present) | PASS: exit 0, "Checked 364 files … No fixes applied." |

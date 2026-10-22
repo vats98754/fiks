@@ -6,8 +6,10 @@
 (i)   H1 exact entity test: analytic exact size <= alpha, and the simulated rejection rate under
       i.i.d. entities (N_E Bernoulli(0.02) indicators per dataset) within +-3 MC SE of that size.
       Informational: size under a beta-binomial authoring-batch DGP (batches of 25; ICC 0.02, 0.05).
-(ii)  Two-sided sign-flip tests for H2, H3a and H4a: rejection within alpha +-3 MC SE at
-      alpha 0.05 and 0.0125 under symmetric nulls with drift heterogeneity:
+(ii)  Two-sided sign-flip tests for H2, H3a and H4a: rejection <= alpha + 3 MC SE at alpha 0.05
+      and 0.0125 under symmetric nulls with drift heterogeneity; the realised size is reported
+      (amended BA4: per-drift differences lie on a 1/(m*a) lattice with ties, so the
+      non-randomised sign-flip is conservative and a two-sided band would fail a valid test):
         H2   per-drift BA level ~ U(0.55, 0.95), per-drift noise scale ~ U(0.02, 0.15); one fiks
              test and six agent tests, exchangeable (Delta_i symmetric about 0).
         H3a  green-incorrect rate per drift ~ Beta(1.5, 8.5) (mean 0.15), per-model logit offsets
@@ -152,15 +154,21 @@ def boot_t_pvals(rng, X: np.ndarray) -> np.ndarray:
     return np.array([stats.bootstrap_t_ni_p(row, DELTA, FLIPS, rng) for row in X])
 
 
-def size_rows(p: np.ndarray, d: int, two_sided_band: bool) -> dict:
+def size_rows(p: np.ndarray, d: int) -> dict:
+    """One-sided size gate (PLAN 9.1 (ii)-(iv), BA4): rejection <= alpha + 3 MC SE.
+
+    The realised size is always kept; `direction` is informational only (a size below
+    alpha - 3 MC SE is reported as conservative and still passes)."""
     rows = {}
     for alpha in ALPHAS:
         r = float(np.mean(p <= alpha))
         se = mcse(alpha, d)
-        ok = abs(r - alpha) <= 3 * se if two_sided_band else r <= alpha + 3 * se
-        row = {"rejection": r, "mcse": se, "pass": ok}
+        ok = r <= alpha + 3 * se
+        row = {"rejection": r, "mcse": se, "bound": alpha + 3 * se, "pass": ok}
         if not ok:
-            row["direction"] = "conservative" if r < alpha else "anti-conservative"
+            row["direction"] = "anti-conservative"
+        elif r < alpha - 3 * se:
+            row["direction"] = "conservative"
         rows[str(alpha)] = row
     return rows
 
@@ -176,7 +184,7 @@ def run(d: int, n: int, models: int, attempts: int, seed: int) -> dict:
         ("H3a", dgp_harm_null(rng, d, n, 1.5, 8.5, models, attempts)),
         ("H4a", dgp_harm_null(rng, d, n, 2.0, 8.0, models, attempts)),
     ):
-        signflip[name] = size_rows(flip_pvals(rng, X, "two-sided"), d, two_sided_band=True)
+        signflip[name] = size_rows(flip_pvals(rng, X, "two-sided"), d)
     res["ii_signflip"] = signflip
 
     ni = {}
@@ -185,11 +193,11 @@ def run(d: int, n: int, models: int, attempts: int, seed: int) -> dict:
         "skewed": dgp_ni_boundary(rng, d, n, models, attempts, True),
     }
     for name, X in data.items():
-        ni[name] = size_rows(flip_pvals(rng, X, "greater", DELTA), d, two_sided_band=False)
+        ni[name] = size_rows(flip_pvals(rng, X, "greater", DELTA), d)
     sf_ok = all(r["pass"] for v in ni.values() for r in v.values())
     res["iii_ni"] = {"signFlip": ni, "selected": "sign-flip" if sf_ok else "bootstrap-t"}
     if not sf_ok:
-        bt = {name: size_rows(boot_t_pvals(rng, X), d, two_sided_band=False) for name, X in data.items()}
+        bt = {name: size_rows(boot_t_pvals(rng, X), d) for name, X in data.items()}
         res["iii_ni"]["bootstrapT"] = bt
     method = res["iii_ni"]["selected"]
 
@@ -204,7 +212,7 @@ def run(d: int, n: int, models: int, attempts: int, seed: int) -> dict:
         p_harm = np.where(harm_d.mean(axis=1) > 0, p_harm, 1.0)
         p_ni = flip_pvals(rng, ni_d, "greater", DELTA) if method == "sign-flip" else boot_t_pvals(rng, ni_d)
         p_iut = np.maximum(p_harm, p_ni)
-        iut[name] = size_rows(p_iut, d, two_sided_band=False)
+        iut[name] = size_rows(p_iut, d)
     res["iv_iut"] = iut
 
     gated = [res["i_h1"]["NE1500"]["pass"], res["i_h1"]["NE1000"]["pass"]]
@@ -228,7 +236,8 @@ def report(res: dict) -> None:
     for name, rows in res["ii_signflip"].items():
         for a, r in rows.items():
             verdict = "PASS" if r["pass"] else f"FAIL ({r['direction']})"
-            print(f"(ii) {name} alpha {a}: rejection {r['rejection']:.4f} (alpha +-{3 * r['mcse']:.4f}) {verdict}")
+            note = f" [realised size {r['rejection']:.4f}, {r['direction']}]" if r["pass"] and "direction" in r else ""
+            print(f"(ii) {name} alpha {a}: rejection {r['rejection']:.4f} (<= alpha + {3 * r['mcse']:.4f}) {verdict}{note}")
     for name, rows in res["iii_ni"]["signFlip"].items():
         for a, r in rows.items():
             print(f"(iii) NI sign-flip {name} alpha {a}: rejection {r['rejection']:.4f} (<= alpha + {3 * r['mcse']:.4f}) {'PASS' if r['pass'] else 'FAIL'}")

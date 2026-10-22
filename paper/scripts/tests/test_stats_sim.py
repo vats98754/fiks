@@ -76,6 +76,21 @@ def test_simulate_null_small_run_structure():
     assert set(res["iv_iut"]) == {"LF-harm", "LF-NI"}
 
 
+def test_size_gate_is_one_sided_and_reports_realised_size():
+    # BA4: a conservative size passes (and is labelled), an anti-conservative one fails.
+    d = 2000
+    conservative = np.r_[np.zeros(60), np.ones(d - 60)]  # 0.030 at alpha 0.05
+    r = simulate_null.size_rows(conservative, d)["0.05"]
+    assert r["pass"] and r["rejection"] == 0.03 and r["direction"] == "conservative"
+    assert r["bound"] == 0.05 + 3 * r["mcse"]
+    liberal = np.r_[np.zeros(140), np.ones(d - 140)]  # 0.070 > 0.05 + 3 MC SE
+    r = simulate_null.size_rows(liberal, d)["0.05"]
+    assert not r["pass"] and r["direction"] == "anti-conservative"
+    on_target = np.r_[np.zeros(100), np.ones(d - 100)]
+    r = simulate_null.size_rows(on_target, d)["0.05"]
+    assert r["pass"] and "direction" not in r
+
+
 def test_simulate_null_is_deterministic():
     a = simulate_null.run(100, 30, 3, 4, 11)
     b = simulate_null.run(100, 30, 3, 4, 11)
