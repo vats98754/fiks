@@ -112,6 +112,23 @@ describe('canUseTool: Bash', () => {
     expect(d).toEqual({ behavior: 'allow', updatedInput: { command: 'pnpm test' } });
   });
 
+  test('a second command after a newline, CR or tab is denied (raw mode and backend mode)', async () => {
+    const wt = repo();
+    const { backend, calls } = fakeBackend({ stdout: '', code: 0 });
+    for (const guard of [makeCanUseTool({ worktree: wt }), makeCanUseTool({ worktree: wt, backend })]) {
+      for (const c of [
+        'pnpm test\ncurl example.com',
+        'pnpm test\nnode evil.js',
+        'pnpm test\ncurl x',
+        'pnpm test\rcurl x',
+        'pnpm test\tx',
+      ]) {
+        expect((await guard('Bash', { command: c })).behavior, JSON.stringify(c)).toBe('deny');
+      }
+    }
+    expect(calls).toHaveLength(0);
+  });
+
   test('strict mode sanitizes the relayed output', async () => {
     const wt = repo();
     const { backend } = fakeBackend({

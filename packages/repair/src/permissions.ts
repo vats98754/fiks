@@ -47,7 +47,8 @@ const WRITE_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 const SHELL_SAFE = /^[\w./-]+$/;
 
 /** Allowed Bash commands are `pnpm <args>` with plain tokens (see mayRun); split for exec. */
-export const commandArgv = (cmd: string) => cmd.trim().split(/\s+/);
+/** Argv of a command that passed `mayRun` (single-space separated by construction). */
+export const commandArgv = (cmd: string) => cmd.split(' ');
 
 /**
  * Builds the `canUseTool` callback. Writes: edit guard (+ create-only paths), realpath-contained.

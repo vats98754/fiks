@@ -378,6 +378,45 @@ export function createAgentSdkRunner(o: AgentSdkRunnerOptions = {}): RepairRunne
 export const agentSdkRunner: RepairRunner = createAgentSdkRunner();
 
 /**
+ * argv of the `claude -p` fallback. Glob is left out: its path argument is not covered by the
+ * Read(./**) rule, so a Glob on a directory outside the worktree would list it (the SDK guard's
+ * mayGlob refuses that). Read is limited to the worktree; node_modules links out of it.
+ */
+export function claudeCliArgv(job: Pick<RunnerJob, 'prompt' | 'model' | 'maxTurns' | 'maxBudgetUsd'>) {
+  return [
+    '-p',
+    job.prompt,
+    '--output-format',
+    'json',
+    '--model',
+    job.model,
+    '--max-turns',
+    String(job.maxTurns),
+    // 'local' = .claude/settings.local.json, which a fresh worktree never has: no repo- or
+    // user-controlled settings, like settingSources: [] in the SDK runner.
+    '--setting-sources',
+    'local',
+    '--max-budget-usd',
+    String(job.maxBudgetUsd),
+    '--strict-mcp-config',
+    '--tools',
+    'Read,Edit,Write,Bash',
+    '--permission-mode',
+    'dontAsk',
+    '--allowedTools',
+    'Read(./**)',
+    'Edit(src/**)',
+    'Write(src/**)',
+    'Bash(pnpm typecheck)',
+    'Bash(pnpm lint)',
+    'Bash(pnpm test)',
+    // fiks's node_modules link resolves outside the worktree (the SDK guard refuses it too).
+    '--disallowedTools',
+    'Read(./node_modules/**)',
+  ];
+}
+
+/**
  * Fallback: headless `claude -p` in the worktree, same tool limits via --allowedTools. It cannot
  * consult the realpath read guard, rewrite Bash or sanitize output, so it refuses to start when
  * a symlink in the worktree leaves it, in strict mode, with an exec backend, with create-only
@@ -406,47 +445,12 @@ export const claudeCliRunner: RepairRunner = {
     }
     const links = escapingSymlinks(job.worktree);
     if (links.length) return refuse(`symlinks leave the worktree: ${links.join(', ')}`);
-    const r = spawnSync(
-      'claude',
-      [
-        '-p',
-        job.prompt,
-        '--output-format',
-        'json',
-        '--model',
-        job.model,
-        '--max-turns',
-        String(job.maxTurns),
-        // 'local' = .claude/settings.local.json, which a fresh worktree never has: no repo- or
-        // user-controlled settings, like settingSources: [] in the SDK runner.
-        '--setting-sources',
-        'local',
-        '--max-budget-usd',
-        String(job.maxBudgetUsd),
-        '--strict-mcp-config',
-        '--tools',
-        'Read,Glob,Edit,Write,Bash',
-        '--permission-mode',
-        'dontAsk',
-        '--allowedTools',
-        'Read(./**)',
-        'Glob',
-        'Edit(src/**)',
-        'Write(src/**)',
-        'Bash(pnpm typecheck)',
-        'Bash(pnpm lint)',
-        'Bash(pnpm test)',
-        // fiks's node_modules link resolves outside the worktree (the SDK guard refuses it too).
-        '--disallowedTools',
-        'Read(./node_modules/**)',
-      ],
-      {
-        cwd: job.worktree,
-        env: claudeEnv() as NodeJS.ProcessEnv,
-        encoding: 'utf8',
-        maxBuffer: 64 * 1024 * 1024,
-      },
-    );
+    const r = spawnSync('claude', claudeCliArgv(job), {
+      cwd: job.worktree,
+      env: claudeEnv() as NodeJS.ProcessEnv,
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
+    });
     try {
       const j = JSON.parse(r.stdout) as {
         is_error: boolean;

@@ -9,6 +9,7 @@ import type { ExecBackend } from '@fiks/interfaces';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   agentSdkRunner,
+  claudeCliArgv,
   claudeCliRunner,
   createAgentSdkRunner,
   defaultRunners,
@@ -366,6 +367,41 @@ describe('CLI fallback', () => {
     const r = await claudeCliRunner.run(job(wt), signal);
     expect(r.outcome).toBe('refused');
     expect(r.summary).toMatch(/src\/env\.ts/);
+  });
+
+  test('argv offers no Glob (its path is not worktree-scoped); Read is limited to the worktree', async () => {
+    const wt = repo();
+    // A fake `claude` on PATH records its argv (NUL-separated) and prints a CLI JSON result.
+    const bin = mkdtempSync(join(tmpdir(), 'fiks-fake-claude-'));
+    const argvFile = join(bin, 'argv');
+    writeFileSync(
+      join(bin, 'claude'),
+      `#!/bin/sh\nprintf '%s\\0' "$@" > '${argvFile}'\n` +
+        `echo '{"is_error":false,"result":"done","num_turns":2,"total_cost_usd":0.01,"subtype":"success"}'\n`,
+      { mode: 0o755 },
+    );
+    const savedPath = process.env.PATH;
+    process.env.PATH = `${bin}:${savedPath}`;
+    try {
+      const r = await claudeCliRunner.run(job(wt), signal);
+      expect(r.outcome).toBe('completed');
+    } finally {
+      process.env.PATH = savedPath;
+    }
+    const argv = readFileSync(argvFile, 'utf8').split('\0').slice(0, -1);
+    expect(argv).toEqual(claudeCliArgv(job(wt)));
+    expect(argv[argv.indexOf('--tools') + 1]).toBe('Read,Edit,Write,Bash');
+    expect(argv.filter((a) => /glob/i.test(a))).toEqual([]);
+    expect(argv[argv.indexOf('--permission-mode') + 1]).toBe('dontAsk');
+    const allowed = argv.slice(argv.indexOf('--allowedTools') + 1, argv.indexOf('--disallowedTools'));
+    expect(allowed).toEqual([
+      'Read(./**)',
+      'Edit(src/**)',
+      'Write(src/**)',
+      'Bash(pnpm typecheck)',
+      'Bash(pnpm lint)',
+      'Bash(pnpm test)',
+    ]);
   });
 });
 

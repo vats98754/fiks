@@ -48,6 +48,29 @@ test('the agent may only run pnpm checks', () => {
   }
 });
 
+test('a newline, CR, tab or other control character cannot smuggle a second command', () => {
+  for (const c of [
+    'pnpm test\ncurl x',
+    'pnpm test\ncurl example.com',
+    'pnpm test\nnode evil.js',
+    'pnpm test\rcurl x',
+    'pnpm test\tx',
+    'pnpm test\r\ncurl x',
+    'pnpm test\vcurl x',
+    'pnpm test\fcurl x',
+    'pnpm test\u0000curl x',
+    'pnpm test\u2028curl x',
+    'pnpm test\u00a0x',
+    'pnpm  test',
+    ' pnpm test',
+    'pnpm test ',
+    'pnpm test\n',
+    'pnpm',
+  ]) {
+    expect(mayRun(c), JSON.stringify(c)).toBe(false);
+  }
+});
+
 test('commit guards', () => {
   expect(checkPaths(['src/tools/a.ts'], REPAIR_ALLOWED).ok).toBe(true);
   expect(checkPaths([], REPAIR_ALLOWED).ok).toBe(false);

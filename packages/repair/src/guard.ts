@@ -215,9 +215,13 @@ export function escapingSymlinks(worktree: string, ignore: readonly string[] = [
 /**
  * Pure check for an agent Bash call: exactly `pnpm typecheck`, `pnpm lint`, `pnpm test [paths]`
  * or `pnpm exec vitest run [paths]`. No flags (so no --write, -u, --config or --outDir).
+ * The raw string is checked first: words of `[\w./-]` joined by single spaces, nothing else.
+ * A newline, CR, tab or other control character would start a second shell command that a
+ * whitespace split never sees.
  */
 export function mayRun(command: string): boolean {
-  const parts = command.trim().split(/\s+/);
+  if (!/^pnpm(?: [\w./-]+)+$/.test(command)) return false;
+  const parts = command.split(' ');
   const path = /^[\w./-]+$/;
   const paths = (xs: string[]) => xs.every((x) => path.test(x) && !x.startsWith('-') && !x.includes('..'));
   if (parts[0] !== 'pnpm') return false;
