@@ -83,6 +83,8 @@ def sign_test_two_sided(wins, losses):
 def run_stats(run_id):
     meta, trials = load_run(run_id)
     per_task = {}
+    noans_task = {}
+    viol_trials = 0
     outcomes = {'correct': 0, 'wrong': 0, 'declined': 0, 'noAnswer': 0}
     calls = {'verified': 0, 'violated': 0, 'unverifiable': 0}
     props = {}
@@ -92,6 +94,10 @@ def run_stats(run_id):
         # Same rule as packages/cli/src/commands/summarize.ts: an unsubmitted answer is 'noAnswer', not 'wrong'.
         o = 'noAnswer' if t.get('answer') is None and t['outcome'] != 'declined' and not t['pass'] else t['outcome']
         outcomes[o] = outcomes.get(o, 0) + 1
+        if o == 'noAnswer':
+            noans_task[t['taskId']] = noans_task.get(t['taskId'], 0) + 1
+        if any(cl.get('verdict') == 'violated' for cl in t.get('calls', [])):
+            viol_trials += 1
         for call in t.get('calls', []):
             v = call.get('verdict', 'none')
             calls[v] = calls.get(v, 0) + 1
@@ -103,6 +109,8 @@ def run_stats(run_id):
     lo, hi = wilson(c, n)
     return {
         'run': run_id, 'model': meta['model'], 'fiksSha': meta.get('fiksSha', ''), 'proxy': meta.get('proxy'),
+        'fiksDirty': meta.get('fiksDirty'), 'shopRef': meta.get('shopRef'), 'shopMcpSha': meta.get('shopMcpSha', ''),
+        'violTrials': viol_trials, 'noAnswerByTask': noans_task,
         'n': n, 'tasks': len(per_task), 'k': max(nn for (_, nn) in per_task.values()),
         'pass1': c / n, 'pass1_lo': lo, 'pass1_hi': hi,
         'passk': [pass_hat_k(per_task, k) for k in range(1, 6)],
@@ -143,6 +151,12 @@ def build():
             repairs.append(json.load(open(os.path.join(RES, 'loop', 'repairs', name))))
     repairs.sort(key=lambda r: r['scenario'])
     prs = json.load(open(PRS))
+    fruns = {}
+    for line in open(os.path.join(RES, 'loop', 'events.jsonl')):
+        e = json.loads(line) if line.strip() else {}
+        if e.get('type') == 'gate_F' and e.get('ok'):
+            reason = (e.get('data') or {}).get('reason', '')
+            fruns[e.get('traceId')] = reason.rsplit(' on ', 1)[-1].replace(' runs', '')
 
     M = {}  # macro name -> string
 
@@ -158,6 +172,10 @@ def build():
         M[f'declined{tag}'] = str(s['outcomes']['declined'])
         M[f'noAnswer{tag}'] = str(s['outcomes']['noAnswer'])
         M[f'trials{tag}'] = str(s['n'])
+    M['fiksSha'] = S['A']['fiksSha'][:7]
+    M['shopShaAB'] = S['A']['shopMcpSha'][:7]
+    M['shopShaC'] = S['C']['shopMcpSha'][:7]
+    M['nDirtyRuns'] = str(sum(1 for k in ('A', 'B', 'Bd', 'C') if S[k]['fiksDirty']))
     M['nTasks'] = str(S['A']['tasks'])
     M['kTrials'] = str(S['A']['k'])
     M['benchModel'] = S['A']['model']
@@ -168,28 +186,27 @@ def build():
     M['vOneCalls'] = str(n_v1)
     M['vOneViolated'] = str(a['violated'])
     M['vOneFpUpper'] = fmt_pct(wilson(a['violated'], n_v1)[1])
-    M['vOneTrialFpUpper'] = fmt_pct(wilson(0, S['A']['n'])[1])
+    M['vOneTrialFpUpper'] = fmt_pct(wilson(S['A']['violTrials'], S['A']['n'])[1])
     M['violatedCallsB'] = str(S['B']['calls']['violated'])
     M['callsB'] = str(sum(S['B']['calls'].values()))
 
     # Paired task-level comparison, receipts vs no fiks (pass^5 per task)
     def task_pass_all(s):
         return {t: v['c'] == v['n'] for t, v in s['perTask'].items()}
-    pb, pd = task_pass_all(S['B']), task_pass_all(S['Bd'])
-    wins = sum(1 for t in pb if pb[t] and not pd[t])
-    losses = sum(1 for t in pb if pd[t] and not pb[t])
-    M['pairWins'] = str(wins)
-    M['pairLosses'] = str(losses)
-    M['pairP'] = f'{sign_test_two_sided(wins, losses):.2f}'
+    for suffix, (kb, kd) in (('', ('B', 'Bd')), ('Old', ('Bold', 'Bdold'))):
+        pb, pd = task_pass_all(S[kb]), task_pass_all(S[kd])
+        wins = sum(1 for t in pb if pb[t] and not pd[t])
+        losses = sum(1 for t in pb if pd[t] and not pb[t])
+        M[f'pairWins{suffix}'] = str(wins)
+        M[f'pairLosses{suffix}'] = str(losses)
+        M[f'pairP{suffix}'] = f'{sign_test_two_sided(wins, losses):.2f}'
     wrong_tasks = sorted({t for t, v in S['Bd']['perTask'].items()} & {
         t for t in S['Bd']['perTask'] if any(
             tr['outcome'] == 'wrong' and tr.get('answer') is not None for tr in load_run(RUNS['Bd'])[1] if tr['taskId'] == t)})
     M['wrongTasksBd'] = ', '.join(wrong_tasks)
     M['nWrongTasksBd'] = str(len(wrong_tasks))
     # T1 sensitivity: without the 2 no-answer trials (right price stated, no submit)
-    t1 = S['Bd']['perTask']['T1']
-    sens = dict((t, (v['c'], v['n'])) for t, v in S['Bd']['perTask'].items())
-    sens['T1'] = (t1['c'] + S['Bd']['outcomes']['noAnswer'], t1['n'])
+    sens = dict((t, (v['c'] + S['Bd']['noAnswerByTask'].get(t, 0), v['n'])) for t, v in S['Bd']['perTask'].items())
     M['pFiveBdSens'] = fmt_pct(pass_hat_k(sens, 5))
 
     # Loop (D1-D5)
@@ -201,6 +218,8 @@ def build():
     M['nReproValid'] = str(sum(1 for d in summary['drifts'].values() if d['reproValid']))
     M['nPrGreen'] = str(sum(1 for d in summary['drifts'].values() if d['prGreen']))
     M['nConfirmed'] = str(sum(1 for d in summary['drifts'].values() if d['confirmed']))
+    M['nFTwoRuns'] = str(sum(1 for v in fruns.values() if v == '2/2'))
+    M['nFThreeRuns'] = str(sum(1 for v in fruns.values() if v == '3/3'))
     M['nOneAttempt'] = str(sum(1 for r in repairs if r['attempts'] == 1))
     M['repairModel'] = repairs[0]['model']
     M['costMin'] = f'{min(costs):.2f}'
@@ -258,13 +277,13 @@ def build():
         p = pr_by_url.get(d['prUrl'], {})
         prop = ', '.join(x.split('/', 1)[1] if '/' in x else x for x in r['propertyIds'])
         prop = prop.replace('_', '\\_')
-        lrows.append(f"{r['scenario']} & \\texttt{{{prop}}} & {'yes' if d['reproValid'] else 'no'} & {r['attempts']} & "
+        lrows.append(f"{r['scenario']} & \\texttt{{{prop}}} & {fruns.get(r['traceId'], '?')} & {r['attempts']} & "
                      f"{r['turns']} & {r['costUsd']:.2f} & {d['minutesDriftToPr']:.1f} & "
                      f"\\#{p.get('number', '?')} & {'yes' if d['merged'] else 'no'} & {'yes' if d['confirmed'] else 'no'} \\\\")
     files['tab-loop.tex'] = (
         '% Generated by paper/scripts/pilot_numbers.py. Do not edit.\n'
         '\\begin{tabular}{llcrrrrlcc}\n\\toprule\n'
-        'Drift & Violated property & F gate & Att. & Turns & Cost (\\$) & Min. to PR & PR & Merged & Confirmed \\\\\n'
+        'Drift & Violated property & F gate (runs) & Att. & Turns & Cost (\\$) & Min. to PR & PR & Merged & Confirmed \\\\\n'
         '\\midrule\n' + '\n'.join(lrows) + '\n\\bottomrule\n\\end{tabular}\n')
 
     # Table: receipt wording history (v1 vs v2)
