@@ -38,11 +38,15 @@ only network use was the read-only `scripts/ensure-shop-mcp.mjs` clone into the 
    that it violates under the current contract (a target it no longer violates there is a note).
 4. **corpus**: no clean v1 case violates a property it did not already violate (pre-existing
    violations are notes, not blamed on the delta).
-5. **mutation**: each variant is still rejected on every property that rejected it before, except
-   the amended ones. Added guard (CU design choice, stricter than the P12 sentence): an amended
-   property that rejected some variant before must still reject at least one, so "amend" cannot
-   mean "disable" (e.g. a range widened to [0, 1e9]).
-6. **input**: empty stored/corpus/variant lists and cases without a tool result fail closed.
+5. **mutation**: each variant is still rejected on every property that rejected it before, the
+   amended ones included (round 4; CU design choice, stricter than the P12 sentence, which exempts
+   the amended property): an amendment admits the trigger, never its mutants, so "amend" cannot
+   mean "disable". Rounds 1-3 only required an amended property to keep rejecting at least one
+   variant. A `replaceInvariant` keeps the invariant's `kind` and paths and a
+   `replacePostcondition` its `probeTool` (round 4, a `delta` error otherwise).
+6. **input**: empty stored/corpus/variant lists and cases without a tool result fail closed, and so
+   does every mutation variant that is not a call of the trigger's tool with the trigger's
+   arguments (round 4; it is skipped, not evaluated).
 
 ## Test inputs and provenance
 
@@ -151,10 +155,56 @@ five new tests fail and the other 28 pass.
 Evidence: `pnpm vitest run packages/contract-update` -> 2 files, 33 tests passed; `pnpm
 typecheck` exit 0; `pnpm lint` exit 0 ("Checked 173 files ... No fixes applied").
 
+## Round 4 (verifier findings)
+
+Rebase onto main: main is still `6157cb4`, so `git rebase main` -> "Current branch ws/CU is up to
+date" (uncommitted SETUP lockfile edit stashed around it). SETUP re-run: "nothing to apply",
+`pnpm install --no-frozen-lockfile` exit 0 (lockfile edit left uncommitted).
+
+1. **A kind swap no longer gets around "amend, not disable"** (`apply.ts`, `gate.ts`). Two
+   independent layers:
+   - `applyDelta` rejects a `replaceInvariant` that changes `kind`, `path`, `itemsPath`,
+     `totalPath` or `upstreamPath` of the invariant it replaces, and a `replacePostcondition` that
+     changes `probeTool`; only parameters change. Verifier repro, now: `{replaceInvariant,
+     shop.get_product, {id: price.range, kind: notNull, path: price}}` with `premiumProduct()` and
+     `productVariants()` -> `accepted=false`, one `[delta]` reason: `changes kind ("range" ->
+     "notNull")`.
+   - The mutation check no longer exempts amended properties: every variant an amended property
+     rejected before must still be rejected on it after. With the identity check disabled (a
+     temporary local edit, reverted), the same swap is still rejected: one `[mutation]` reason, M1
+     "is no longer rejected on the amended shop.get_product/price.range (was: price = 249900 is
+     outside 20-2000 USD)", mutation summary 4/3/2. This also closes a partial neutralisation the
+     round-3 rule let through: `items.price.range` widened to [20, 300000] admits M1 (x100) but still
+     rejects M2 (/100); with the D1 trace withheld, round 3 accepted it, round 4 rejects it with one
+     `[mutation]` finding on `benign-premium-search~M1`.
+2. **Mutation variants must be variants of the trigger** (`gate.ts`). A variant whose tool or
+   contract differs from the trigger's, or whose arguments differ (key-order independent), is an
+   `input` finding and is not evaluated; the vacuous-pass check counts only usable variants.
+   Verifier repro, now: `premiumProduct()` trigger, `searchVariants()`, `price.range` -> [0, 1e9]
+   -> `accepted=false`, four `[input]` findings ("is a shop.search_products call, but the trigger is
+   a shop.get_product call ... not a variant of the trigger"), mutation summary 4/0/0. With
+   `productVariants()` the same delta is rejected as before ("disables the property instead of
+   amending it").
+
+New tests (`describe('acceptDelta: amend, not disable (round 4)')`, 5 tests): the kind swap; a
+path move and a probeTool change; the partial neutralisation; search variants for a product
+trigger; a variant of p-1001 mixed into p-1004's variants (one `input` finding, counts equal to the
+trigger's own variants). The round-3 scope test amended `items.id.unique` by moving its path; it now
+changes a parameter (`items.nonEmpty`, `onlyKnownGood: false`) so it still reaches the scope check.
+
+Self-check (temporary local edits, each reverted): identity check disabled -> 2 tests fail;
+foreign-variant check disabled -> 2 fail; amended properties exempted again (round-3 rule) -> 4
+fail.
+
+Evidence: `pnpm vitest run packages/contract-update` -> 2 files, 38 tests passed (the three P12
+acceptance tests included and unchanged); `pnpm typecheck` exit 0; `pnpm lint` exit 0 ("Checked
+173 files ... No fixes applied").
+
 ## For ORCH (`--arm fiks+cu`)
 
 Pass the frozen trace as `trigger`, the target repo's `test/repro/*.json` as `storedViolations`,
 the A0 S-dev CallRecords as `cleanCorpus`, MUT M1-M14 variants of the trigger as
-`mutationVariants`, the contract file in force as `contracts`, and
+`mutationVariants` (each with the trigger's tool and arguments; anything else fails closed),
+the contract file in force as `contracts`, and
 `declaredOutputSchemas(<server tools/list>.tools)` as `declaredOutputSchemas`. On rejection feed `reasons`
 back to the agent; on acceptance write `renderProposal(...).markdown` and emit no `would_open_pr`.

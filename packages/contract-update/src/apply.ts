@@ -1,6 +1,22 @@
 // Applies a ContractDelta to a ContractFile. Pure: the input file is never mutated.
-import type { ContractFile, ToolContract } from '@fiks/contracts';
+import type { ContractFile, Invariant, ReadAfterWrite, ToolContract } from '@fiks/contracts';
 import type { ContractDelta } from './outcome.ts';
+
+/**
+ * The fields that say what an invariant checks and where: its `kind` and every path it reads.
+ * A replace keeps them; only parameters (bounds, unit, ages, compare mode, onlyKnownGood) change.
+ * Otherwise a replace could swap e.g. a `range` on `price` for a `notNull` under the same id and
+ * delete the range check while the property id lives on.
+ */
+const IDENTITY = ['kind', 'path', 'itemsPath', 'totalPath', 'upstreamPath'] as const;
+
+function identityChanges(cur: Invariant, next: Invariant): string[] {
+  const a = cur as Record<string, unknown>;
+  const b = next as Record<string, unknown>;
+  return IDENTITY.filter((k) => !same(a[k], b[k])).map(
+    (k) => `${k} (${JSON.stringify(a[k])} -> ${JSON.stringify(b[k])})`,
+  );
+}
 
 export interface AppliedDelta {
   contracts: ContractFile;
@@ -57,8 +73,16 @@ export function applyDelta(file: ContractFile, delta: ContractDelta): ApplyResul
           );
           return;
         }
-        if (same(c.invariants[j], op.invariant)) {
+        const cur = c.invariants[j] as Invariant;
+        if (same(cur, op.invariant)) {
           errors.push(`${at}: ${c.id}/${op.invariant.id} is unchanged`);
+          return;
+        }
+        const moved = identityChanges(cur, op.invariant);
+        if (moved.length) {
+          errors.push(
+            `${at}: ${c.id}/${op.invariant.id} changes ${moved.join(', ')}; a replace may change only the property's parameters (it amends the check, it never swaps it for another)`,
+          );
           return;
         }
         c.invariants[j] = structuredClone(op.invariant);
@@ -86,8 +110,15 @@ export function applyDelta(file: ContractFile, delta: ContractDelta): ApplyResul
           errors.push(`${at}: ${c.id} has no postcondition "${op.postcondition.id}"`);
           return;
         }
-        if (same(posts[j], op.postcondition)) {
+        const cur = posts[j] as ReadAfterWrite;
+        if (same(cur, op.postcondition)) {
           errors.push(`${at}: ${c.id}/${op.postcondition.id} is unchanged`);
+          return;
+        }
+        if (cur.probeTool !== op.postcondition.probeTool) {
+          errors.push(
+            `${at}: ${c.id}/${op.postcondition.id} changes probeTool (${JSON.stringify(cur.probeTool)} -> ${JSON.stringify(op.postcondition.probeTool)}); a replace may change only the property's parameters`,
+          );
           return;
         }
         posts[j] = structuredClone(op.postcondition);

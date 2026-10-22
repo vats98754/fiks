@@ -8,11 +8,14 @@ import type { Invariant, JsonSchema, ReadAfterWrite } from '@fiks/contracts';
  * There is deliberately no remove op: a contract update amends a property, it never deletes one.
  */
 export type DeltaOp =
-  /** Replace the invariant with the same `id` (amends `${contractId}/${invariant.id}`). */
+  /**
+   * Replace the invariant with the same `id` (amends `${contractId}/${invariant.id}`). Its `kind`
+   * and paths must stay: only parameters (bounds, unit, ages, compare mode, onlyKnownGood) change.
+   */
   | { op: 'replaceInvariant'; contractId: string; invariant: Invariant }
   /** Add a new invariant; its id must not exist yet (adds a property, amends none). */
   | { op: 'addInvariant'; contractId: string; invariant: Invariant }
-  /** Replace the postcondition with the same `id` (amends `${contractId}/${postcondition.id}`). */
+  /** Replace the postcondition with the same `id` and `probeTool` (amends `${contractId}/${postcondition.id}`). */
   | { op: 'replacePostcondition'; contractId: string; postcondition: ReadAfterWrite }
   /** Set the contract's outputSchema override (amends `${contractId}/outputSchema`). */
   | { op: 'setOutputSchema'; contractId: string; outputSchema: JsonSchema }
@@ -125,7 +128,12 @@ export const CONTRACT_UPDATE_OUTCOME_SCHEMA: JsonSchema = {
             type: 'object',
             required: ['op', 'contractId'],
             properties: {
-              op: { type: 'string', enum: [...OP_NAMES] },
+              op: {
+                type: 'string',
+                enum: [...OP_NAMES],
+                description:
+                  'replaceInvariant keeps the kind and paths of the invariant it replaces and replacePostcondition its probeTool: only parameters change.',
+              },
               contractId: { type: 'string' },
               invariant: invariantSchema,
               postcondition: { type: 'object' },

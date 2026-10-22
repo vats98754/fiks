@@ -164,7 +164,7 @@ describe('acceptDelta: other checks', () => {
         {
           op: 'replaceInvariant',
           contractId: 'shop.search_products',
-          invariant: { id: 'items.id.unique', kind: 'unique', path: 'items[*].name' },
+          invariant: { id: 'items.nonEmpty', kind: 'nonEmpty', path: 'items', onlyKnownGood: false },
         },
         ...widenSearch(3000).ops,
       ],
@@ -172,7 +172,7 @@ describe('acceptDelta: other checks', () => {
     const r = acceptDelta(delta, ctx(premiumSearch(), searchVariants()));
     expect(r.accepted).toBe(false);
     expect(r.findings).toContainEqual(
-      expect.objectContaining({ check: 'scope', property: 'shop.search_products/items.id.unique' }),
+      expect.objectContaining({ check: 'scope', property: 'shop.search_products/items.nonEmpty' }),
     );
   });
 
@@ -421,6 +421,114 @@ describe('acceptDelta: other checks', () => {
     expect(r1).toEqual(r2);
     expect(JSON.stringify(SHOP_CONTRACTS)).toBe(before);
     expect(JSON.stringify(c)).toBe(snapshot);
+  });
+});
+
+describe('acceptDelta: amend, not disable (round 4)', () => {
+  it('rejects a kind swap under an existing id (range -> notNull on price.range)', () => {
+    // Under the same id, a notNull would reject M5 (null price) on price.range while M1 (x100
+    // cents, the D1 operator) went from rejected to verified: the range check would be deleted.
+    const swap: ContractDelta = {
+      rationale: 'x',
+      ops: [
+        {
+          op: 'replaceInvariant',
+          contractId: 'shop.get_product',
+          invariant: { id: 'price.range', kind: 'notNull', path: 'price' },
+        },
+      ],
+    };
+    const r = acceptDelta(swap, ctx(premiumProduct(), productVariants()));
+    expect(r.accepted).toBe(false);
+    expect(r.findings).toEqual([expect.objectContaining({ check: 'delta' })]);
+    expect(r.reasons[0]).toContain('changes kind ("range" -> "notNull")');
+    expect(r.proposed).toBeUndefined();
+  });
+
+  it('rejects a replace that moves the property to another path, or a postcondition to another probe', () => {
+    const moved: ContractDelta = {
+      rationale: 'x',
+      ops: [
+        {
+          op: 'replaceInvariant',
+          contractId: 'shop.get_product',
+          invariant: { id: 'price.range', kind: 'range', path: 'stock', min: 20, max: 3000, unit: 'USD' },
+        },
+      ],
+    };
+    const r = acceptDelta(moved, ctx(premiumProduct(), productVariants()));
+    expect(r.accepted).toBe(false);
+    expect(r.reasons).toEqual([expect.stringContaining('changes path ("price" -> "stock")')]);
+
+    const rawOrder = findContract(SHOP_CONTRACTS, 'create_order')?.postconditions?.[0];
+    expect(rawOrder).toBeDefined();
+    if (!rawOrder) return;
+    const probe: ContractDelta = {
+      rationale: 'x',
+      ops: [
+        {
+          op: 'replacePostcondition',
+          contractId: 'shop.create_order',
+          postcondition: { ...rawOrder, probeTool: 'get_product' },
+        },
+      ],
+    };
+    const r2 = acceptDelta(probe, ctx(premiumProduct(), productVariants()));
+    expect(r2.accepted).toBe(false);
+    expect(r2.findings.every((f) => f.check === 'delta')).toBe(true);
+    expect(r2.reasons[0]).toContain('changes probeTool');
+  });
+
+  it('rejects an amendment that stops rejecting one variant on the amended property while it still rejects another', () => {
+    // [20, 300000] admits M1 (x100: the premium laptop at 250,000) but still rejects M2 (/100).
+    // The D1 trace is withheld so that the mutation check alone decides.
+    const stored = storedTraces().filter((t) => t.id !== D1().id);
+    const r = acceptDelta(
+      widenSearch(300_000),
+      ctx(premiumSearch(), searchVariants(), { storedViolations: stored }),
+    );
+    expect(r.accepted).toBe(false);
+    expect(r.findings).toEqual([
+      expect.objectContaining({
+        check: 'mutation',
+        caseId: 'benign-premium-search~M1',
+        property: SEARCH_RANGE,
+      }),
+    ]);
+    expect(r.reasons[0]).toContain('disables the property instead of amending it');
+    // M2 is still rejected on the amended property after the delta.
+    const m2 = searchVariants().find((v) => v.mutant === 'M2');
+    expect(m2 && r.proposed && violatedIds(m2, r.proposed)).toContain(SEARCH_RANGE);
+  });
+
+  it('fails closed on mutation variants of another tool than the trigger', () => {
+    // search_products variants for a get_product trigger: the mutation check would pass vacuously
+    // for the amended get_product contract.
+    const variants = searchVariants();
+    const r = acceptDelta(widenProduct(1e9, 0), ctx(premiumProduct(), variants));
+    expect(r.accepted).toBe(false);
+    expect(r.findings.filter((f) => f.check === 'input').map((f) => f.caseId)).toEqual(
+      variants.map((v) => v.id),
+    );
+    expect(r.reasons[0]).toContain('is not a variant of the trigger');
+    expect(r.summary.mutation).toEqual({ total: 4, rejectedBefore: 0, rejectedAfter: 0 });
+
+    // Control: with the trigger's own variants the same delta is rejected as a neutralisation.
+    const own = acceptDelta(widenProduct(1e9, 0), ctx(premiumProduct(), productVariants()));
+    expect(own.reasons).toEqual([expect.stringContaining('disables the property instead of amending it')]);
+  });
+
+  it("fails closed on variants with other arguments than the trigger's, one finding per foreign variant", () => {
+    const other = productVariants(load('shop-v1/product-p-1001.json'));
+    const mixed = [...productVariants(), other[0] as GateInput];
+    const r = acceptDelta(widenProduct(3000), ctx(premiumProduct(), mixed));
+    expect(r.accepted).toBe(false);
+    expect(r.findings).toEqual([expect.objectContaining({ check: 'input', caseId: other[0]?.id })]);
+    expect(r.reasons[0]).toContain('has arguments {"id":"p-1001"}');
+    // The foreign variant is not evaluated: the counts are those of the trigger's own variants.
+    const own = acceptDelta(widenProduct(3000), ctx(premiumProduct(), productVariants()));
+    expect(own.accepted).toBe(true);
+    expect(r.summary.mutation).toEqual({ ...own.summary.mutation, total: 5 });
   });
 });
 

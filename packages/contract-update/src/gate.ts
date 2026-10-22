@@ -12,13 +12,14 @@
 //              under the current contract;
 //   corpus   - no clean v1 case violates a property it did not already violate;
 //   mutation - every mutation variant of the trigger is still rejected on every property that
-//              rejected it before, except the amended properties; and an amended property that
-//              rejected some variant before still rejects at least one (it is amended, not
-//              neutralised).
+//              rejected it before, the amended properties included (an amendment admits the
+//              trigger, never its mutants: it is amended, not neutralised). Every variant must be
+//              a call of the trigger's tool with the trigger's arguments.
 // Every case is checked against the server's declared outputSchema (`declaredOutputSchemas`, from
 // tools/list), as the live proxy does, so `<contract>/outputSchema` verdicts match production.
 // Missing or unevaluable inputs fail closed, and so does a check that would pass vacuously: no
-// stored trace that violates its target, no corpus case that verifies, no variant rejected before.
+// stored trace that violates its target, no corpus case that verifies, no variant rejected before,
+// a "variant" that is not a variant of the trigger.
 import { type ContractFile, type EvalResult, evaluate, findContract, type Verdict } from '@fiks/contracts';
 import { applyDelta } from './apply.ts';
 import { type DeclaredOutputSchemas, evalInput, type GateCase, type GateInput, toGateCase } from './cases.ts';
@@ -110,6 +111,17 @@ function onlyKnownGoodProps(file: ContractFile, contractId: string): string[] {
   return (c?.invariants ?? [])
     .filter((inv) => 'onlyKnownGood' in inv && inv.onlyKnownGood)
     .map((inv) => `${contractId}/${inv.id}`);
+}
+
+/** JSON with object keys sorted, so equal arguments compare equal whatever their key order. */
+function canonical(x: unknown): string {
+  return JSON.stringify(x, (_k, v: unknown) =>
+    v !== null && typeof v === 'object' && !Array.isArray(v)
+      ? Object.fromEntries(
+          Object.entries(v as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+        )
+      : v,
+  );
 }
 
 function describe(c: GateCase): string {
@@ -325,46 +337,57 @@ export function acceptDelta(delta: unknown, ctx: GateContext): GateResult {
       message: `none of the ${summary.corpus.total} clean v1 corpus cases verifies under the current contract, so the corpus check would pass vacuously; the gate fails closed`,
     });
 
-  // Mutation variants are still rejected, except on the amended properties.
-  const amendedBefore = new Map<string, number>();
-  const amendedAfter = new Map<string, number>();
+  // Mutation variants are still rejected: on every property that rejected them before, the
+  // amended ones included. Each must be a variant of the trigger (same tool, same arguments; MUT
+  // operators edit the upstream body only), or the check would say nothing about the amended
+  // contract.
+  const tToolContract = findContract(old, trigger.tool)?.id;
+  let usable = 0;
   for (const input of ctx.mutationVariants ?? []) {
     const c = toGateCase(input);
+    const cContract = findContract(old, c.tool)?.id;
+    const foreign: string[] = [];
+    if (c.tool !== trigger.tool || cContract !== tToolContract)
+      foreign.push(
+        `is a ${cContract ?? c.tool} call, but the trigger is a ${tToolContract ?? trigger.tool} call`,
+      );
+    else if (canonical(c.args) !== canonical(trigger.args))
+      foreign.push(
+        `has arguments ${JSON.stringify(c.args)}, but the trigger's are ${JSON.stringify(trigger.args)}`,
+      );
+    if (foreign.length) {
+      findings.push({
+        check: 'input',
+        caseId: c.id,
+        message: `mutation variant ${describe(c)} ${foreign.join('; ')}; it is not a variant of the trigger, so it cannot show the amended contract still rejects the trigger's faults. The gate fails closed`,
+      });
+      continue;
+    }
     const [before, after] = evalBoth(c);
     if (!before || !after) {
       unevaluable('mutation', c);
       continue;
     }
+    usable++;
     if (before.violated.size) summary.mutation.rejectedBefore++;
     if (after.violated.size) summary.mutation.rejectedAfter++;
-    for (const p of amended) {
-      if (before.violated.has(p)) amendedBefore.set(p, (amendedBefore.get(p) ?? 0) + 1);
-      if (after.violated.has(p)) amendedAfter.set(p, (amendedAfter.get(p) ?? 0) + 1);
-    }
     for (const p of before.violated) {
-      if (amendedSet.has(p) || after.violated.has(p)) continue;
+      if (after.violated.has(p)) continue;
       findings.push({
         check: 'mutation',
         caseId: c.id,
         property: p,
-        message: `mutation variant ${describe(c)} is no longer rejected on ${p}, which the delta does not amend (was: ${messageFor(before, p)})`,
+        message: amendedSet.has(p)
+          ? `mutation variant ${describe(c)} is no longer rejected on the amended ${p} (was: ${messageFor(before, p)}); an amendment may admit the trigger, not its mutants: the delta disables the property instead of amending it`
+          : `mutation variant ${describe(c)} is no longer rejected on ${p}, which the delta does not amend (was: ${messageFor(before, p)})`,
       });
     }
   }
-  if (summary.mutation.total > 0 && summary.mutation.rejectedBefore === 0)
+  if (usable > 0 && summary.mutation.rejectedBefore === 0)
     findings.push({
       check: 'input',
-      message: `none of the ${summary.mutation.total} mutation variants of the trigger is rejected under the current contract, so the mutation check would pass vacuously; the gate fails closed`,
+      message: `none of the ${usable} mutation variants of the trigger is rejected under the current contract, so the mutation check would pass vacuously; the gate fails closed`,
     });
-  for (const p of amended) {
-    const n = amendedBefore.get(p) ?? 0;
-    if (n > 0 && (amendedAfter.get(p) ?? 0) === 0)
-      findings.push({
-        check: 'mutation',
-        property: p,
-        message: `the amended ${p} rejected ${n} mutation variant(s) before and rejects none after; the delta disables the property instead of amending it`,
-      });
-  }
 
   return done({ amended, added, contractLevel, proposed: next, delta: parsed.value });
 }
