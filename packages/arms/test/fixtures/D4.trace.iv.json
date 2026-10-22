@@ -1,0 +1,15 @@
+{
+  "controlCallId": "control-tr_c3cb09411c",
+  "attributableProperties": [
+    "shop.search_products/countMatchesTotal"
+  ],
+  "ivProperties": [
+    "shop.search_products/outputSchema",
+    "shop.search_products/items.price.range",
+    "shop.search_products/countMatchesTotal",
+    "shop.search_products/total.equalsUpstream",
+    "shop.search_products/items.id.unique",
+    "shop.search_products/items.nonEmpty"
+  ],
+  "ivExcluded": []
+}

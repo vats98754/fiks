@@ -1,0 +1,13 @@
+{
+  "controlCallId": "control-tr_bc59dbbff1",
+  "attributableProperties": [
+    "tracker.list_comments/countMatchesTotal"
+  ],
+  "ivProperties": [
+    "tracker.list_comments/outputSchema",
+    "tracker.list_comments/countMatchesTotal",
+    "tracker.list_comments/total.equalsUpstream",
+    "tracker.list_comments/items.id.unique"
+  ],
+  "ivExcluded": []
+}

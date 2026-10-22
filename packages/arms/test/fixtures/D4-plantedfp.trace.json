@@ -1,0 +1,124 @@
+{
+  "id": "tr_47828c0b12",
+  "capturedAt": "2026-10-01T12:00:00.000Z",
+  "runId": "arms-fixture-D4-plantedfp",
+  "contractId": "shop.search_products",
+  "tool": "search_products",
+  "args": {
+    "query": "laptop"
+  },
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"items\":[{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"price\":1199,\"currency\":\"USD\"},{\"id\":\"p-1002\",\"name\":\"Volt 13 Laptop\",\"category\":\"laptop\",\"price\":899,\"currency\":\"USD\"},{\"id\":\"p-1003\",\"name\":\"Titan 16 Laptop\",\"category\":\"laptop\",\"price\":1499,\"currency\":\"USD\"},{\"id\":\"p-1004\",\"name\":\"Nimbus 15 Laptop\",\"category\":\"laptop\",\"price\":749.5,\"currency\":\"USD\"},{\"id\":\"px-arms-budget-laptop\",\"name\":\"Arms Budget 11 Laptop\",\"category\":\"laptop\",\"price\":9,\"currency\":\"USD\"}],\"count\":5,\"total\":6}"
+      }
+    ],
+    "structuredContent": {
+      "items": [
+        {
+          "id": "p-1001",
+          "name": "Aero 14 Laptop",
+          "category": "laptop",
+          "price": 1199,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1002",
+          "name": "Volt 13 Laptop",
+          "category": "laptop",
+          "price": 899,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1003",
+          "name": "Titan 16 Laptop",
+          "category": "laptop",
+          "price": 1499,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1004",
+          "name": "Nimbus 15 Laptop",
+          "category": "laptop",
+          "price": 749.5,
+          "currency": "USD"
+        },
+        {
+          "id": "px-arms-budget-laptop",
+          "name": "Arms Budget 11 Laptop",
+          "category": "laptop",
+          "price": 9,
+          "currency": "USD"
+        }
+      ],
+      "count": 5,
+      "total": 6
+    }
+  },
+  "http": [
+    {
+      "seq": 0,
+      "startedAt": "2026-10-01T12:00:00.000Z",
+      "durationMs": 0,
+      "request": {
+        "method": "GET",
+        "url": "/products?q=laptop",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-10-01"
+        },
+        "body": "{\"items\":[{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":12,\"price\":1199},{\"id\":\"p-1002\",\"name\":\"Volt 13 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":30,\"price\":899},{\"id\":\"p-1003\",\"name\":\"Titan 16 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":4,\"price\":1499},{\"id\":\"p-1004\",\"name\":\"Nimbus 15 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":18,\"price\":749.5},{\"id\":\"px-arms-budget-laptop\",\"name\":\"Arms Budget 11 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":3,\"price\":9}],\"total\":6,\"next_cursor\":\"5\"}"
+      }
+    }
+  ],
+  "vendorVersionHeader": "2026-10-01",
+  "upstream": {
+    "version": "v1",
+    "drifts": [],
+    "clock": "2026-10-01T12:00:00.000Z"
+  },
+  "violated": [
+    {
+      "propertyId": "shop.search_products/items.price.range",
+      "kind": "range",
+      "path": "items[4].price",
+      "expected": "20-2000 USD",
+      "actual": 9,
+      "message": "1 of 5 prices outside 20-2000 USD (px-arms-budget-laptop = 9)"
+    },
+    {
+      "propertyId": "shop.search_products/countMatchesTotal",
+      "kind": "countMatchesTotal",
+      "path": "items",
+      "expected": "items.length == total (6)",
+      "actual": 5,
+      "message": "list is incomplete, 5 of 6 matches returned"
+    }
+  ],
+  "target": [
+    "shop.search_products/countMatchesTotal"
+  ],
+  "server": {
+    "name": "shop-mcp",
+    "transport": "stdio",
+    "gitSha": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7"
+  },
+  "profile": {
+    "domain": "shop",
+    "base": "v1",
+    "ruleId": "D4",
+    "ruleHash": "502098ec4570e9eaf1c3f653016eb9fd0d416156cc051d4901b8f10fef025be0"
+  }
+}

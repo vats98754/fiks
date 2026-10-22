@@ -1,0 +1,22 @@
+{
+  "entities": [
+    {
+      "id": "px-arms-budget-laptop",
+      "name": "Arms Budget 11 Laptop",
+      "category": "laptop",
+      "price": 9,
+      "currency": "USD",
+      "stock": 3,
+      "authorBatch": "arms-plantedfp"
+    },
+    {
+      "id": "px-arms-studio-laptop",
+      "name": "Arms Studio 15 Laptop",
+      "category": "laptop",
+      "price": 999,
+      "currency": "USD",
+      "stock": 7,
+      "authorBatch": "arms-plantedfp"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "controlCallId": "control-tr_b703bf79d0",
+  "attributableProperties": [
+    "shop.create_order/readAfterWrite"
+  ],
+  "ivProperties": [
+    "shop.create_order/outputSchema",
+    "shop.create_order/total.range",
+    "shop.create_order/readAfterWrite"
+  ],
+  "ivExcluded": []
+}

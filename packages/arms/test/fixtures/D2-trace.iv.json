@@ -1,0 +1,12 @@
+{
+  "controlCallId": "control-tr_079b90c89e",
+  "attributableProperties": [
+    "shop.get_product/price.notNull"
+  ],
+  "ivProperties": [
+    "shop.get_product/outputSchema",
+    "shop.get_product/price.notNull",
+    "shop.get_product/price.range"
+  ],
+  "ivExcluded": []
+}

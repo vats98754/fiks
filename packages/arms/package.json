@@ -1,0 +1,27 @@
+{
+  "name": "@fiks/arms",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "bin": {
+    "fiks-iv": "./src/iv-cli.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fiks/contracts": "workspace:*",
+    "@fiks/domains": "workspace:*",
+    "@fiks/interfaces": "workspace:*",
+    "@fiks/proxy": "workspace:*",
+    "@fiks/repair": "workspace:*",
+    "@fiks/replay-proc": "workspace:*",
+    "@fiks/repro": "workspace:*",
+    "@fiks/sandbox": "workspace:*"
+  },
+  "devDependencies": {
+    "@fiks/injector": "workspace:*"
+  }
+}
