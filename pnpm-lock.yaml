@@ -226,6 +226,12 @@ importers:
       '@fiks/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@fiks/domains':
+        specifier: workspace:*
+        version: link:../domains
+      '@fiks/interfaces':
+        specifier: workspace:*
+        version: link:../interfaces
       '@fiks/proxy':
         specifier: workspace:*
         version: link:../proxy
@@ -239,7 +245,11 @@ importers:
         specifier: workspace:*
         version: link:../interfaces
 
-  packages/vendor-api: {}
+  packages/vendor-api:
+    dependencies:
+      '@fiks/interfaces':
+        specifier: workspace:*
+        version: link:../interfaces
 
   packages/vendor-tracker:
     dependencies:
