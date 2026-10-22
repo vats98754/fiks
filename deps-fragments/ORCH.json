@@ -1,0 +1,12 @@
+{
+  "stream": "ORCH",
+  "add": {
+    "packages/cli": {
+      "@fiks/contract-update": "workspace:*",
+      "@fiks/injector": "workspace:*",
+      "@fiks/llm": "workspace:*",
+      "@fiks/mutate": "workspace:*",
+      "@fiks/sandbox": "workspace:*"
+    }
+  }
+}
