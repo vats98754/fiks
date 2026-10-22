@@ -1,0 +1,15 @@
+{
+  "id": "R19",
+  "repo": "vats98754/rb-r19-mongodb-mcp-server",
+  "upstream": "mongodb-js/mongodb-mcp-server",
+  "upstreamRef": "https://github.com/mongodb-js/mongodb-mcp-server/pull/561",
+  "prefixSha": "62a57d815107d6cfb9ec9a436b82abe376ca10f1",
+  "fixSha": "7fa4a2f21865ac0bcd824bfb0875b0523afecfe2",
+  "fixKind": "squash merge of PR #561 (single parent = prefixSha)",
+  "pushed": {
+    "main": "62a57d815107d6cfb9ec9a436b82abe376ca10f1",
+    "tags/human-fix": "7fa4a2f21865ac0bcd824bfb0875b0523afecfe2"
+  },
+  "license": "Apache-2.0",
+  "round": 7
+}

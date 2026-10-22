@@ -1,0 +1,52 @@
+{
+  "id": "r19-heldout-twelve-clusters",
+  "label": "synthesized",
+  "provenance": "Synthesized from the Atlas Admin API v2 schemas (prefix openapi.d.ts); held-out: twelve dedicated clusters (count >= 10, two-digit).",
+  "capturedAt": "2025-09-15T12:00:00.000Z",
+  "tool": "atlas-list-clusters",
+  "args": {
+    "projectId": "68c8a1f2e4b0a1b2c3d4e5f6"
+  },
+  "http": [
+    {
+      "seq": 0,
+      "startedAt": "2025-09-15T12:00:00.100Z",
+      "durationMs": 60,
+      "request": {
+        "method": "GET",
+        "url": "/api/atlas/v2/groups/68c8a1f2e4b0a1b2c3d4e5f6",
+        "headers": {
+          "accept": "application/vnd.atlas.2025-03-12+json"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/vnd.atlas.2025-03-12+json;charset=utf-8"
+        },
+        "body": "{\"clusterCount\":12,\"created\":\"2025-08-01T09:00:00Z\",\"id\":\"68c8a1f2e4b0a1b2c3d4e5f6\",\"links\":[],\"name\":\"fiks-r19-fleet\",\"orgId\":\"68c8a1d0e4b0a1b2c3d4e500\",\"tags\":[]}"
+      }
+    },
+    {
+      "seq": 1,
+      "startedAt": "2025-09-15T12:00:00.200Z",
+      "durationMs": 80,
+      "request": {
+        "method": "GET",
+        "url": "/api/atlas/v2/groups/68c8a1f2e4b0a1b2c3d4e5f6/clusters",
+        "headers": {
+          "accept": "application/vnd.atlas.2025-03-12+json"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/vnd.atlas.2025-03-12+json;charset=utf-8"
+        },
+        "body": "{\"links\":[],\"results\":[{\"clusterType\":\"REPLICASET\",\"connectionStrings\":{\"standard\":\"mongodb://shard-01.ab000.mongodb.net:27017/?ssl=true\",\"standardSrv\":\"mongodb+srv://shard-01.ab000.mongodb.net\"},\"createDate\":\"2025-08-01T10:00:00Z\",\"groupId\":\"68c8a1f2e4b0a1b2c3d4e5f6\",\"id\":\"68c8a2000000000000000000\",\"mongoDBMajorVersion\":\"8.0\",\"mongoDBVersion\":\"8.0.13\",\"name\":\"shard-01\",\"paused\":false,\"replicationSpecs\":[{\"id\":\"68c8a3000000000000000000\",\"zoneName\":\"Zone 1\",\"regionConfigs\":[{\"providerName\":\"AWS\",\"regionName\":\"US_EAST_1\",\"priority\":7,\"electableSpecs\":{\"instanceSize\":\"M40\",\"nodeCount\":3}}]}],\"stateName\":\"IDLE\",\"terminationProtectionEnabled\":false},{\"clusterType\":\"REPLICASET\",\"connectionStrings\":{\"standard\":\"mongodb://shard-02.ab001.mongodb.net:27017/?ssl=true\",\"standardSrv\":\"mongodb+srv://shard-02.ab001.mongodb.net\"},\"createDate\":\"2025-08-01T10:00:00Z\",\"groupId\":\"68c8a1f2e4b0a1b2c3d4e5f6\",\"id\":\"68c8a2000000000000000001\",\"mongoDBMajorVersion\":\"8.0\",\"mongoDBVersion\":\"8.0.13\",\"name\":\"shard-02\",\"paused\":false,\"replicationSpecs\":[{\"id\":\"68c8a3000000000000000001\",\"zoneName\":\"Zone 1\",\"regionConfigs\":[{\"providerName\":\"AWS\",\"regionName\":\"US_EAST_1\",\"priority\":7,\"electableSpecs\":{\"instanceSize\":\"M40\",\"nodeCount\":3}}]}],\"stateName\":\"IDLE\",\"terminationProtectionEnabled\":false},{\"clusterType\":\"REPLICASET\",\"connectionStrings\":{\"standard\":\"mongodb://shard-03.ab002.mongodb.net:27017/?ssl=true\",\"standardSrv\":\"mongodb+srv://shard-03.ab002.mongodb.net\"},\"createDate\":\"2025-08-01T10:00:00Z\",\"groupId\":\"68c8a1f2e4b0a1b2c3d4e5f6\",\"id\":\"68c8a2000000000000000002\",\"mongoDBMajorVersion\":\"8.0\",\"mongoDBVersion\":\"8.0.13\",\"name\":\"shard-03\",\"paused\":false,\"replicationSpecs\":[{\"id\":\"68c8a3000000000000000002\",\"zoneName\":\"Zone 1\",\"regionConfigs\":[{\"providerName\":\"AWS\",\"regionName\":\"US_EAST_1\",\"priority\":7,\"electableSpecs\":{\"instanceSize\":\"M40\",\"nodeCount\":3}}]}],\"stateName\":\"IDLE\",\"terminationProtectionEnabled\":false},{\"clusterType\":\"REPLICASET\",\"connectionStrings\":{\"standard\":\"mongodb://shard-04.ab003.mongodb.net:27017/?ssl=true\",\"standardSrv\":\"mongodb+srv://shard-04.ab003.mongodb.net\"},\"createDate\":\"2025-08-01T10:00:00Z\",\"groupId\":\"68c8a1f2e4b0a1b2c3d4e5f6\",\"id\":\"68c8a2000000000000000003\",\"mongoDBMajorVersion\":\"8.0\",\"mongoDBVersion\":\"8.0.13\",\"name\":\"shard-04\",\"paused\":false,\"replicationSpecs\":[{\"id\":\"68c8a3000000000000000003\",\"zoneName\":\"Zone 1\",\"regionConfigs\":[{\"providerName\":\"AWS\",\"regionName\":\"US_EAST_1\",\"priority\":7,\"electableSpecs\":{\"instanceSize\":\"M40\",\"nodeCount\":3}}]}],\"stateName\":\"IDLE\",\"terminationProtectionEnabled\":false},{\"clusterType\":\"REPLICASET\",\"connectionStrings\":{\"standard\":\"mongodb://shard-05.ab004.mongodb.net:27017/?ssl=true\",\"standardSrv\":\"mongodb+srv://shard-05.ab004.mongodb.net\"},\"createDate\":\"2025-08-01T10:00:00Z\",\"groupId\":\"68c8a1f2e4b0a1b2c3d4e5f6\",\"id\":\"68c8a2000000000000000004\",\"mongoDBMajorVersion\":\"8.0\",\"mongoDBVersion\":\"8.0.13\",\"name\":\"shard-05\",\"paused\":false,\"replicationSpecs\":[{\"id\":\"68c8a3000000000000000004\",\"zoneName\":\"Zone 1\",\"regionConfigs\":[{\"providerName\":\"AWS\",\"regionName\":\"US_EAST_1\",\"priority\":7,\"electableSpecs\":{\"instanceSize\":\"M40\",\"nodeCount\":3}}]}],\"stateName\":\"IDLE\",\"terminationProtectionEnabled\":false},{\"clusterType\":\"REPLICASET\",\"connectionStrings\":{\"standard\":\"mongodb://shard-06.ab005.mongodb.net:27017/?ssl=true\",\"standardSrv\":\"mongodb+srv://shard-06.ab005.mongodb.net\"},\"createDate\":\"2025-08-01T10:00:00Z\",\"groupId\":\"68c8a1f2e4b0a1b2c3d4e5f6\",\"id\":\"68c8a2000000000000000005\",\"mongoDBMajorVersion\":\"8.0\",\"mongoDBVersion\":\"8.0.13\",\"name\":\"shard-06\",\"paused\":false,\"replicationSpecs\":[{\"id\":\"68c8a3000000000000000005\",\"zoneName\":\"Zone 1\",\"regionConfigs\":[{\"providerName\":\"AWS\",\"regionName\":\"US_EAST_1\",\"priority\":7,\"electableSpecs\":{\"instanceSize\":\"M40\",\"nodeCount\":3}}]}],\"stateName\":\"IDLE\",\"terminationProtectionEnabled\":false},{\"clusterType\":\"REPLICASET\",\"connectionStrings\":{\"standard\":\"mongodb://shard-07.ab006.mongodb.net:27017/?ssl=true\",\"standardSrv\":\"mongodb+srv://shard-07.ab006.mongodb.net\"},\"createDate\":\"2025-08-01T10:00:00Z\",\"groupId\":\"68c8a1f2e4b0a1b2c3d4e5f6\",\"id\":\"68c8a2000000000000000006\",\"mongoDBMajorVersion\":\"8.0\",\"mongoDBVersion\":\"8.0.13\",\"name\":\"shard-07\",\"paused\":false,\"replicationSpecs\":[{\"id\":\"68c8a3000000000000000006\",\"zoneName\":\"Zone 1\",\"regionConfigs\":[{\"providerName\":\"AWS\",\"regionName\":\"US_EAST_1\",\"priority\":7,\"electableSpecs\":{\"instanceSize\":\"M40\",\"nodeCount\":3}}]}],\"stateName\":\"IDLE\",\"terminationProtectionEnabled\":false},{\"clusterType\":\"REPLICASET\",\"connectionStrings\":{\"standard\":\"mongodb://shard-08.ab007.mongodb.net:27017/?ssl=true\",\"standardSrv\":\"mongodb+srv://shard-08.ab007.mongodb.net\"},\"createDate\":\"2025-08-01T10:00:00Z\",\"groupId\":\"68c8a1f2e4b0a1b2c3d4e5f6\",\"id\":\"68c8a2000000000000000007\",\"mongoDBMajorVersion\":\"8.0\",\"mongoDBVersion\":\"8.0.13\",\"name\":\"shard-08\",\"paused\":false,\"replicationSpecs\":[{\"id\":\"68c8a3000000000000000007\",\"zoneName\":\"Zone 1\",\"regionConfigs\":[{\"providerName\":\"AWS\",\"regionName\":\"US_EAST_1\",\"priority\":7,\"electableSpecs\":{\"instanceSize\":\"M40\",\"nodeCount\":3}}]}],\"stateName\":\"IDLE\",\"terminationProtectionEnabled\":false},{\"clusterType\":\"REPLICASET\",\"connectionStrings\":{\"standard\":\"mongodb://shard-09.ab008.mongodb.net:27017/?ssl=true\",\"standardSrv\":\"mongodb+srv://shard-09.ab008.mongodb.net\"},\"createDate\":\"2025-08-01T10:00:00Z\",\"groupId\":\"68c8a1f2e4b0a1b2c3d4e5f6\",\"id\":\"68c8a2000000000000000008\",\"mongoDBMajorVersion\":\"8.0\",\"mongoDBVersion\":\"8.0.13\",\"name\":\"shard-09\",\"paused\":false,\"replicationSpecs\":[{\"id\":\"68c8a3000000000000000008\",\"zoneName\":\"Zone 1\",\"regionConfigs\":[{\"providerName\":\"AWS\",\"regionName\":\"US_EAST_1\",\"priority\":7,\"electableSpecs\":{\"instanceSize\":\"M40\",\"nodeCount\":3}}]}],\"stateName\":\"IDLE\",\"terminationProtectionEnabled\":false},{\"clusterType\":\"REPLICASET\",\"connectionStrings\":{\"standard\":\"mongodb://shard-10.ab009.mongodb.net:27017/?ssl=true\",\"standardSrv\":\"mongodb+srv://shard-10.ab009.mongodb.net\"},\"createDate\":\"2025-08-01T10:00:00Z\",\"groupId\":\"68c8a1f2e4b0a1b2c3d4e5f6\",\"id\":\"68c8a2000000000000000009\",\"mongoDBMajorVersion\":\"8.0\",\"mongoDBVersion\":\"8.0.13\",\"name\":\"shard-10\",\"paused\":false,\"replicationSpecs\":[{\"id\":\"68c8a3000000000000000009\",\"zoneName\":\"Zone 1\",\"regionConfigs\":[{\"providerName\":\"AWS\",\"regionName\":\"US_EAST_1\",\"priority\":7,\"electableSpecs\":{\"instanceSize\":\"M40\",\"nodeCount\":3}}]}],\"stateName\":\"IDLE\",\"terminationProtectionEnabled\":false},{\"clusterType\":\"REPLICASET\",\"connectionStrings\":{\"standard\":\"mongodb://shard-11.ab010.mongodb.net:27017/?ssl=true\",\"standardSrv\":\"mongodb+srv://shard-11.ab010.mongodb.net\"},\"createDate\":\"2025-08-01T10:00:00Z\",\"groupId\":\"68c8a1f2e4b0a1b2c3d4e5f6\",\"id\":\"68c8a2000000000000000010\",\"mongoDBMajorVersion\":\"8.0\",\"mongoDBVersion\":\"8.0.13\",\"name\":\"shard-11\",\"paused\":false,\"replicationSpecs\":[{\"id\":\"68c8a3000000000000000010\",\"zoneName\":\"Zone 1\",\"regionConfigs\":[{\"providerName\":\"AWS\",\"regionName\":\"US_EAST_1\",\"priority\":7,\"electableSpecs\":{\"instanceSize\":\"M40\",\"nodeCount\":3}}]}],\"stateName\":\"IDLE\",\"terminationProtectionEnabled\":false},{\"clusterType\":\"REPLICASET\",\"connectionStrings\":{\"standard\":\"mongodb://shard-12.ab011.mongodb.net:27017/?ssl=true\",\"standardSrv\":\"mongodb+srv://shard-12.ab011.mongodb.net\"},\"createDate\":\"2025-08-01T10:00:00Z\",\"groupId\":\"68c8a1f2e4b0a1b2c3d4e5f6\",\"id\":\"68c8a2000000000000000011\",\"mongoDBMajorVersion\":\"8.0\",\"mongoDBVersion\":\"8.0.13\",\"name\":\"shard-12\",\"paused\":false,\"replicationSpecs\":[{\"id\":\"68c8a3000000000000000011\",\"zoneName\":\"Zone 1\",\"regionConfigs\":[{\"providerName\":\"AWS\",\"regionName\":\"US_EAST_1\",\"priority\":7,\"electableSpecs\":{\"instanceSize\":\"M40\",\"nodeCount\":3}}]}],\"stateName\":\"IDLE\",\"terminationProtectionEnabled\":false}],\"totalCount\":12}"
+      }
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "id": "r19-heldout-one-cluster",
+  "label": "synthesized",
+  "provenance": "Synthesized from the Atlas Admin API v2 schemas (prefix openapi.d.ts); held-out: a single shared-tier cluster.",
+  "capturedAt": "2025-09-15T12:00:00.000Z",
+  "tool": "atlas-list-clusters",
+  "args": {
+    "projectId": "68c8a1f2e4b0a1b2c3d4e5f6"
+  },
+  "http": [
+    {
+      "seq": 0,
+      "startedAt": "2025-09-15T12:00:00.100Z",
+      "durationMs": 60,
+      "request": {
+        "method": "GET",
+        "url": "/api/atlas/v2/groups/68c8a1f2e4b0a1b2c3d4e5f6",
+        "headers": {
+          "accept": "application/vnd.atlas.2025-03-12+json"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/vnd.atlas.2025-03-12+json;charset=utf-8"
+        },
+        "body": "{\"clusterCount\":1,\"created\":\"2025-08-01T09:00:00Z\",\"id\":\"68c8a1f2e4b0a1b2c3d4e5f6\",\"links\":[],\"name\":\"fiks-r19-single\",\"orgId\":\"68c8a1d0e4b0a1b2c3d4e500\",\"tags\":[]}"
+      }
+    },
+    {
+      "seq": 1,
+      "startedAt": "2025-09-15T12:00:00.200Z",
+      "durationMs": 80,
+      "request": {
+        "method": "GET",
+        "url": "/api/atlas/v2/groups/68c8a1f2e4b0a1b2c3d4e5f6/clusters",
+        "headers": {
+          "accept": "application/vnd.atlas.2025-03-12+json"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/vnd.atlas.2025-03-12+json;charset=utf-8"
+        },
+        "body": "{\"links\":[],\"results\":[{\"clusterType\":\"REPLICASET\",\"connectionStrings\":{\"standard\":\"mongodb://cluster0.ab000.mongodb.net:27017/?ssl=true\",\"standardSrv\":\"mongodb+srv://cluster0.ab000.mongodb.net\"},\"createDate\":\"2025-08-01T10:00:00Z\",\"groupId\":\"68c8a1f2e4b0a1b2c3d4e5f6\",\"id\":\"68c8a2000000000000000000\",\"mongoDBMajorVersion\":\"8.0\",\"mongoDBVersion\":\"8.0.13\",\"name\":\"Cluster0\",\"paused\":false,\"replicationSpecs\":[{\"id\":\"68c8a3000000000000000000\",\"zoneName\":\"Zone 1\",\"regionConfigs\":[{\"providerName\":\"TENANT\",\"backingProviderName\":\"AWS\",\"regionName\":\"US_EAST_1\",\"priority\":7,\"electableSpecs\":{\"instanceSize\":\"M0\"}}]}],\"stateName\":\"IDLE\",\"terminationProtectionEnabled\":false}],\"totalCount\":1}"
+      }
+    }
+  ]
+}

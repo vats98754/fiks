@@ -1,0 +1,43 @@
+{
+  "bugId": "R19",
+  "repoDir": ".work/realbugs/R19",
+  "prefixSha": "62a57d815107d6cfb9ec9a436b82abe376ca10f1",
+  "fixSha": "7fa4a2f21865ac0bcd824bfb0875b0523afecfe2",
+  "serverCommand": "node dist/esm/index.js --transport stdio --loggers stderr --telemetry disabled --apiClientId fiks-r19-placeholder-id --apiClientSecret fiks-r19-placeholder-secret",
+  "baseUrlEnv": "MDB_MCP_API_BASE_URL",
+  "testCommand": "node_modules/.bin/vitest run --project unit-and-integration --project eslint-rules",
+  "testRunner": "vitest",
+  "suiteScope": [
+    "eslint-rules/no-config-imports.test.js",
+    "tests/unit/accessListUtils.test.ts",
+    "tests/unit/accuracyScorer.test.ts",
+    "tests/unit/args.test.ts",
+    "tests/unit/common/apiClient.test.ts",
+    "tests/unit/common/config.test.ts",
+    "tests/unit/common/keychain.test.ts",
+    "tests/unit/common/managedTimeout.test.ts",
+    "tests/unit/common/roles.test.ts",
+    "tests/unit/common/session.test.ts",
+    "tests/unit/elicitation.test.ts",
+    "tests/unit/helpers/connectionOptions.test.ts",
+    "tests/unit/helpers/deviceId.test.ts",
+    "tests/unit/helpers/indexCheck.test.ts",
+    "tests/unit/logger.test.ts",
+    "tests/unit/resources/common/debug.test.ts",
+    "tests/unit/telemetry.test.ts",
+    "tests/unit/toolBase.test.ts",
+    "tests/unit/transports/stdio.test.ts",
+    "tests/integration/tools/atlas/clusters.test.ts"
+  ],
+  "allowedEditPaths": ["^src/.+\\.ts$"],
+  "humanFixTests": ["tests/integration/tools/atlas/clusters.test.ts"],
+  "heldoutCommand": "pnpm tsx realbugs/R19/harness/run.ts --sha {head} --heldout --expect pass",
+  "issuePath": "realbugs/R19/issue.md",
+  "contractPath": "realbugs/R19/contract.json",
+  "fixtures": [
+    {
+      "path": "realbugs/R19/fixtures/trigger-two-clusters.json",
+      "label": "synthesized"
+    }
+  ]
+}
