@@ -91,8 +91,12 @@ DGP (green-incorrect rate per drift ~ Beta(1.5, 8.5), 3 models x 4 attempts, bot
 about 30% of the per-drift differences are exactly 0 and the rest lie on a 1/12 lattice, so the
 sign-flip distribution has atoms and the test cannot reach alpha. Three further runs of 20,000
 datasets each (seeds 1, 2, 3) give 0.0410, 0.0401 and 0.0438 at alpha 0.05 (0.0093, 0.0091,
-0.0105 at 0.0125). So the true size is about 0.04, inside the band, and the 2,000-dataset run
-fell about 1.7 MC SE below it. The H4a row (Beta(2, 8)) passes at 0.0465.
+0.0105 at 0.0125). ~~So the true size is about 0.04, inside the band, and the 2,000-dataset run
+fell about 1.7 MC SE below it.~~ **Correction (round 4):** that sentence was misleading. A size
+of about 0.04 is inside the band only because the band is wide at 2,000 datasets. The test is
+genuinely conservative, not unlucky: at 20,000 datasets the H3a and H4a sizes at alpha 0.05 are
+about 0.040 to 0.043, not 0.05, and both fail the two-sided band (round 4 has the runs). The H4a
+row (Beta(2, 8)) passes at 0.0465 only at 2,000 datasets.
 
 The seed and the DGPs were not changed after this result. PLAN §9.1 (ii) asks for a two-sided
 band, which treats a conservative test as a failure. The planner needs to decide one of: keep the
@@ -208,6 +212,70 @@ only the untracked `paper/.venv/`). The venv was deleted and rebuilt from scratc
 | `simulate_power.py --configs S0 S2 S3 --n 61 40` | PASS: exit 0; `power.json` byte-identical |
 | `paper_check.py` | PASS: "paper:check PASS" |
 | `check_workstreams.py paper/WORKSTREAMS.json` | PASS: exit 0 ("est_hours total: 574") |
+| `git status --porcelain paper/results/raw paper/results/confirmatory.lock` | PASS: empty |
+| `pnpm typecheck` | PASS: exit 0 |
+| `pnpm lint` | FAIL with `paper/.venv` present (finding 2); exit 0 with it moved aside |
+
+## Round 4 (2026-10-21)
+
+Base: rebased onto main `0bbadff` (RBX merged), then again onto `67ac4b0` (MUT merged) when main
+moved during the round; both rebases clean, no conflicts. Neither merge touched `paper/PLAN.md`,
+the root `.gitignore` or `biome.json`. SETUP re-run on `67ac4b0`: `node scripts/apply-dep-fragments.mjs`
+→ "nothing to apply"; `pnpm install --no-frozen-lockfile` exit 0, no tracked-file change. The venv
+was deleted and rebuilt (Python 3.12.7, `pip check` clean). No code changed this round.
+
+### Verifier findings
+
+1. **simulate_null (ii) is genuinely conservative for H3a and H4a (open, needs a planner
+   erratum).** The round-1 sentence calling the true size "about 0.04, inside the band" is
+   corrected in place above. Re-measured on the current code, gate and seed unchanged:
+   - `--check --datasets 2000` (seed 20261021): H3a alpha 0.05 = 0.0335 vs [0.0354, 0.0646],
+     FAIL (conservative); `simulate_null: FAIL`, exit 1. Every other row passes.
+   - `--datasets 20000`, (ii) rows only, at alpha 0.05 / 0.0125:
+
+     | seed | H2 | H3a | H4a |
+     |---|---|---|---|
+     | 7 | 0.0500 / 0.0136 | 0.0406 / 0.0095 | 0.0433 / 0.0106 |
+     | 1 | 0.0487 / 0.0127 | 0.0398 / 0.0086 | 0.0429 / 0.0103 |
+     | 2 | 0.0503 / 0.0135 | 0.0403 / 0.0098 | 0.0418 / 0.0118 |
+     | 3 | 0.0539 / 0.0125 | 0.0396 / 0.0097 | 0.0423 / 0.0114 |
+
+     At 20,000 datasets the band is alpha ± 0.0046 (0.05) and ± 0.0024 (0.0125). H3a fails both
+     alphas and H4a fails alpha 0.05 on every seed, all on the conservative side. So the sign-flip
+     size at alpha 0.05 is about 0.040 (H3a) to 0.043 (H4a), not 0.05. (Round 1's seed-1..3 values
+     0.0410/0.0401/0.0438 came from the round-1 code; the current code draws differently and gives
+     the values above.)
+   - Cause: the H3a/H4a nulls have tied per-drift differences on a 1/(m·a) = 1/12 lattice. Share
+     of exactly-zero differences: 0.303 (H3a), 0.248 (H4a); at most 10 / 11 distinct |d| values.
+     The non-randomised sign-flip p counts ties against rejection, so it cannot reach alpha. H2's
+     continuous null is on target.
+   - Needed: a planner erratum to PLAN §9.1 (ii) and the AN acceptance item, either a one-sided
+     gate (rejection <= alpha + 3 MC SE, as (iii) and (iv) already use) or an accepted, reported
+     conservative size, with seed 20261021 unchanged. PLAN is not AN-owned and main `67ac4b0` has
+     no such erratum, so the gate in `simulate_null.py` still implements the two-sided band of the
+     current PLAN text. After the erratum, AN changes the gate to match and re-runs
+     `--check --datasets 2000` with the same seed.
+2. **`pnpm lint` with the venv present (open, needs the orchestrator/INTEG).** Re-measured on
+   `67ac4b0`: with `paper/.venv` present, exit 1 (Biome "path is expected to be under the root");
+   with it moved aside, exit 0 ("Checked 226 files … No fixes applied."). Fix outside AN's
+   ownership: add `paper/.venv/` to the root `.gitignore` (or `!paper/.venv` to `biome.json`
+   `files.includes`) before AN merges, then re-run `pnpm lint` with the venv present.
+
+### Acceptance evidence (round 4, base `67ac4b0`)
+
+| Item | Result |
+|---|---|
+| fresh venv + `pip install -r` + `pytest paper/scripts/tests` | PASS: 90 passed |
+| `power.py all --check paper/PLAN.md` | PASS: "72/72 entries pass; 0 problems", exit 0 |
+| `binom` / `binom-min` | PASS: crit 18, size 0.0123, 0.821, >= 0.99; 217 |
+| `ni` / `harm` (§3.3 round-4 table) | PASS: 0.468 0.312 0.389 0.256 0.288 0.190 / 0.243 0.161 0.200 0.134 0.149 0.102; 0.385 0.239 0.307 0.188 0.214 0.132 |
+| `frame --frame-spec fixtures/frame-spec.json` | PASS: no top-up, crit 18, 0.821, underpowered False, m 4 |
+| `anyfp --n 50 --pi 0.02 0.01` | PASS: 0.636 0.395 |
+| unit items (H1, H3/holm, classify, h2, h3h4 = eval_stats paired, per-class rows, e*-lock) | PASS (in the 90) |
+| `simulate_null.py --check --datasets 2000` | **FAIL** (ii) H3a alpha 0.05 = 0.0335, exit 1; blocked on the PLAN erratum (finding 1) |
+| `simulate_power.py --configs S0 S2 S3 --n 61 40` | PASS: exit 0; `power.json` byte-identical |
+| `paper_check.py` | PASS: "paper:check PASS" |
+| `check_workstreams.py paper/WORKSTREAMS.json` | PASS: exit 0 |
 | `git status --porcelain paper/results/raw paper/results/confirmatory.lock` | PASS: empty |
 | `pnpm typecheck` | PASS: exit 0 |
 | `pnpm lint` | FAIL with `paper/.venv` present (finding 2); exit 0 with it moved aside |
