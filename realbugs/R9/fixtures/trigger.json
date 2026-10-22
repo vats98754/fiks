@@ -1,0 +1,31 @@
+{
+  "id": "r9-trigger-zones_list",
+  "label": "synthesized",
+  "note": "Issue #468 step 2: zones_list with no arguments. The upstream response is synthesized (no Cloudflare account or token is used): a Cloudflare v4 envelope with two zones for the replay account. The npx 0.2.0 artifact never sends this request (its zones_list returns hard-coded records); a head that calls the API gets this answer.",
+  "capturedAt": "2026-10-22T12:00:00.000Z",
+  "accountId": "f1c5a0d2b3e4f5a6b7c8d9e0f1a2b3c4",
+  "tool": "zones_list",
+  "args": {},
+  "http": [
+    {
+      "seq": 1,
+      "startedAt": "2026-10-22T12:00:00.000Z",
+      "durationMs": 12,
+      "request": {
+        "method": "GET",
+        "url": "/client/v4/zones?account.id=f1c5a0d2b3e4f5a6b7c8d9e0f1a2b3c4&per_page=50",
+        "headers": {
+          "authorization": "Bearer fiks-replay-token"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"result\":[{\"id\":\"9a7806061c88ada191ed06f989cc3dac\",\"name\":\"r9-alpha.example\",\"status\":\"active\",\"paused\":false,\"type\":\"full\",\"development_mode\":0,\"name_servers\":[\"ada.ns.cloudflare.com\",\"bob.ns.cloudflare.com\"],\"account\":{\"id\":\"f1c5a0d2b3e4f5a6b7c8d9e0f1a2b3c4\",\"name\":\"R9 replay account\"},\"created_on\":\"2026-03-02T10:11:12.000000Z\",\"modified_on\":\"2026-09-30T08:00:00.000000Z\"},{\"id\":\"5c1e2d3f4a5b6c7d8e9f0a1b2c3d4e5f\",\"name\":\"r9-beta.example\",\"status\":\"active\",\"paused\":false,\"type\":\"full\",\"development_mode\":0,\"name_servers\":[\"ada.ns.cloudflare.com\",\"bob.ns.cloudflare.com\"],\"account\":{\"id\":\"f1c5a0d2b3e4f5a6b7c8d9e0f1a2b3c4\",\"name\":\"R9 replay account\"},\"created_on\":\"2026-03-02T10:11:12.000000Z\",\"modified_on\":\"2026-09-30T08:00:00.000000Z\"}],\"result_info\":{\"page\":1,\"per_page\":50,\"count\":2,\"total_count\":2,\"total_pages\":1},\"success\":true,\"errors\":[],\"messages\":[]}"
+      }
+    }
+  ]
+}

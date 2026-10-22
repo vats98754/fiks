@@ -1,0 +1,47 @@
+{
+  "id": "r9-prefix-wire-zones_list",
+  "label": "recorded",
+  "recordedAt": "2026-10-22T12:28:33.803Z",
+  "ref": "prefix",
+  "sha": "db9084730dd45ebb6ac4dd5d3181d189cc96e98d",
+  "serverKind": "npx-artifact",
+  "accountId": "f1c5a0d2b3e4f5a6b7c8d9e0f1a2b3c4",
+  "toolsListEntry": {
+    "name": "zones_list",
+    "description": "List all zones in your account",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "testMode": {
+          "type": "string",
+          "description": "Test mode for internal testing purposes"
+        }
+      }
+    }
+  },
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tools/call",
+    "params": {
+      "name": "zones_list",
+      "arguments": {}
+    }
+  },
+  "response": {
+    "result": {
+      "toolResult": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"success\": true,\n  \"errors\": [],\n  \"messages\": [],\n  \"result\": [\n    {\n      \"id\": \"zone-abc123\",\n      \"name\": \"example.com\",\n      \"status\": \"active\",\n      \"paused\": false,\n      \"type\": \"full\",\n      \"development_mode\": 0\n    },\n    {\n      \"id\": \"zone-def456\",\n      \"name\": \"test.com\",\n      \"status\": \"active\",\n      \"paused\": false,\n      \"type\": \"full\",\n      \"development_mode\": 0\n    }\n  ]\n}"
+          }
+        ]
+      }
+    },
+    "jsonrpc": "2.0",
+    "id": 3
+  },
+  "upstream": [],
+  "denied": []
+}

@@ -1,0 +1,34 @@
+{
+  "bugId": "R9",
+  "status": "attrited",
+  "attrition": "realbugs/R9/ATTRITION.md",
+  "repoDir": ".work/realbugs/R9",
+  "prefixSha": "db9084730dd45ebb6ac4dd5d3181d189cc96e98d",
+  "fixSha": "7e576219a41e9b1e42187a852996bee29bded0cb",
+  "serverCommand": "node {entry} run {accountId}",
+  "serverResolution": "{entry} is resolved per tree by realbugs/R9/harness/server.ts prepareBuild: the bin of a non-private @cloudflare/mcp-server-cloudflare package in the tree (root, packages/*, apps/*; PR #469 adds packages/mcp-server-cloudflare with bin src/cli.js), installed from the tree's lockfile; else (the prefix) the published 0.2.0 that `npx -y @cloudflare/mcp-server-cloudflare` resolves to, dist/index.js, installed from realbugs/R9/harness/npx-0.2.0/package-lock.json. {accountId} = the case's accountId. Env: CLOUDFLARE_API_TOKEN=fiks-replay-token, HOME = a fresh temp dir.",
+  "baseUrlEnv": "",
+  "upstreamHosts": ["api.cloudflare.com"],
+  "testCommand": "PENDING",
+  "testRunner": "vitest",
+  "suiteScope": [],
+  "allowedEditPaths": [
+    "^packages/mcp-server-cloudflare/.+$",
+    "^\\.changeset/[^/]+\\.md$",
+    "^package\\.json$",
+    "^pnpm-lock\\.yaml$"
+  ],
+  "humanFixTests": [],
+  "heldoutCommand": "pnpm tsx realbugs/R9/heldout/run.ts --worktree {worktree}",
+  "issuePath": "realbugs/R9/issue.md",
+  "contractPath": "realbugs/R9/contract.json",
+  "fixtures": [
+    { "path": "realbugs/R9/fixtures/trigger.json", "label": "synthesized" },
+    { "path": "realbugs/R9/fixtures/prefix-wire.json", "label": "recorded" }
+  ],
+  "namedProperty": "cloudflare.zones_list/textJson",
+  "triggerFixture": "realbugs/R9/fixtures/trigger.json",
+  "harnessCommand": "pnpm tsx realbugs/R9/harness/run.ts (--sha {sha} | --worktree {worktree}) --runs {runs}",
+  "installCommand": "repo package: pnpm install --frozen-lockfile --ignore-scripts --filter @cloudflare/mcp-server-cloudflare (in the tree); npx artifact: npm ci --ignore-scripts (in .work/realbugs/R9.builds/npx-0.2.0, from the committed lock)",
+  "notes": []
+}

@@ -81,3 +81,49 @@ structured path. Both properties are therefore bug-specific kinds (`textJson`,
 standard `outputSchema` property also applies and is evaluated by `@fiks/contracts` itself.
 This is a real limit of the frozen vocabulary for this bug class (text-only results), recorded
 for the paper's limitations, not a change to `@fiks/contracts`.
+
+## After the contract (the contract was not edited after 12:15:07Z)
+
+| Time (UTC) | Step |
+|---|---|
+| 2026-10-22T12:15:34Z | Contract committed on `ws/RB-R9` (`52ef0ba`, "blind contract ... before reading the PR #469 diff"; committer date 08:15:34-04:00). |
+| 2026-10-22T12:15:37Z | **First read of the PR #469 diff** (`git diff --stat prefix fix`, then the full diff). |
+| 2026-10-22T12:16:06Z | Found the legacy stdio source in history: commit `d4b871f` "@cloudflare/mcp-server-cloudflare 0.2.0" (2025-03-14), deleted at `8896f0a` (2025-04-11); read its `zones.ts`/`workers.ts` handlers. |
+| 2026-10-22T12:16:55Z | npm metadata for `@cloudflare/mcp-server-cloudflare` (latest = 0.2.0, published 2025-03-14; integrity equals PR #469's lockfile entry). |
+| 12:17Z–12:20Z (no exact stamp taken) | PR #469 head worktree under `.work/realbugs/R9.builds/`, filtered `pnpm install`; raw JSON-RPC call of `zones_list` on the 0.2.0 artifact: the response is `{"result":{"toolResult":{...}}}` with no top-level `content`. Proxy-mode replay (RBX HTTPS shim) checked on `domain_list` and `worker_list`. |
+| 2026-10-22T12:21:55Z | Private repo `vats98754/rb-r9-mcp-server-cloudflare` created (`gh repo create --private`, not a fork); 12:22:05Z pushed branch `r9-prefix` = prefix and tag `r9-fix` = PR head; clone's origin repointed to it. |
+| 12:23Z–12:28Z (no exact stamp taken) | Harness (`server.ts`, `check.ts`, `run.ts`) and held-out cases written; first trial runs: prefix 0/2 violations, PR head 2/2 verified. |
+| 2026-10-22T12:28:28Z | `harness/record.ts` recorded `fixtures/prefix-wire.json` from the prefix artifact's process. |
+| 2026-10-22T12:33:05Z | Duplicate search (#269, #12; see ATTRITION.md). |
+| 2026-10-22T12:34:22Z | `run.ts --sha prefix --runs 10`: 0/10 violations of `cloudflare.zones_list/textJson`, 10/10 verified. 12:34:46Z `--sha fix --runs 10 --expect pass`: 10/10 verified. |
+
+What the fix PR does (read after the contract): it adds `packages/mcp-server-cloudflare` (the
+npm package name, bin `src/cli.js`, depending on the published 0.2.0 as
+`mcp-server-cloudflare-legacy`), renames the root package to free that name, and puts a stdio
+proxy in front of the 0.2.0 process: `zones_list`, `domain_list` and `worker_list` are answered
+directly from the Cloudflare API as one JSON text block (`JSON.stringify(data.result, null, 2)`;
+upstream failures become `isError` results), and every other response is unwrapped from
+`toolResult` and stripped of `metadata`. Tests: `packages/mcp-server-cloudflare/src/proxy.spec.js`
+(unit tests with a mocked fetch).
+
+What the 0.2.0 artifact does on the trigger (observed, `fixtures/prefix-wire.json`): `zones_list`
+makes no upstream request and returns two hard-coded zones (`zone-abc123`, `zone-def456`) as JSON
+text inside `toolResult`, without a top-level `content` array. `domain_list`, `queue_list` and
+the error path of every handler use the same wrapper; `worker_list` returns a standard `content`
+array (plus a non-standard `metadata: {}`).
+
+Post-hoc findings (the contract was not changed in response):
+
+- **False negative on the trigger.** A spec client sees `content: []` and no `isError`, so the
+  blind `textJson` holds vacuously (rule (b) applies only when a text block exists),
+  `carriesUpstream` is skipped (no upstream request), and no outputSchema is declared. Prefix
+  10/10 `verified`. The blind reading of the symptom ("the text block is `[object Object]`") was
+  wrong about where the string comes from: the client renders the non-standard `toolResult`
+  object; the server never sends that text.
+- **Tool coverage.** The contract names `workers_list` (the repo's Workers tool), but the
+  artifact's tool is `worker_list`, and `domain_list` was left uncovered; on held-out cases for
+  those tools the contract is `unverifiable`.
+- **Not separable anywhere.** On every held-out case the contract gives the same verdict on the
+  prefix and on PR #469's head (`heldout/run.ts`, contract column). R9 is attrited
+  (ATTRITION.md); the held-out oracle (`harness/check.ts` `gradeHeldout`, written after the diff)
+  is what separates them.

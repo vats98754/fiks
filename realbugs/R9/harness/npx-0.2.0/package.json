@@ -1,0 +1,18 @@
+{
+  "name": "fiks-r9-npx-0.2.0",
+  "private": true,
+  "description": "What `npx -y @cloudflare/mcp-server-cloudflare` resolves to at the R9 prefix (the repo ships no such package there): the published 0.2.0, transitive versions pinned to the PR #469 lockfile.",
+  "dependencies": {
+    "@cloudflare/mcp-server-cloudflare": "0.2.0"
+  },
+  "overrides": {
+    "@iarna/toml": "2.2.5",
+    "@modelcontextprotocol/sdk": "0.6.1",
+    "chalk": "5.4.1",
+    "dotenv": "16.6.1",
+    "undici": "5.28.5",
+    "which": "5.0.0",
+    "xdg-app-paths": "8.3.0",
+    "zod": "3.25.76"
+  }
+}

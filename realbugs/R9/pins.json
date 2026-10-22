@@ -1,0 +1,27 @@
+{
+  "bugId": "R9",
+  "repo": "vats98754/rb-r9-mcp-server-cloudflare",
+  "upstream": "cloudflare/mcp-server-cloudflare",
+  "issue": "https://github.com/cloudflare/mcp-server-cloudflare/issues/468",
+  "fixPr": "https://github.com/cloudflare/mcp-server-cloudflare/pull/469",
+  "fixPrState": "closed, not merged (checked 2026-10-22); the issue is open, so there is no merged human fix",
+  "prefixSha": "db9084730dd45ebb6ac4dd5d3181d189cc96e98d",
+  "fixSha": "7e576219a41e9b1e42187a852996bee29bded0cb",
+  "prefixIs": "the only parent of PR #469's single commit 7e57621 (upstream main)",
+  "fixIs": "PR #469's head commit (unmerged); kept as the tag `fix` for reference runs only, never as a grading oracle",
+  "remoteRefs": {
+    "refs/heads/r9-prefix": "db9084730dd45ebb6ac4dd5d3181d189cc96e98d",
+    "refs/tags/r9-fix": "7e576219a41e9b1e42187a852996bee29bded0cb"
+  },
+  "remoteRefsNote": "The prefix is pushed as branch r9-prefix (the repo's default branch), not main, so the upstream workflows that trigger on push to main (deploy-staging, release, semgrep) never run in the private repo.",
+  "artifact": {
+    "name": "@cloudflare/mcp-server-cloudflare",
+    "version": "0.2.0",
+    "integrity": "sha512-506bCOY2ZI7AINJLULbqyDRLymLag2pRuKFGBPP1yFr9+wAfqHS9fk8UkDdUYCeU5MYdv8FUWHVhdg62cMXdXg==",
+    "sourceCommit": "d4b871f6a3ab36aeaeff303456be22621ef52291",
+    "lock": "realbugs/R9/harness/npx-0.2.0/package-lock.json",
+    "why": "The faulty handlers exist only in this published artifact; their source (src/) was deleted from the repo at 8896f0a (2025-04-11). At the prefix the repo ships no stdio package, so `npx -y @cloudflare/mcp-server-cloudflare` (the issue's invocation) resolves to this version. See ATTRITION.md."
+  },
+  "clone": ".work/realbugs/R9",
+  "round": 7
+}

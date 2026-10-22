@@ -1,0 +1,189 @@
+{
+  "bugId": "R9",
+  "written": "after the contract and after the first read of the PR #469 diff (see ../contract-log.md); synthesized inputs, no Cloudflare account or token",
+  "oracle": "realbugs/R9/harness/check.ts gradeHeldout: data = not an error, no '[object Object]', a JSON text block (or structuredContent) holding every upstream result[*].id (and every mustContain string) and no id the upstream did not send; error = isError true. Direction-neutral: a bare array, the full envelope, structuredContent or JSON plus prose all pass.",
+  "matching": "query strings are ignored when matching upstream requests (harness/server.ts MATCHERS)",
+  "cases": [
+    {
+      "id": "H1-zones-other-account",
+      "role": "manifestation",
+      "label": "synthesized",
+      "capturedAt": "2026-10-22T13:00:00.000Z",
+      "accountId": "7d0c3b2a19f8e7d6c5b4a39281706f5e",
+      "tool": "zones_list",
+      "args": {},
+      "http": [
+        {
+          "seq": 1,
+          "startedAt": "2026-10-22T13:00:00.000Z",
+          "durationMs": 9,
+          "request": {
+            "method": "GET",
+            "url": "/client/v4/zones?account.id=7d0c3b2a19f8e7d6c5b4a39281706f5e&per_page=50",
+            "headers": {
+              "authorization": "Bearer fiks-replay-token"
+            },
+            "body": null
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "content-type": "application/json"
+            },
+            "body": "{\"result\":[{\"id\":\"0e1d2c3b4a5968778695a4b3c2d1e0f9\",\"name\":\"münchen-r9.example\",\"status\":\"active\",\"paused\":false,\"type\":\"full\",\"account\":{\"id\":\"7d0c3b2a19f8e7d6c5b4a39281706f5e\",\"name\":\"R9 held-out account\"},\"created_on\":\"2025-11-01T00:00:00.000000Z\"},{\"id\":\"1f2e3d4c5b6a79880796b5c4d3e2f1a0\",\"name\":\"r9-gamma.example\",\"status\":\"pending\",\"paused\":false,\"type\":\"full\",\"account\":{\"id\":\"7d0c3b2a19f8e7d6c5b4a39281706f5e\",\"name\":\"R9 held-out account\"},\"created_on\":\"2025-11-01T00:00:00.000000Z\"},{\"id\":\"2a3b4c5d6e7f8091a2b3c4d5e6f70812\",\"name\":\"r9-delta.example\",\"status\":\"active\",\"paused\":false,\"type\":\"full\",\"account\":{\"id\":\"7d0c3b2a19f8e7d6c5b4a39281706f5e\",\"name\":\"R9 held-out account\"},\"created_on\":\"2025-11-01T00:00:00.000000Z\"}],\"success\":true,\"errors\":[],\"messages\":[],\"result_info\":{\"page\":1,\"per_page\":50,\"count\":3,\"total_count\":3,\"total_pages\":1}}"
+          }
+        }
+      ],
+      "expect": {
+        "kind": "data"
+      },
+      "why": "zones_list on another account with three zones (one IDN name, one pending): the agent must get these zones as JSON."
+    },
+    {
+      "id": "H2-domain_list",
+      "role": "manifestation",
+      "label": "synthesized",
+      "capturedAt": "2026-10-22T13:00:00.000Z",
+      "accountId": "7d0c3b2a19f8e7d6c5b4a39281706f5e",
+      "tool": "domain_list",
+      "args": {},
+      "http": [
+        {
+          "seq": 1,
+          "startedAt": "2026-10-22T13:00:00.000Z",
+          "durationMs": 9,
+          "request": {
+            "method": "GET",
+            "url": "/client/v4/accounts/7d0c3b2a19f8e7d6c5b4a39281706f5e/workers/domains",
+            "headers": {
+              "authorization": "Bearer fiks-replay-token"
+            },
+            "body": null
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "content-type": "application/json"
+            },
+            "body": "{\"result\":[{\"id\":\"c0ffee00112233445566778899aabbcc\",\"zone_id\":\"0e1d2c3b4a5968778695a4b3c2d1e0f9\",\"zone_name\":\"münchen-r9.example\",\"hostname\":\"api.münchen-r9.example\",\"service\":\"r9-api\",\"environment\":\"production\"},{\"id\":\"d00dfeed112233445566778899aabbcc\",\"zone_id\":\"1f2e3d4c5b6a79880796b5c4d3e2f1a0\",\"zone_name\":\"r9-gamma.example\",\"hostname\":\"shop.r9-gamma.example\",\"service\":\"r9-shop\",\"environment\":\"production\"}],\"success\":true,\"errors\":[],\"messages\":[]}"
+          }
+        }
+      ],
+      "expect": {
+        "kind": "data"
+      },
+      "why": "domain_list, named in the issue: the agent must get the two Workers custom domains as JSON."
+    },
+    {
+      "id": "H3-queue_list",
+      "role": "manifestation",
+      "label": "synthesized",
+      "capturedAt": "2026-10-22T13:00:00.000Z",
+      "accountId": "7d0c3b2a19f8e7d6c5b4a39281706f5e",
+      "tool": "queue_list",
+      "args": {},
+      "http": [
+        {
+          "seq": 1,
+          "startedAt": "2026-10-22T13:00:00.000Z",
+          "durationMs": 9,
+          "request": {
+            "method": "GET",
+            "url": "/client/v4/accounts/7d0c3b2a19f8e7d6c5b4a39281706f5e/queues",
+            "headers": {
+              "authorization": "Bearer fiks-replay-token"
+            },
+            "body": null
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "content-type": "application/json"
+            },
+            "body": "{\"result\":[{\"queue_id\":\"q-4f3e2d1c0b0a99887766554433221100\",\"queue_name\":\"r9-orders\",\"created_on\":\"2026-01-05T00:00:00.000000Z\",\"modified_on\":\"2026-01-05T00:00:00.000000Z\",\"producers_total_count\":1,\"consumers_total_count\":1},{\"queue_id\":\"q-5a4b3c2d1e0f99887766554433221100\",\"queue_name\":\"r9-emails\",\"created_on\":\"2026-02-05T00:00:00.000000Z\",\"modified_on\":\"2026-02-05T00:00:00.000000Z\",\"producers_total_count\":1,\"consumers_total_count\":0}],\"success\":true,\"errors\":[],\"messages\":[]}"
+          }
+        }
+      ],
+      "expect": {
+        "kind": "data",
+        "mustContain": [
+          "q-4f3e2d1c0b0a99887766554433221100",
+          "q-5a4b3c2d1e0f99887766554433221100",
+          "r9-orders",
+          "r9-emails"
+        ]
+      },
+      "why": "queue_list, a list tool the issue does not name, with the same response envelope: the agent must get both queues as JSON."
+    },
+    {
+      "id": "H4-domain_list-403",
+      "role": "manifestation",
+      "label": "synthesized",
+      "capturedAt": "2026-10-22T13:00:00.000Z",
+      "accountId": "7d0c3b2a19f8e7d6c5b4a39281706f5e",
+      "tool": "domain_list",
+      "args": {},
+      "http": [
+        {
+          "seq": 1,
+          "startedAt": "2026-10-22T13:00:00.000Z",
+          "durationMs": 9,
+          "request": {
+            "method": "GET",
+            "url": "/client/v4/accounts/7d0c3b2a19f8e7d6c5b4a39281706f5e/workers/domains",
+            "headers": {
+              "authorization": "Bearer fiks-replay-token"
+            },
+            "body": null
+          },
+          "response": {
+            "status": 403,
+            "headers": {
+              "content-type": "application/json"
+            },
+            "body": "{\"result\":null,\"success\":false,\"errors\":[{\"code\":10000,\"message\":\"Authentication error\"}],\"messages\":[]}"
+          }
+        }
+      ],
+      "expect": {
+        "kind": "error"
+      },
+      "why": "domain_list when the upstream refuses the token (403): the agent must get an explicit tool error, not an empty success."
+    },
+    {
+      "id": "C1-worker_list",
+      "role": "control",
+      "label": "synthesized",
+      "capturedAt": "2026-10-22T13:00:00.000Z",
+      "accountId": "7d0c3b2a19f8e7d6c5b4a39281706f5e",
+      "tool": "worker_list",
+      "args": {},
+      "http": [
+        {
+          "seq": 1,
+          "startedAt": "2026-10-22T13:00:00.000Z",
+          "durationMs": 9,
+          "request": {
+            "method": "GET",
+            "url": "/client/v4/accounts/7d0c3b2a19f8e7d6c5b4a39281706f5e/workers/scripts",
+            "headers": {
+              "authorization": "Bearer fiks-replay-token"
+            },
+            "body": null
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "content-type": "application/json"
+            },
+            "body": "{\"result\":[{\"id\":\"r9-api\",\"etag\":\"a1b2c3\",\"created_on\":\"2026-01-01T00:00:00.000000Z\",\"modified_on\":\"2026-09-01T00:00:00.000000Z\",\"usage_model\":\"standard\"},{\"id\":\"r9-shop\",\"etag\":\"d4e5f6\",\"created_on\":\"2026-02-01T00:00:00.000000Z\",\"modified_on\":\"2026-09-02T00:00:00.000000Z\",\"usage_model\":\"standard\"}],\"success\":true,\"errors\":[],\"messages\":[]}"
+          }
+        }
+      ],
+      "expect": {
+        "kind": "data"
+      },
+      "why": "Control: worker_list already returns a standard text block on the prefix artifact; the oracle must pass it."
+    }
+  ]
+}
