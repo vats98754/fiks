@@ -1,0 +1,174 @@
+{
+  "domain": "tracker",
+  "catalog": "original",
+  "note": "Held-out traffic task prompts (PLAN 5.9). Each answer is graded against the original catalog on a fresh vendor: every answerIncludes term must appear (case-insensitive, '_' read as a space), and every stateCheck must hold on the vendor state after the task.",
+  "tasks": [
+    {
+      "id": "t01",
+      "prompt": "Which open bugs are assigned to alice? Give me their keys.",
+      "answerIncludes": ["TRK-101", "TRK-108"],
+      "stateChecks": []
+    },
+    {
+      "id": "t02",
+      "prompt": "How many comments does TRK-104 have, and who wrote the most recent one?",
+      "answerIncludes": ["4", "frank"],
+      "stateChecks": []
+    },
+    {
+      "id": "t03",
+      "prompt": "Find the issue about the login page timing out and tell me its priority and who is assigned to it.",
+      "answerIncludes": ["TRK-101", "high", "alice"],
+      "stateChecks": []
+    },
+    {
+      "id": "t04",
+      "prompt": "Move TRK-103 to in progress and confirm its new state.",
+      "answerIncludes": ["in progress"],
+      "stateChecks": [
+        {
+          "key": "TRK-103",
+          "field": "state",
+          "equals": "in_progress"
+        }
+      ]
+    },
+    {
+      "id": "t05",
+      "prompt": "Add a comment to TRK-119 saying the upgrade is scheduled for the next maintenance window, then tell me how many comments the issue has now.",
+      "answerIncludes": ["1"],
+      "stateChecks": [
+        {
+          "key": "TRK-119",
+          "field": "comment_count",
+          "equals": 1
+        }
+      ]
+    },
+    {
+      "id": "t06",
+      "prompt": "List every issue labelled security that is not closed yet.",
+      "answerIncludes": ["TRK-109", "TRK-115", "TRK-119"],
+      "stateChecks": []
+    },
+    {
+      "id": "t07",
+      "prompt": "What is the total story-point estimate of all issues that are currently in progress?",
+      "answerIncludes": ["16"],
+      "stateChecks": []
+    },
+    {
+      "id": "t08",
+      "prompt": "Which issues have nobody assigned?",
+      "answerIncludes": ["TRK-103", "TRK-105", "TRK-114", "TRK-119"],
+      "stateChecks": []
+    },
+    {
+      "id": "t09",
+      "prompt": "Label TRK-114 as triaged and remove the good-first-issue label. Which labels does it have now?",
+      "answerIncludes": ["frontend", "triaged"],
+      "stateChecks": [
+        {
+          "key": "TRK-114",
+          "field": "labels",
+          "equals": ["frontend", "triaged"]
+        }
+      ]
+    },
+    {
+      "id": "t10",
+      "prompt": "Assign TRK-105 to erin and tell me who is assigned to it now.",
+      "answerIncludes": ["erin"],
+      "stateChecks": [
+        {
+          "key": "TRK-105",
+          "field": "assignees",
+          "equals": ["erin"]
+        }
+      ]
+    },
+    {
+      "id": "t11",
+      "prompt": "Who reported TRK-117, and on which day was it filed?",
+      "answerIncludes": ["alice", "2026-09-03"],
+      "stateChecks": []
+    },
+    {
+      "id": "t12",
+      "prompt": "How many feature requests are there in total, and how many of them are still open?",
+      "answerIncludes": ["6", "2"],
+      "stateChecks": []
+    },
+    {
+      "id": "t13",
+      "prompt": "Reopen TRK-111 and leave a comment explaining that the duplicate reset emails are back.",
+      "answerIncludes": ["open"],
+      "stateChecks": [
+        {
+          "key": "TRK-111",
+          "field": "state",
+          "equals": "open"
+        },
+        {
+          "key": "TRK-111",
+          "field": "comment_count",
+          "equals": 3
+        }
+      ]
+    },
+    {
+      "id": "t14",
+      "prompt": "Which urgent issues do we have, and what state is each one in?",
+      "answerIncludes": ["TRK-106", "closed", "TRK-117", "open"],
+      "stateChecks": []
+    },
+    {
+      "id": "t15",
+      "prompt": "Summarise the discussion on the issue about rate limiting the public search API.",
+      "answerIncludes": ["TRK-115", "token bucket"],
+      "stateChecks": []
+    },
+    {
+      "id": "t16",
+      "prompt": "Find the issue about the build cache and tell me who owns it.",
+      "answerIncludes": ["TRK-113", "frank"],
+      "stateChecks": []
+    },
+    {
+      "id": "t17",
+      "prompt": "TRK-120 is done: resolve it and tell me which state it was in before.",
+      "answerIncludes": ["resolved", "in progress"],
+      "stateChecks": [
+        {
+          "key": "TRK-120",
+          "field": "state",
+          "equals": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "t18",
+      "prompt": "Which issues did bob report?",
+      "answerIncludes": ["TRK-107", "TRK-113", "TRK-120"],
+      "stateChecks": []
+    },
+    {
+      "id": "t19",
+      "prompt": "Is TRK-110 resolved? If so, close it and confirm.",
+      "answerIncludes": ["closed"],
+      "stateChecks": [
+        {
+          "key": "TRK-110",
+          "field": "state",
+          "equals": "closed"
+        }
+      ]
+    },
+    {
+      "id": "t20",
+      "prompt": "Which issue has the largest story-point estimate, and how large is it?",
+      "answerIncludes": ["TRK-109", "13"],
+      "stateChecks": []
+    }
+  ]
+}

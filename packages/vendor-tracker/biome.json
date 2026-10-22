@@ -21,5 +21,14 @@
         }
       }
     }
-  ]
+  ],
+  "files": {
+    "includes": [
+      "**",
+      "!fixtures/driftpkgs/*.json",
+      "!fixtures/driftpkgs/*/rule.json",
+      "!fixtures/driftpkgs/*/hidden",
+      "!fixtures/driftpkgs/*/hidden-renamed"
+    ]
+  }
 }

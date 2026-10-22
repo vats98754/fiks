@@ -11,9 +11,7 @@
   },
   "dependencies": {
     "@fiks/domains": "workspace:*",
-    "@fiks/interfaces": "workspace:*"
-  },
-  "devDependencies": {
+    "@fiks/interfaces": "workspace:*",
     "@modelcontextprotocol/sdk": "1.32.0"
   }
 }
