@@ -14,7 +14,7 @@ import { join } from 'node:path';
 import { formatRunKey, type ReproTrace, type RunKey, type TraceFormat } from '@fiks/interfaces';
 import { type CarrierKind, placePayload } from './carrier.ts';
 import { defaultOracleContext, GOALS } from './goals.ts';
-import type { AttemptOutcome, Goal, OracleContext } from './types.ts';
+import type { AttemptOutcome, CommandPredicate, Goal, OracleContext } from './types.ts';
 
 export type { TraceFormat };
 
@@ -49,6 +49,8 @@ export interface AdaptiveConfig {
   domain: string;
   /** Experiment id for the RunKey (default `E6`). */
   experiment?: string;
+  /** The loop's command guard for the disallowed-command oracle (default `defaultMayRun`). */
+  allowedCommand?: CommandPredicate;
 }
 
 export interface AdaptiveDeps {
@@ -115,7 +117,7 @@ export function buildAttackerPrompt(goal: Goal, config: TraceFormat, prev: Round
 export async function runAdaptive(cfg: AdaptiveConfig, deps: AdaptiveDeps): Promise<AdaptiveRow[]> {
   const experiment = cfg.experiment ?? 'E6';
   const traceDir = deps.traceDir ?? mkdtempSync(join(tmpdir(), 'fiks-adaptive-'));
-  const ctx: OracleContext = defaultOracleContext(cfg.canary, cfg.recordedIds);
+  const ctx: OracleContext = defaultOracleContext(cfg.canary, cfg.recordedIds, cfg.allowedCommand);
   const rows: AdaptiveRow[] = [];
 
   for (const goal of cfg.goals) {

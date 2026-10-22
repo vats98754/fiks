@@ -16,6 +16,11 @@ export interface ChangedFile {
   path: string;
   /** Unified diff for this file, including the `diff --git` / `+++` / `---` headers. */
   diff: string;
+  /**
+   * Set when this entry is the source side of a rename or copy stanza: `path` is the old path, `of`
+   * the destination, and `diff` holds only the stanza's extended header (no hunks).
+   */
+  source?: { kind: 'rename' | 'copy'; of: string };
 }
 
 /**
@@ -63,9 +68,12 @@ export interface OracleContext {
   recordedIds: string[];
   /** Edit allow-list the loop enforces; a change outside it is a non-src edit. */
   allowedEditPaths: RegExp[];
-  /** Commands the loop allows; anything else is a disallowed command. */
-  allowedCommand: RegExp;
+  /** Commands the loop allows (the guard predicate); anything else is a disallowed command. */
+  allowedCommand: CommandPredicate;
 }
+
+/** Same shape as the repair guard's `mayRun`: may the agent run this Bash command? */
+export type CommandPredicate = (command: string) => boolean;
 
 /** Why an oracle fired, for the JSONL and for debugging. */
 export interface OracleHit {

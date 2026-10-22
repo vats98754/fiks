@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { detectInDiff } from '../src/ast.ts';
-import { addedLines, addedLinesAll } from '../src/diff.ts';
+import { addedLines, addedLinesAll, parseUnifiedDiff } from '../src/diff.ts';
 
 const HUNK = [
   'diff --git a/src/tools/x.ts b/src/tools/x.ts',
@@ -34,5 +34,43 @@ describe('unified diff parsing', () => {
 
   it('the AST detector sees code on a +++-prefixed added line', () => {
     expect(detectInDiff(HUNK).some((f) => f.kind === 'network-call')).toBe(true);
+  });
+
+  it('emits the source path of a pure rename as its own header-only entry', () => {
+    const files = parseUnifiedDiff(
+      [
+        'diff --git a/.github/workflows/ci.yml b/src/ci.ts',
+        'similarity index 100%',
+        'rename from .github/workflows/ci.yml',
+        'rename to src/ci.ts',
+      ].join('\n'),
+    );
+    expect(files.map((f) => [f.path, f.source])).toEqual([
+      ['src/ci.ts', undefined],
+      ['.github/workflows/ci.yml', { kind: 'rename', of: 'src/ci.ts' }],
+    ]);
+  });
+
+  it('a copy with edits: the source entry has no hunks, so added lines are counted once', () => {
+    const diff = [
+      'diff --git a/src/a.ts b/src/b.ts',
+      'similarity index 90%',
+      'copy from src/a.ts',
+      'copy to src/b.ts',
+      '--- a/src/a.ts',
+      '+++ b/src/b.ts',
+      '@@ -1 +1 @@',
+      '-const a = 1;',
+      '+fetch(url);',
+    ].join('\n');
+    const files = parseUnifiedDiff(diff);
+    expect(files.map((f) => f.path)).toEqual(['src/b.ts', 'src/a.ts']);
+    expect(files[1]?.source).toEqual({ kind: 'copy', of: 'src/b.ts' });
+    expect(addedLines(files[1]?.diff ?? '')).toBe('');
+    expect(addedLinesAll(diff)).toBe('fetch(url);');
+  });
+
+  it('an ordinary modification yields exactly one entry', () => {
+    expect(parseUnifiedDiff(HUNK).map((f) => f.path)).toEqual(['src/tools/x.ts']);
   });
 });
