@@ -1,0 +1,56 @@
+{
+  "server": "cloudflare",
+  "version": 1,
+  "contracts": [
+    {
+      "id": "cloudflare.zones_list",
+      "tool": "zones_list",
+      "invariants": []
+    },
+    {
+      "id": "cloudflare.workers_list",
+      "tool": "workers_list",
+      "invariants": []
+    }
+  ],
+  "realbug": {
+    "bugId": "R9",
+    "writtenFrom": "symptom only: upstream issue cloudflare/mcp-server-cloudflare#468 (title, body), the candidate row in paper/research/real-bugs-mcp.candidates.json, PR #469 metadata (title, state, head and parent SHAs; no body, files or diff) and the prefix's registered tool names; see contract-log.md",
+    "toolNames": {
+      "zones_list": "zones_list (issue name = prefix name)",
+      "worker_list": "workers_list (the prefix registers no worker_list; workers_list is the list-workers tool)",
+      "domain_list": "no tool of this name or role is registered at the prefix; not covered"
+    },
+    "properties": [
+      {
+        "id": "cloudflare.zones_list/textJson",
+        "kind": "textJson",
+        "tool": "zones_list",
+        "forbiddenSubstring": "[object Object]",
+        "rule": "On a non-error result: (a) no text content block contains the substring '[object Object]', and (b) when the result has at least one text content block, at least one of them parses with JSON.parse to an object or an array. A result with no text block is checked only by (a) and by the declared outputSchema. An isError result is unverifiable (an explicit error is seen by the agent)."
+      },
+      {
+        "id": "cloudflare.zones_list/carriesUpstream",
+        "kind": "carriesUpstream",
+        "tool": "zones_list",
+        "upstreamItems": "result[*].id",
+        "rule": "On a non-error result: take every 2xx upstream JSON response of this call whose body has a `result` array (Cloudflare v4 envelope); every string `id` of those `result` items appears as a string value somewhere in the tool's payload (the JSON parsed from any text block, or structuredContent). Skipped when no such upstream response exists or it lists no ids. An isError result is unverifiable."
+      },
+      {
+        "id": "cloudflare.workers_list/textJson",
+        "kind": "textJson",
+        "tool": "workers_list",
+        "forbiddenSubstring": "[object Object]",
+        "rule": "Same rule as cloudflare.zones_list/textJson."
+      },
+      {
+        "id": "cloudflare.workers_list/carriesUpstream",
+        "kind": "carriesUpstream",
+        "tool": "workers_list",
+        "upstreamItems": "result[*].id",
+        "rule": "Same rule as cloudflare.zones_list/carriesUpstream."
+      }
+    ],
+    "standard": "Each contract above is also evaluated by @fiks/contracts evaluate with the tool's declared outputSchema from tools/list (property <contract id>/outputSchema: structuredContent present and matching it, when an outputSchema is declared)."
+  }
+}
