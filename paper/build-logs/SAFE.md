@@ -19,6 +19,8 @@ every runner test uses a fake `query`, the stub runner or a mocked SDK.
 | Edit guard from `allowedEditPaths` (regex sources; default `['^src/.+\\.ts$']`, so `REPAIR_ALLOWED = editGuard()`). Optional `allowedNewFilePaths` are create-only paths, e.g. an agent-written repro test: a file that existed before can never be overwritten. | `src/guard.ts`, `src/permissions.ts` |
 | Stub runner: `stubRunner(script)` / `loadStubScript(file)`. Ops are write, edit, newTest, bash and read. Each op is one turn through the same `makeCanUseTool`. The turn budget is shared across resumes (`sessions[]`, ids `stub-session-<n>`). The runner never imports or calls the SDK. Both the SDK runner and the CLI runner throw `LlmForbiddenError` before any call when `FIKS_LLM_FORBID=1`. | `src/stub.ts`, `src/env.ts` |
 
+| Round 2: guard as an SDK PreToolUse hook. Claude Code 0.3.289 auto-allows Read/Glob/Grep inside the cwd (`decisionReason {type:'mode', mode:'default'}`) and read-only Bash before it calls `canUseTool`, so `canUseTool` alone let a strict-mode agent Read or `cat`/`grep` `test/fixtures/**`, `test/repro/*.json`, `test/traces/**` and `.alerts/**`, and let read-only Bash skip `mayRun` and the backend rewrite in every mode. `sdkToolGuard(guard)` now passes the same `makeCanUseTool` decision as `hooks.PreToolUse` (no matcher, so every tool; 16 min hook timeout for a backend `pnpm test`): deny with the guard's message, or allow with the guard's `updatedInput` (the Bash relay). `canUseTool` stays as a backstop and shares a per-`tool_use_id` memo, so a call reaching both runs the guard (and a backend command and its candidate capture) once. | `src/runner.ts` `sdkToolGuard` |
+
 `RunnerResult`'s new fields (`outcome`, `tokens`, `sessionId`, `tries`, `sessionTurns`,
 `denials`) are optional, so the existing CLI oracle runners still compile unchanged.
 
@@ -35,7 +37,22 @@ every runner test uses a fake `query`, the stub runner or a mocked SDK.
   fragment is needed. The local `pnpm-lock.yaml` change from `pnpm install --no-frozen-lockfile`
   is not committed: the orchestrator regenerates the lockfile at merge.
 
-## Evidence (run 2026-10-21 on this branch)
+## Evidence, round 2 (2026-10-21, ws/SAFE rebased on main `c144b03`, already up to date)
+
+- SETUP: `node scripts/apply-dep-fragments.mjs` ("nothing to apply"), `pnpm install --no-frozen-lockfile`,
+  `node scripts/ensure-shop-mcp.mjs` (`.work/shop-mcp` at `7bf2e66`). Without the ensure step a fresh
+  worktree fails at vitest startup (`packages/cli/vitest.config.ts` runs `git -C .work/shop-mcp worktree add`);
+  the SETUP line in WORKSTREAMS.json needs it added (orchestrator-owned file).
+- `pnpm vitest run packages/repair`: 6 files, 73 tests passed. New: `query options carry a PreToolUse
+  guard hook; strict Read/cat of a fixture is denied there` (Read of `test/fixtures/v1/a.json`, relative
+  and absolute, `cat test/fixtures/v1/a.json`, `grep -r price test/fixtures` and Grep on `test/fixtures`
+  denied by the hook; Read of `src/a.ts` allowed) and `the hook relays allow-listed Bash through the
+  backend once, even if canUseTool is asked too` (one backend exec; `cat src/a.ts` denied in raw mode).
+- Mutation check: with the `hooks:` option removed from the query call, both new tests fail (2 failed, 10 passed).
+- `pnpm typecheck`: exit 0. `pnpm lint`: exit 0.
+- Regression: `with-lock suite pnpm vitest run packages/cli/test/repair.test.ts`: 1 file, 12 tests passed.
+
+## Evidence, round 1 (run 2026-10-21 on this branch)
 
 - `pnpm vitest run packages/repair`: 6 files, 71 tests passed.
 - `pnpm typecheck`: exit 0. `pnpm lint`: "Checked 146 files ... No fixes applied", exit 0.

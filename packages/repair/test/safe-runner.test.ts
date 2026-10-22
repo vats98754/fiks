@@ -167,6 +167,102 @@ describe('agent SDK runner', () => {
     expect(calls).toHaveLength(2);
   });
 
+  test('query options carry a PreToolUse guard hook; strict Read/cat of a fixture is denied there', async () => {
+    // Claude Code auto-allows in-cwd Read/Glob/Grep and read-only Bash before canUseTool, so the
+    // guard must also run as a PreToolUse hook (which runs before those auto-allows).
+    const wt = repo();
+    mkdirSync(join(wt, 'test/fixtures/v1'), { recursive: true });
+    writeFileSync(join(wt, 'test/fixtures/v1/a.json'), '{"price":1999,"note":"vendor bytes"}');
+    const { q, calls } = fakeQuery([[sdkResult]]);
+    const r = await createAgentSdkRunner({ query: q, env: {} }).run(
+      job(wt, { traceFormat: 'strict' }),
+      signal,
+    );
+    expect(r.outcome).toBe('completed');
+    const opts = calls[0]?.options as Parameters<typeof query>[0]['options'] & object;
+    expect(opts.permissionMode).toBe('default');
+    expect(typeof opts.canUseTool).toBe('function');
+    const matchers = opts.hooks?.PreToolUse ?? [];
+    expect(matchers).toHaveLength(1);
+    expect(matchers[0]?.matcher).toBeUndefined(); // every tool, not a subset
+    const [hook] = matchers[0]?.hooks ?? [];
+    if (!hook) throw new Error('no PreToolUse hook');
+    let n = 0;
+    const pre = (tool_name: string, tool_input: Record<string, unknown>) => {
+      const id = `toolu_${++n}`;
+      return hook(
+        {
+          hook_event_name: 'PreToolUse',
+          tool_name,
+          tool_input,
+          tool_use_id: id,
+          session_id: 's',
+          transcript_path: '',
+          cwd: wt,
+        },
+        id,
+        { signal },
+      );
+    };
+    const decision = (o: unknown) =>
+      (o as { hookSpecificOutput?: { permissionDecision?: string } }).hookSpecificOutput?.permissionDecision;
+    for (const file_path of ['test/fixtures/v1/a.json', join(wt, 'test/fixtures/v1/a.json')]) {
+      expect(decision(await pre('Read', { file_path }))).toBe('deny');
+    }
+    expect(decision(await pre('Bash', { command: 'cat test/fixtures/v1/a.json' }))).toBe('deny');
+    expect(decision(await pre('Bash', { command: 'grep -r price test/fixtures' }))).toBe('deny');
+    expect(decision(await pre('Grep', { pattern: 'price', path: 'test/fixtures' }))).toBe('deny');
+    expect(decision(await pre('Read', { file_path: 'src/a.ts' }))).toBe('allow');
+    expect(r.denials).toHaveLength(5);
+  });
+
+  test('the hook relays allow-listed Bash through the backend once, even if canUseTool is asked too', async () => {
+    const wt = repo();
+    const ran: string[][] = [];
+    const backend: ExecBackend = {
+      async exec(cmd, args) {
+        ran.push([cmd, ...args]);
+        return { code: 1, stdout: '1 failed', stderr: '' };
+      },
+      async cleanup() {},
+    };
+    const { q, calls } = fakeQuery([[sdkResult]]);
+    await createAgentSdkRunner({ query: q, env: {} }).run(job(wt, { backend }), signal);
+    const opts = calls[0]?.options as Parameters<typeof query>[0]['options'] & object;
+    const hook = opts.hooks?.PreToolUse?.[0]?.hooks[0];
+    if (!hook || !opts.canUseTool) throw new Error('guard not wired');
+    const out = (await hook(
+      {
+        hook_event_name: 'PreToolUse',
+        tool_name: 'Bash',
+        tool_input: { command: 'pnpm test' },
+        tool_use_id: 'toolu_x',
+        session_id: 's',
+        transcript_path: '',
+        cwd: wt,
+      },
+      'toolu_x',
+      { signal },
+    )) as { hookSpecificOutput?: { permissionDecision?: string; updatedInput?: { command?: string } } };
+    expect(out.hookSpecificOutput?.permissionDecision).toBe('allow');
+    expect(out.hookSpecificOutput?.updatedInput?.command).toMatch(/^cat \S+; exit 1$/);
+    // the backstop for the same tool_use_id reuses the hook's decision instead of re-running
+    const again = await opts.canUseTool(
+      'Bash',
+      { command: 'pnpm test' },
+      { signal, toolUseID: 'toolu_x', requestId: 'r1' },
+    );
+    expect(again).toEqual({ behavior: 'allow', updatedInput: out.hookSpecificOutput?.updatedInput });
+    expect(ran).toEqual([['pnpm', 'test']]);
+    // read-only Bash that Claude Code would auto-allow is denied in raw mode too
+    const cat = await opts.canUseTool(
+      'Bash',
+      { command: 'cat src/a.ts' },
+      { signal, toolUseID: 'toolu_y', requestId: 'r2' },
+    );
+    expect(cat?.behavior).toBe('deny');
+  });
+
   test('with FIKS_LLM_FORBID=1 the SDK runner throws before any call', async () => {
     process.env.FIKS_LLM_FORBID = '1';
     await expect(agentSdkRunner.run(job(repo()), signal)).rejects.toThrow(LlmForbiddenError);

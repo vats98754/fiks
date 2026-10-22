@@ -1,9 +1,14 @@
 import { spawnSync } from 'node:child_process';
-import { query as sdkQuery } from '@anthropic-ai/claude-agent-sdk';
+import {
+  type HookCallbackMatcher,
+  type HookEvent,
+  type CanUseTool as SdkCanUseTool,
+  query as sdkQuery,
+} from '@anthropic-ai/claude-agent-sdk';
 import type { AllowedEditPaths, ExecBackend, TokenUsage, TraceFormat } from '@fiks/interfaces';
 import { assertLlmAllowed, claudeEnv, type OnCandidate } from './env.ts';
 import { DEFAULT_ALLOWED_EDIT_PATHS, escapingSymlinks } from './guard.ts';
-import { makeCanUseTool } from './permissions.ts';
+import { type CanUseTool, makeCanUseTool, type ToolDecision } from './permissions.ts';
 
 export type RunnerKind = 'agent-sdk' | 'claude-cli' | 'oracle' | 'oracle-broken' | 'stub';
 
@@ -127,6 +132,74 @@ export function classifyFailure(f: FailureInfo): 'retry' | 'fatal' | 'model' {
 export const RETRY_MESSAGE =
   'The previous request failed with a transient API error. Continue the task where you left off.';
 
+export interface SdkToolGuard {
+  hooks: Partial<Record<HookEvent, HookCallbackMatcher[]>>;
+  canUseTool: SdkCanUseTool;
+}
+
+/**
+ * Wires the tool policy into the SDK twice. `canUseTool` alone is not enough: Claude Code
+ * auto-allows Read/Glob/Grep inside the working directory and read-only Bash (`cat`, `grep`, ...)
+ * in `default` mode before it ever asks `canUseTool`, which would bypass the strict quarantine
+ * (P3), the Bash allow-list and the backend rewrite (P1). A PreToolUse hook runs before those
+ * auto-allows, so the guard decides there for every tool: deny, or allow with the guard's
+ * (possibly rewritten) input. `canUseTool` stays as a backstop for a call the hook did not settle
+ * (e.g. a hook timeout). Decisions are memoised per tool_use_id, so a call reaching both runs the
+ * guard, and hence a backend command and its candidate capture, once.
+ */
+export function sdkToolGuard(
+  guard: CanUseTool,
+  opts: { onDeny?: (tool: string, message: string) => void; hookTimeoutSec?: number } = {},
+): SdkToolGuard {
+  const decided = new Map<string, Promise<ToolDecision>>();
+  const decide = (tool: string, input: Record<string, unknown>, id: string | undefined) => {
+    const hit = id ? decided.get(id) : undefined;
+    if (hit) return hit;
+    const p = guard(tool, input).then((d) => {
+      if (d.behavior === 'deny') opts.onDeny?.(tool, d.message);
+      return d;
+    });
+    if (id) decided.set(id, p);
+    return p;
+  };
+  return {
+    hooks: {
+      PreToolUse: [
+        {
+          // No matcher: every tool goes through the guard (unknown tools are denied there).
+          timeout: opts.hookTimeoutSec ?? 16 * 60, // a backend `pnpm test` may run for minutes
+          hooks: [
+            async (input, toolUseID) => {
+              if (input.hook_event_name !== 'PreToolUse') return {};
+              const toolInput =
+                input.tool_input && typeof input.tool_input === 'object'
+                  ? (input.tool_input as Record<string, unknown>)
+                  : {};
+              const d = await decide(input.tool_name, toolInput, input.tool_use_id ?? toolUseID);
+              return {
+                hookSpecificOutput:
+                  d.behavior === 'deny'
+                    ? {
+                        hookEventName: 'PreToolUse',
+                        permissionDecision: 'deny',
+                        permissionDecisionReason: d.message,
+                      }
+                    : {
+                        hookEventName: 'PreToolUse',
+                        permissionDecision: 'allow',
+                        permissionDecisionReason: 'fiks repair guard',
+                        updatedInput: d.updatedInput,
+                      },
+              };
+            },
+          ],
+        },
+      ],
+    },
+    canUseTool: (tool, input, options) => decide(tool, input, options?.toolUseID),
+  };
+}
+
 export interface AgentSdkRunnerOptions {
   /** The SDK `query` (tests inject a fake). */
   query?: typeof sdkQuery;
@@ -141,7 +214,7 @@ export interface AgentSdkRunnerOptions {
 
 /**
  * Claude Agent SDK runner: Claude Code in the worktree, every tool call through `makeCanUseTool`
- * (edit guard, realpath read guard, Bash allow-list, optional exec backend), env = OAuth token +
+ * via a PreToolUse hook plus `canUseTool` (`sdkToolGuard`; edit guard, realpath read guard, Bash allow-list, optional exec backend), env = OAuth token +
  * PATH + temp HOME. Transient API failures are retried with backoff; when the tries run out the
  * outcome is `infra_error`. Refuses to start under FIKS_LLM_FORBID=1.
  */
@@ -187,6 +260,9 @@ export function createAgentSdkRunner(o: AgentSdkRunnerOptions = {}): RepairRunne
         backend: job.backend,
         onCandidate: job.onCandidate,
       });
+      const sdkGuard = sdkToolGuard(guard, {
+        onDeny: (tool, message) => denials.push(`${tool}: ${message}`),
+      });
       let lastFailure = '';
       while (tries < maxTries) {
         if (tries > 0) await sleep(backoff * 4 ** (tries - 1));
@@ -217,11 +293,8 @@ export function createAgentSdkRunner(o: AgentSdkRunnerOptions = {}): RepairRunne
               abortController: controller,
               env: claudeEnv(env),
               ...(sessionId ? { resume: sessionId } : {}),
-              canUseTool: async (tool, input) => {
-                const d = await guard(tool, input);
-                if (d.behavior === 'deny') denials.push(`${tool}: ${d.message}`);
-                return d;
-              },
+              hooks: sdkGuard.hooks,
+              canUseTool: sdkGuard.canUseTool,
             },
           });
           for await (const m of stream) {
