@@ -211,3 +211,11 @@ the last section of this file.
 Three consecutive runs of `with-lock suite pnpm test -- --reporter=json --outputFile=<tmp>/fullN.json`
 at `7529764`: each exit 0, 212 passed, 0 failed, 212 total. No `.work/cli-*` copy is left behind
 and the worktree is clean afterwards. `pnpm typecheck` and `pnpm lint` exit 0.
+
+## Full suite (round 3, after rebase onto 0bbadff and the P6 repro fix)
+
+`with-lock suite pnpm test -- --reporter=json --outputFile=<tmp>/full1.json` at `6ea2ed5`: exit 0,
+327 passed, 0 failed, 1 skipped (`packages/proxy/test/replay.test.ts`, not CORE's), 328 total.
+`pnpm typecheck` and `pnpm lint` exit 0. Items 2 (p-0000 `unverifiable`) and 11 (`pnpm fiks`
+exit 1 under the root `.npmrc` `reporter=silent`) still fail as written and wait for an
+orchestrator decision; no decision is recorded in PLAN.md or WORKSTREAMS.json at `0bbadff`.
