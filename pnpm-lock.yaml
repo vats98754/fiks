@@ -230,6 +230,12 @@ importers:
         specifier: workspace:*
         version: link:../vendor-api
 
+  packages/sandbox:
+    dependencies:
+      '@fiks/interfaces':
+        specifier: workspace:*
+        version: link:../interfaces
+
   packages/vendor-api: {}
 
   packages/vendor-tracker:
