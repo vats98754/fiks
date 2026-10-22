@@ -11,7 +11,7 @@
 // same bytes (hash included).
 import type { GradeRecord } from '@fiks/interfaces';
 import { diffSha } from './diff.ts';
-import { canonicalJson, sha256 } from './hash.ts';
+import { canonicalJson, cmp, sha256 } from './hash.ts';
 
 /** Where a primary-pool candidate came from (PLAN 5.6). */
 export type PoolSource =
@@ -119,7 +119,7 @@ export function seededShuffle<T>(xs: readonly T[], label: string, seed: string):
 }
 
 const bySource = (a: PoolCandidate, b: PoolCandidate) =>
-  SOURCE_ORDER.indexOf(a.source) - SOURCE_ORDER.indexOf(b.source) || a.id.localeCompare(b.id);
+  SOURCE_ORDER.indexOf(a.source) - SOURCE_ORDER.indexOf(b.source) || cmp(a.id, b.id);
 
 /** One drift's primary pool entry from its candidates and their grades. */
 export function primaryEntry(
@@ -171,7 +171,7 @@ export function primaryEntry(
     patches,
     counts: { correct, incorrect, candidates: candidates.length, duplicates, ungraded },
     excluded: correct < min || incorrect < min,
-    crossTab: Object.fromEntries(Object.entries(crossTab).sort(([a], [b]) => a.localeCompare(b))),
+    crossTab: Object.fromEntries(Object.entries(crossTab).sort(([a], [b]) => cmp(a, b))),
   };
 }
 
@@ -185,7 +185,7 @@ export function buildPrimaryPool(
   opts: { seed: string; minPerClass?: number },
 ): PrimaryPool {
   const entries = [...drifts]
-    .sort((a, b) => a.drift.localeCompare(b.drift))
+    .sort((a, b) => cmp(a.drift, b.drift))
     .map((d) =>
       primaryEntry(d.drift, d.candidates, d.grades, {
         seed: opts.seed,
@@ -233,19 +233,29 @@ export interface SecondaryPool {
 export const SECONDARY_CAP = 30;
 
 /**
- * Largest-remainder allocation of `cap` over strata by size, never above a stratum's size; ties
- * broken by stratum name.
+ * The cap split over strata: one per non-empty stratum first (every source arm is represented when
+ * the cap allows), the rest by largest remainder in proportion to size, never above a stratum's
+ * size; ties broken by stratum name.
  */
 export function allocate(sizes: Record<string, number>, cap: number): Record<string, number> {
   const names = Object.keys(sizes).sort();
   const total = names.reduce((s, n) => s + (sizes[n] ?? 0), 0);
   if (total <= cap) return Object.fromEntries(names.map((n) => [n, sizes[n] ?? 0]));
-  const quota = names.map((n) => ({ n, q: ((sizes[n] ?? 0) * cap) / total }));
-  const out: Record<string, number> = Object.fromEntries(quota.map(({ n, q }) => [n, Math.floor(q)]));
-  let left = cap - Object.values(out).reduce((s, v) => s + v, 0);
-  const order = [...quota].sort(
-    (a, b) => b.q - Math.floor(b.q) - (a.q - Math.floor(a.q)) || a.n.localeCompare(b.n),
-  );
+  const nonEmpty = names.filter((n) => (sizes[n] ?? 0) > 0);
+  const out: Record<string, number> = Object.fromEntries(names.map((n) => [n, 0]));
+  let left = cap;
+  if (cap >= nonEmpty.length) {
+    for (const n of nonEmpty) out[n] = 1;
+    left -= nonEmpty.length;
+  }
+  const rest = Object.fromEntries(names.map((n) => [n, (sizes[n] ?? 0) - (out[n] ?? 0)]));
+  const restTotal = names.reduce((s, n) => s + (rest[n] ?? 0), 0);
+  const quota = names.map((n) => ({ n, q: restTotal ? ((rest[n] ?? 0) * left) / restTotal : 0 }));
+  for (const { n, q } of quota) {
+    out[n] = (out[n] ?? 0) + Math.floor(q);
+    left -= Math.floor(q);
+  }
+  const order = [...quota].sort((a, b) => b.q - Math.floor(b.q) - (a.q - Math.floor(a.q)) || cmp(a.n, b.n));
   for (const { n } of order) {
     if (left === 0) break;
     if ((out[n] ?? 0) < (sizes[n] ?? 0)) {
@@ -265,7 +275,7 @@ export function buildSecondaryPool(
   const entries: SecondaryDriftEntry[] = drifts.map((drift) => {
     const seen = new Set<string>();
     const strata = new Map<string, { id: string; arm: string; diffSha: string }[]>();
-    for (const c of [...captured].filter((x) => x.drift === drift).sort((a, b) => a.id.localeCompare(b.id))) {
+    for (const c of [...captured].filter((x) => x.drift === drift).sort((a, b) => cmp(a.id, b.id))) {
       const sha = diffSha(c.diff);
       if (seen.has(sha) || !c.diff.trim()) continue;
       seen.add(sha);

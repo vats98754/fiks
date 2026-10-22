@@ -14,6 +14,7 @@ import { existsSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import type { RerecordLog } from '@fiks/interfaces';
 import { diffSha } from './diff.ts';
+import { cmp } from './hash.ts';
 import { type Head, prepareHead, removeFrom, writeInto } from './head.ts';
 import { type LoadedPackage, profileOf } from './pkg.ts';
 import { rerecordIn, restoreOverlay } from './rerecord.ts';
@@ -169,7 +170,7 @@ export function fileRuns(report: VitestReport, expected: readonly string[]): Fil
   for (const p of expected) {
     if (!byPath.has(p)) byPath.set(p, { path: p, pass: false, passed: 0, failed: 0, error: 'no result' });
   }
-  return [...byPath.values()].sort((a, b) => a.path.localeCompare(b.path));
+  return [...byPath.values()].sort((a, b) => cmp(a.path, b.path));
 }
 
 async function vitestIn(

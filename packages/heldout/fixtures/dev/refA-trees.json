@@ -1,0 +1,8 @@
+{
+  "_comment": "git write-tree after git apply packages/cli/test/oracles/D<n>.patch on seed-v1^{commit} (bb037cf); checked by test/grade.test.ts",
+  "D1": "8415b4a6edae9a8fd340624c0daede2aaa345ed9",
+  "D2": "d48f847bbba170dca3c86ac6042fdf3908aa86d2",
+  "D3": "a4d082a04fc6d93715bd31b74c9a643d5f4a13a7",
+  "D4": "80b5d17ae3561b725e8326d6606d2e75d64541a9",
+  "D5": "dc1aa35582031f0e4fbb313a357751d2873ebe01"
+}

@@ -22,5 +22,9 @@
     "eslint-plugin-security": "4.2.0",
     "fast-check": "4.10.2",
     "typescript": "6.0.3"
+  },
+  "devDependencies": {
+    "@fiks/repro": "workspace:*",
+    "@fiks/vendor-tracker": "workspace:*"
   }
 }

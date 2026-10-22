@@ -1,0 +1,29 @@
+{
+  "$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+  "root": false,
+  "extends": "//",
+  "linter": {
+    "rules": {
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "patterns": [
+              {
+                "group": [
+                  "@fiks/contracts",
+                  "@fiks/contracts/**",
+                  "@fiks/proxy",
+                  "@fiks/proxy/**",
+                  "**/contracts/src/**",
+                  "**/proxy/src/**"
+                ],
+                "message": "The held-out oracle never imports the contracts or the proxy (PLAN 3.0 criterion 5): truth() and the grader stay independent of every monitor."
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

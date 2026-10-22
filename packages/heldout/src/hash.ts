@@ -19,3 +19,6 @@ export function canonicalJson(v: unknown): string {
 
 /** The hash two reruns of the same grade must share (PLAN 8.1 R5: re-grades must match exactly). */
 export const gradeRecordHash = (g: GradeRecord) => sha256(canonicalJson(g));
+
+/** Code-unit string order (locale-independent, so sorted output is the same on every machine). */
+export const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);

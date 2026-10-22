@@ -4,6 +4,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseUnifiedDiff } from '../diff.ts';
+import { cmp } from '../hash.ts';
 import { astTool } from './ast.ts';
 import { eslintTool } from './eslint.ts';
 import { semgrepTool } from './semgrep.ts';
@@ -97,11 +98,7 @@ export async function sastOnDiff(opts: {
     }
   }
   newFindings.sort(
-    (a, b) =>
-      a.file.localeCompare(b.file) ||
-      a.line - b.line ||
-      a.tool.localeCompare(b.tool) ||
-      a.rule.localeCompare(b.rule),
+    (a, b) => cmp(a.file, b.file) || a.line - b.line || cmp(a.tool, b.tool) || cmp(a.rule, b.rule),
   );
   const confirmed = confirm(newFindings);
   return { newFindings, confirmed, pass: confirmed.length === 0, files: heads.map((f) => f.path).sort() };

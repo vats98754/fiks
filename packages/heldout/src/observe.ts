@@ -89,12 +89,11 @@ export interface ObserveDeps {
   ) => Promise<HiddenRun[]>;
 }
 
+/** Error flag and structured content only; an absent structured content is kept as null (empty). */
 export function trim(result: unknown): ObservedOutput {
   const r = result as { isError?: unknown; structuredContent?: unknown } | null;
-  const out: ObservedOutput = {};
+  const out: ObservedOutput = { structuredContent: r?.structuredContent ?? null };
   if (r?.isError === true) out.isError = true;
-  if (r?.structuredContent !== undefined && r.structuredContent !== null)
-    out.structuredContent = r.structuredContent;
   return out;
 }
 

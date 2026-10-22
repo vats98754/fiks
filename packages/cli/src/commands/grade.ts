@@ -318,6 +318,77 @@ async function gradeMain(values: Values): Promise<number> {
   return 0;
 }
 
+/**
+ * `fiks grade dev-grade --tools-image <img> [--only D1,...] [--jobs 2] [--out <dir>] [--write-expected]`:
+ * grades every dev head (base, ref A, ref B and, for HOLD's packages, P1-P8) in grading
+ * containers. --write-expected writes pmut/<id>/P<k>.expected.json from the grades (done once,
+ * after the first run was inspected; the build log records why each class is what it is).
+ */
+async function devGrade(values: Values): Promise<number> {
+  const heldout = await import('@fiks/heldout');
+  const only = typeof values.only === 'string' ? values.only.split(',') : Object.keys(DEV_PACKAGES);
+  const jobs = Math.max(1, Number(values.jobs ?? 2));
+  const outDir = typeof values.out === 'string' ? values.out : undefined;
+  if (outDir) mkdirSync(outDir, { recursive: true });
+  const queue = [...only];
+  let failed = 0;
+  const worker = async () => {
+    for (let id = queue.shift(); id; id = queue.shift()) {
+      const manifest = DEV_PACKAGES[id];
+      if (!manifest) throw new Error(`unknown dev package ${id}`);
+      const p = await heldout.loadPackage(manifest);
+      const d = getDomain(p.pkg.domain);
+      const grader = new heldout.Grader(p, {
+        sandbox: await sandboxFrom(values, p.pkg.domain, p.pkg.base),
+        repoDir: d.repo.dir(),
+        clock: d.frozenClock,
+        traffic: JSON.parse(readFileSync(join(DEV, 'traffic', `${p.pkg.domain}.json`), 'utf8')),
+        log: (l) => console.error(l),
+      });
+      const pmut = join(DEV, 'pmut', id);
+      const patches = [
+        { id: `${id}/base`, diff: '' },
+        { id: `${id}/refA`, diff: readFileSync(p.refA, 'utf8') },
+        { id: `${id}/refB`, diff: readFileSync(p.refB, 'utf8') },
+        ...(existsSync(pmut)
+          ? readdirSync(pmut)
+              .filter((f) => /^P\d\.patch$/.test(f))
+              .sort()
+              .map((f) => ({
+                id: `${id}/${f.replace('.patch', '')}`,
+                diff: readFileSync(join(pmut, f), 'utf8'),
+              }))
+          : []),
+      ];
+      const results: unknown[] = [];
+      for (const patch of patches) {
+        try {
+          const g = await grader.grade(patch);
+          results.push(g);
+          const hash = heldout.gradeRecordHash(g.record);
+          console.log(
+            `${g.record.patchId}: ${g.record.correct ? 'correct' : 'incorrect'} [${g.record.reasons.join(', ')}] ambiguous=${g.record.criteria.ambiguousInputs} ${hash}`,
+          );
+          const op = /\/(P\d)$/.exec(patch.id)?.[1];
+          if (values['write-expected'] && op) {
+            const { formatText } = await import('@fiks/heldout/dev');
+            writeFileSync(
+              join(pmut, `${op}.expected.json`),
+              formatText('expected.json', `${JSON.stringify(g.record, null, 2)}\n`),
+            );
+          }
+        } catch (e) {
+          failed++;
+          console.log(`${patch.id}: ERROR ${(e as Error).message.slice(0, 500)}`);
+        }
+      }
+      if (outDir) writeFileSync(join(outDir, `${id}.json`), `${JSON.stringify(results, null, 2)}\n`);
+    }
+  };
+  await Promise.all(Array.from({ length: jobs }, worker));
+  return failed ? 1 : 0;
+}
+
 interface AcceptSpec {
   pkg: string;
   alert: string;
@@ -374,6 +445,21 @@ const command: CliCommandModule = {
         options: { check: { type: 'boolean', default: false }, only: { type: 'string' } },
       });
       return devTraces(values.check, values.only?.split(','));
+    }
+    if (argv[0] === 'dev-grade') {
+      const { values } = parseArgs({
+        args: argv.slice(1),
+        options: {
+          only: { type: 'string' },
+          jobs: { type: 'string' },
+          out: { type: 'string' },
+          'write-expected': { type: 'boolean', default: false },
+          'tools-image': { type: 'string' },
+          'repo-image': { type: 'string' },
+          purpose: { type: 'string' },
+        },
+      });
+      return devGrade(values);
     }
     const { values } = parseArgs({
       args: argv,
