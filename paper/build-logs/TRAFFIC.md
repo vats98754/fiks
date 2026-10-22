@@ -88,7 +88,7 @@ average was 90-130 during these runs (other streams), which explains the test du
 | Rows carry agent, model, task id, trial; stub hashes identical | unit `collect.test.ts` + `cli-traffic.test.ts` (fixture domain), and on the real servers: `pnpm fiks traffic --domain shop --ref base-shop --tasks s01,s09,s20 --agent-stub builtin --allow-dirty` twice, `--domain tracker --ref dev-tracker-stub --tasks t01,t04,t05` twice | shop: 51 rows, both runs `58b310c8...0106`; tracker: 60 rows, both runs `bfb0a8f8...3a0f`. Unit: identical sha256 for 1 vs 3 workers and repeated runs; every row has agent/model/taskId/trial/seq |
 | No package.json / lockfile in the diff | `git diff --name-only bd19858 HEAD` | lists only `deps-fragments/TRAFFIC.json`, `packages/cli/src/commands/traffic.ts`, `packages/traffic/**`, `paper/build-logs/TRAFFIC.md` |
 | typecheck, lint | `pnpm typecheck && pnpm lint` | both exit 0 (lint: 492 files) |
-| Full suite | `with-lock suite pnpm test` | see below |
+| Full suite | `with-lock suite pnpm test` | 110 files: 108 passed, 1 skipped, 1 failed; 988 tests passed, 7 skipped, 1 failed (1114 s; load avg 60-130). The `@fiks/traffic` files all pass. The one failure is not TRAFFIC code: `packages/contracts/test/ensure-shop-mcp.test.ts` "a clone on main ends detached at the pinned ref" asserts that the source clone's `main` differs from the pin, but this worktree's `.work/shop-mcp` is a fresh clone made after the orchestrator fast-forwarded shop-mcp `main` to `base-shop` (both `0fde2b4`), so the precondition no longer holds. Owner: VOCAB / orchestrator (packages/contracts is not TRAFFIC's). Transient retries seen in the log (bench cli-bench 4-worker, sandbox push-alias, sandbox container write) passed on retry |
 
 ## Not done here / for downstream
 
