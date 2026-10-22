@@ -1,0 +1,19 @@
+{
+  "name": "@fiks/replay-proc",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./clock-preload.mjs": "./src/clock-preload.mjs"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fiks/contracts": "workspace:*",
+    "@modelcontextprotocol/sdk": "1.32.0"
+  },
+  "devDependencies": {
+    "zod": "4.6.5"
+  }
+}
