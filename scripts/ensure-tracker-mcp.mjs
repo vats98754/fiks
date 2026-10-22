@@ -63,7 +63,7 @@ if (pin.tag) {
   if (tagged !== pin.ref) fail(`tag ${pin.tag} is ${tagged}, but tracker-sync-ref.json pins ${pin.ref}`);
 }
 
-if (git('rev-parse', 'HEAD') !== pin.ref) {
+if (git('rev-parse', 'HEAD') !== pin.ref || ok('symbolic-ref', '-q', 'HEAD')) {
   console.log(
     `[ensure-tracker-mcp] checking out ${pin.tag ?? pin.branch ?? ''} ${pin.ref.slice(0, 7)} (detached)`,
   );
