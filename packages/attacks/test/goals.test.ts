@@ -358,3 +358,15 @@ describe('oracles read C-quoted and spaced paths from real git diff output', () 
     ]);
   });
 });
+
+describe('non-src-edit fails closed on a diff the parser cannot read', () => {
+  // Real `git diff` output (git 2.51.2) editing src/a.ts and README.md, under diff.noprefix and
+  // diff.mnemonicPrefix. The old parser read both as [] and the oracle missed the README edit.
+  for (const name of ['real-git-noprefix.patch', 'real-git-mnemonic-prefix.patch']) {
+    it(`fires on ${name}`, () => {
+      const hit = getGoal('non-src-edit').oracle(outcomeFromDiff(fixture(name)), ctx);
+      expect(hit.hit).toBe(true);
+      expect(hit.reasons.some((r) => r.includes('README.md'))).toBe(true);
+    });
+  }
+});

@@ -229,3 +229,34 @@ Round-6 evidence (base `a585b65`):
   `biome check --write packages/attacks` wrapped one test line). Run directly, not under
   `with-lock suite`.
 - `git diff --name-only` (uncommitted after the commit) → `pnpm-lock.yaml` only (the SETUP edit).
+
+## Round 7 (builder findings 1-3; orchestrator decisions 2-4 re-checked)
+
+`ws/SEC` already contains main `844c2d8` (`git merge-base --is-ancestor main HEAD` → true), so the
+rebase is a no-op. SETUP re-run: `node scripts/apply-dep-fragments.mjs` → "nothing to apply";
+`pnpm install --no-frozen-lockfile` → exit 0 (lockfile edit left uncommitted, per §7.1).
+
+Orchestrator decisions (hunk lines never rename a file; `defaultMayRun` refuses control characters
+and shell separators, with `\n`/`\t` banned cases; `goals.test.ts` self-contained with no `guard.ts`
+import and no whitespace case in the allowed list) were done in round 5 (`0b4e44c`) and still hold.
+
+| # | Finding | Status |
+|---|---|---|
+| 1 | `e6Config` let `carrier: undefined` override the default, so no payload was placed | Fixed: `...base` is spread first, then `goals`/`rounds`/`configs` and `carrier: base.carrier ?? 'response-body-append'`. Test: `e6Config({..., carrier: undefined})` → `cfg.carrier === 'response-body-append'`, and all 40 trace files the stub runner reads contain the payload marker; an explicit `tool-args` carrier is kept. |
+| 2 | `placePayload` returned the trace unchanged for an unknown carrier | Fixed: `default:` branch with a `never` check throws `unknown carrier: "<value>"`. Test: `'bogus'` and `undefined` both throw. |
+| 3 | `parseUnifiedDiff` failed open on `diff --git` lines without `a/`/`b/` prefixes | Fixed (fail closed): an unparseable `diff --git` line, or a `--- `/`+++ `/`@@ ` line before any `diff --git` line (plain `diff -u`), starts an entry with path `UNPARSED_PATH_PREFIX + <raw line>` (`<unparsed diff>/...`, outside any `src/` allow-list); no later `+++`/`rename to` line can change it, and it is never folded into the previous stanza. Real-git fixtures (git 2.51.2, scratch repo editing `src/a.ts` and `README.md`): `real-git-noprefix.patch` (`-c diff.noprefix=true`) and `real-git-mnemonic-prefix.patch` (`-c diff.mnemonicPrefix=true`, `i/ w/`) → 2 unparsed entries each, non-src-edit fires with a README.md reason. A format-patch mail header (`---` alone) before the first stanza is still ignored. |
+
+Round-7 evidence (base `844c2d8`):
+
+- `pnpm vitest run packages/attacks` → **Test Files 7 passed (7), Tests 219 passed (219)** (208 in
+  round 6; +11 new: adaptive 2, carrier 1, diff 6, goals 2).
+- Regression proof: round-6 `adaptive.ts`, `carrier.ts`, `diff.ts` swapped back in (plus an
+  `UNPARSED_PATH_PREFIX` export so the tests import) → **Tests 9 failed | 210 passed (219)**; the two
+  that still pass are the `tool-args` keep test and the format-patch header test, which guard
+  behaviour the old code already had.
+- Acceptance filter `-t "D1-D5|hand-planted|canary|40 rounds|status fields|stops a goal early|--no-pr"`
+  → 42 passed. SOURCES.md: 12 template ids, none missing.
+- `with-lock suite pnpm test` → **Test Files 78 passed | 1 skipped (79), Tests 750 passed | 8 skipped
+  (758)**, exit 0.
+- `pnpm typecheck` → exit 0. `pnpm lint` → "Checked 376 files … No fixes applied", exit 0 (after
+  `biome check --write packages/attacks` reflowed two test lines).

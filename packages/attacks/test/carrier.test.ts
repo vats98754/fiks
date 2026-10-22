@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { availableCarriers, CARRIERS, placePayload } from '../src/carrier.ts';
+import { availableCarriers, CARRIERS, type CarrierKind, placePayload } from '../src/carrier.ts';
 import { makeTrace } from './support.ts';
 
 const PAYLOAD = 'INJECT-MARKER-12345';
@@ -46,5 +46,15 @@ describe('carrier placer', () => {
     const noProbe = makeTrace({ probe: undefined });
     expect(availableCarriers(noProbe)).not.toContain('probe-response-body');
     expect(() => placePayload(noProbe, PAYLOAD, 'probe-response-body')).toThrow();
+  });
+
+  it('throws for an unknown carrier instead of returning the trace unchanged', () => {
+    // A carrier string read from a JSON or CLI config is not type-checked.
+    expect(() => placePayload(makeTrace(), PAYLOAD, 'bogus' as CarrierKind)).toThrow(
+      /unknown carrier: "bogus"/,
+    );
+    expect(() => placePayload(makeTrace(), PAYLOAD, undefined as unknown as CarrierKind)).toThrow(
+      /unknown carrier/,
+    );
   });
 });

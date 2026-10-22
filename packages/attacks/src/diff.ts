@@ -5,6 +5,14 @@ import type { ChangedFile } from './types.ts';
 const RENAME_OR_COPY_FROM = /^(rename|copy) from (.+)$/;
 const RENAME_OR_COPY_TO = /^(rename|copy) to (.+)$/;
 const DIFF_GIT = 'diff --git ';
+/** A `--- `, `+++ ` or `@@ ` line: file content a stanza without a `diff --git` line would carry. */
+const BARE_FILE_LINE = /^(--- |\+\+\+ |@@ )/;
+
+/**
+ * Path prefix of the entry emitted for a stanza the parser cannot read. It starts with `<`, so it
+ * matches no repo path pattern (in particular not an `src/` edit allow-list).
+ */
+export const UNPARSED_PATH_PREFIX = '<unparsed diff>/';
 
 /** Single-character escapes git's quote_c_style emits (besides `\ooo` octal bytes). */
 const C_ESCAPES: Record<string, number> = { a: 7, b: 8, t: 9, n: 10, v: 11, f: 12, r: 13, '"': 34, '\\': 92 };
@@ -123,7 +131,12 @@ function parseDiffGit(line: string): { a: string; b: string } | null {
  *
  * Paths are read the way git writes them (round 6): bare or C-quoted (`"b/\303\251.ts"`, the
  * default for non-ASCII and special characters), with the TAB git appends after a path containing a
- * space removed, so every stanza starts its own entry and every path is the real file name.
+ * space removed, so every stanza starts its own entry and every path is the real file name. *
+ * The parser fails closed. A `diff --git` line whose paths lack the `a/` / `b/` prefixes (git's
+ * output under `diff.noprefix` or `diff.mnemonicPrefix`, which use none or `i/ w/ c/ o/`), or a
+ * `--- ` / `+++ ` / `@@` line before any `diff --git` line (a plain `diff -u` patch), starts an
+ * entry whose path is `UNPARSED_PATH_PREFIX` + the raw line. That path is outside every edit
+ * allow-list, so an oracle never reads a diff it cannot parse as a clean one.
  */
 export function parseUnifiedDiff(diff: string): ChangedFile[] {
   const lines = diff.split('\n');
@@ -136,6 +149,8 @@ export function parseUnifiedDiff(diff: string): ChangedFile[] {
     lines: string[];
     headerEnd: number | null;
     inHunks: boolean;
+    /** Fail-closed entry: no later header line may change its path. */
+    unparsed?: boolean;
   } | null = null;
 
   const flush = () => {
@@ -159,8 +174,16 @@ export function parseUnifiedDiff(diff: string): ChangedFile[] {
       current = { path: header.b, aPath: header.a, lines: [line], headerEnd: null, inHunks: false };
       continue;
     }
+    if (line.startsWith(DIFF_GIT) || (!current && BARE_FILE_LINE.test(line))) {
+      // A stanza this parser cannot read: never drop it, and never fold it into the previous file.
+      flush();
+      const path = UNPARSED_PATH_PREFIX + line;
+      current = { path, aPath: path, lines: [line], headerEnd: null, inHunks: false, unparsed: true };
+      continue;
+    }
     if (!current) continue;
     current.lines.push(line);
+    if (current.unparsed) continue;
     if (current.headerEnd === null) {
       // Extended header lines end at the first `--- `, `@@` or `Binary files` line.
       if (line.startsWith('--- ') || line.startsWith('@@') || line.startsWith('Binary files ')) {

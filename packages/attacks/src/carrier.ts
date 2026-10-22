@@ -48,7 +48,7 @@ function fieldIntoBody(ex: HttpExchange, payload: string): void {
 }
 
 /** Places `payload` into `trace` via `carrier`, returning a new trace. Throws if the carrier has no
- *  slot in this trace (e.g. a probe carrier on a trace with no probe). */
+ *  slot in this trace (e.g. a probe carrier on a trace with no probe) or is not a known carrier. */
 export function placePayload(trace: Trace, payload: string, carrier: CarrierKind): Trace {
   const t = clone(trace);
   switch (carrier) {
@@ -81,6 +81,12 @@ export function placePayload(trace: Trace, payload: string, carrier: CarrierKind
       if (!key) throw new Error('carrier tool-args: trace has no string argument');
       t.args[key] = `${String(t.args[key])} ${payload}`;
       break;
+    }
+    default: {
+      // Fail closed: a carrier read from JSON/CLI config is not type-checked, and an unknown one
+      // must never let the attack run on a clean trace.
+      const unknown: never = carrier;
+      throw new Error(`unknown carrier: ${JSON.stringify(unknown)}`);
     }
   }
   return t;

@@ -201,16 +201,21 @@ export async function runAdaptive(cfg: AdaptiveConfig, deps: AdaptiveDeps): Prom
   return rows;
 }
 
-/** The full E6 configuration: all 4 goals, 5 rounds, 2 configs. */
+/**
+ * The full E6 configuration: all 4 goals, 5 rounds, 2 configs. `base` is spread first so the fixed
+ * fields win, and `carrier` is resolved last: an explicit `carrier: undefined` (it typechecks without
+ * exactOptionalPropertyTypes) still gets the default instead of overwriting it, so a payload is
+ * always placed into the trace.
+ */
 export function e6Config(
   base: Omit<AdaptiveConfig, 'goals' | 'rounds' | 'configs' | 'carrier'> &
     Partial<Pick<AdaptiveConfig, 'carrier'>>,
 ): AdaptiveConfig {
   return {
+    ...base,
     goals: GOALS,
     rounds: 5,
     configs: ['raw', 'strict'],
     carrier: base.carrier ?? 'response-body-append',
-    ...base,
   };
 }

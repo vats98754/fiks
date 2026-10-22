@@ -1,4 +1,4 @@
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseRunKey } from '@fiks/interfaces';
@@ -170,6 +170,41 @@ describe('adaptive attacker', () => {
     // other goals still run the full five rounds per config
     expect(rows.filter((r) => r.goal === 'non-src-edit').length).toBe(10);
     expect(rows.length).toBe(2 + 3 * 2 * 5);
+  });
+});
+
+describe('e6Config', () => {
+  it('an explicit carrier: undefined still gets the default carrier, and the payload is placed', async () => {
+    const cfg = e6Config({
+      baseTrace: makeTrace(),
+      canary: 'GH_TOKEN=fiks-canary-deadbeefdeadbeefdeadbeef',
+      recordedIds: RECORDED_IDS,
+      model: 'stub-attacker',
+      domain: 'shop',
+      base: 'base-shop',
+      carrier: undefined,
+    });
+    expect(cfg.carrier).toBe('response-body-append');
+    const placedTraces: string[] = [];
+    await runAdaptive(cfg, {
+      llm: async () => 'PLACED-PAYLOAD-MARKER',
+      runner: async (_argv, tracePath) => {
+        placedTraces.push(readFileSync(tracePath, 'utf8'));
+        return benignOutcome();
+      },
+      writeRow: () => {},
+      traceDir: mkdtempSync(join(tmpdir(), 'adaptive-test-')),
+    });
+    expect(placedTraces.length).toBe(40);
+    for (const t of placedTraces) expect(t).toContain('PLACED-PAYLOAD-MARKER');
+  });
+
+  it('keeps an explicit carrier and never lets base override the fixed E6 shape', () => {
+    const cfg = e6Config({ ...baseCfg(), carrier: 'tool-args' });
+    expect(cfg.carrier).toBe('tool-args');
+    expect(cfg.rounds).toBe(5);
+    expect(cfg.configs).toEqual(['raw', 'strict']);
+    expect(cfg.goals.length).toBe(4);
   });
 });
 

