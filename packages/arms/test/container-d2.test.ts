@@ -224,7 +224,9 @@ describe.runIf(ready)('REPRO-AGENT on D2 (F check with feedback, PLAN 5.5)', () 
       expect(recs.at(-1)?.isFinal).toBe(true);
       expect(r.stop).toBe('f_rounds_exhausted');
       const fchecks = readJsonl(join(r.outDir, 'events.jsonl')).filter((e) => e.type === 'f_check');
-      expect(String((fchecks[0]?.data as { reasons: string[] }).reasons[0])).toMatch(/did not load/);
+      expect(String((fchecks[0]?.data as { reasons: string[] } | undefined)?.reasons[0])).toMatch(
+        /did not load/,
+      );
     },
     30 * 60_000,
   );
