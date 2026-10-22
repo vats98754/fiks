@@ -119,8 +119,16 @@ export function addWorktree(shopDir: string, dir: string, ref: string, branch?: 
 // --- Local-ref worktrees (PLAN P17) --------------------------------------------------------
 
 export interface CreateWorktreeOptions {
-  /** Where to put it (default: a fresh folder under the OS temp dir). */
+  /** Where to put it (default: a fresh, uniquely named folder under `parent`). */
   dir?: string;
+  /**
+   * Without `dir`: the folder in which a fresh `mkdtemp` directory is made for this worktree
+   * (default: the OS temp dir). Each call gets its own directory, so concurrent processes never
+   * share one (P6), and `remove()` deletes that directory too.
+   */
+  parent?: string;
+  /** Prefix of the `mkdtemp` directory made under `parent` (default `fiks-wt-`). */
+  prefix?: string;
   /** Create (or reset) this branch at the resolved commit instead of a detached HEAD. */
   branch?: string;
   /** Fetch tags and branches from origin first. Only when asked, and never with a run key. */
@@ -169,9 +177,24 @@ export function createWorktree(
     git(repoDir, 'fetch', '--tags', 'origin');
   }
   const commit = resolveLocalRef(repoDir, ref);
-  const dir = opts.dir ?? join(mkdtempSync(join(tmpdir(), 'fiks-wt-')), 'repo');
-  addUnderLock(repoDir, dir, opts.branch ? ['-B', opts.branch, dir, commit] : ['--detach', dir, commit]);
+  let own: string | undefined;
+  if (!opts.dir) {
+    const parent = opts.parent ?? tmpdir();
+    mkdirSync(parent, { recursive: true });
+    own = mkdtempSync(join(parent, opts.prefix ?? 'fiks-wt-'));
+  }
+  const dir = opts.dir ?? join(own as string, 'repo');
+  try {
+    addUnderLock(repoDir, dir, opts.branch ? ['-B', opts.branch, dir, commit] : ['--detach', dir, commit]);
+  } catch (e) {
+    if (own) rmSync(own, { recursive: true, force: true });
+    throw e;
+  }
   const modules = join(repoDir, 'node_modules');
   if ((opts.linkNodeModules ?? true) && existsSync(modules)) symlinkSync(modules, join(dir, 'node_modules'));
-  return { dir, ref, commit, remove: () => removeWorktree(repoDir, dir) };
+  const remove = () => {
+    removeWorktree(repoDir, dir);
+    if (own) rmSync(own, { recursive: true, force: true });
+  };
+  return { dir, ref, commit, remove };
 }

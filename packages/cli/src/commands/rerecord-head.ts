@@ -15,9 +15,12 @@
 //
 // Container-runnable (round 6): every path comes from flags; under --require-sandbox nothing is
 // read from the host checkout (.env is not loaded; main.ts exits 2 unless FIKS_IN_SANDBOX=1).
-// Callers that must tell exit 2 ("sandbox required") from 1 (failure) invoke the CLI directly
-// (`tsx packages/cli/src/main.ts rerecord-head ...` or node with the tsx loader), not through
-// `pnpm fiks`: `pnpm run` (9.12.3) reports any non-zero child exit as 1.
+// Exit codes through pnpm: the repo-root .npmrc sets `reporter=silent`, and with the silent
+// reporter `pnpm run` (9.12.3) reports any non-zero child exit as 1 (`pnpm run --silent` does the
+// same). With the default reporter pnpm passes the child's code through, so
+// `pnpm --reporter=default fiks rerecord-head --require-sandbox ...` exits 2. Callers that must
+// tell exit 2 ("sandbox required") from 1 (failure) pass `--reporter=default` or invoke the CLI
+// directly (`tsx packages/cli/src/main.ts rerecord-head ...`, or node with the tsx loader).
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
   appendFileSync,

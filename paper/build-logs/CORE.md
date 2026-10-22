@@ -144,17 +144,27 @@ re-checks it at F2.
     consistent under concurrency, not that the lock is needed for this workload (git's own
     locking already serialises most of it). The lock stays as the P6 safeguard.
 
-11. **`--require-sandbox` exit code through pnpm (DEVIATION, needs an orchestrator decision).**
-    `tsx packages/cli/src/main.ts rerecord-head --require-sandbox ...` on the host exits 2 with
-    "sandbox required" (asserted in `sandbox.test.ts`). Run literally as `pnpm fiks ...` it exits
-    1: `pnpm run` (9.12.3) turns any non-zero child exit into 1 (checked with a bare script that
-    calls `process.exit(2)`). The root `fiks` script is not CORE's file and pnpm's behaviour is
-    not ours to change. ORCH, ARMS, HOLD and RBA must therefore invoke the CLI directly
-    (`tsx packages/cli/src/main.ts rerecord-head --require-sandbox ...`, or node with the tsx
-    loader) whenever they need to tell exit 2 apart from 1; this is documented in the header of
-    `packages/cli/src/commands/rerecord-head.ts`. Proposed amended text: "tsx
-    packages/cli/src/main.ts rerecord-head --require-sandbox ... on the host exits 2 with
-    'sandbox required' (via `pnpm fiks` the stderr message is the same, the exit code is 1)".
+11. **`--require-sandbox` exit code through pnpm (DEVIATION, needs an orchestrator decision;
+    cause corrected in round 3).** `tsx packages/cli/src/main.ts rerecord-head --require-sandbox
+    ...` on the host exits 2 with "sandbox required" (asserted in `sandbox.test.ts`). Run literally
+    as `pnpm fiks ...` from the fiks root it exits 1. Round 2 blamed `pnpm run` itself; that was
+    wrong. The cause is the repo-root `.npmrc` line `reporter=silent`: with the silent reporter,
+    pnpm 9.12.3 reports any non-zero child exit as 1. Checked in round 3 (pnpm 9.12.3): in an empty
+    directory a script calling `process.exit(2)` gives `pnpm run e` -> 2, `pnpm run --silent e`
+    -> 1, and with an `.npmrc` containing `reporter=silent` `pnpm run e` -> 1; in the fiks root
+    `pnpm fiks rerecord-head --require-sandbox ...` -> 1 and
+    `pnpm --reporter=default fiks rerecord-head --require-sandbox ...` -> 2, both with the
+    "sandbox required" message on stderr. The root `.npmrc` belongs to the orchestrator/INTEG, not
+    to CORE, so CORE code alone cannot make the item pass as written. Options for the orchestrator
+    or INTEG: (a) amend the acceptance text to `pnpm --reporter=default fiks rerecord-head
+    --require-sandbox ...` (or to the direct `tsx packages/cli/src/main.ts ...` form); (b) drop
+    `reporter=silent` from the root `.npmrc` (this changes the console output of every
+    `pnpm <script>` in the repo, and any acceptance item that relies on silent output would need
+    re-checking); (c) amend the text to "exits non-zero (1 through `pnpm fiks` under the root
+    .npmrc, 2 when invoked directly) with 'sandbox required'". Until one is recorded the item stays
+    failing. Callers that must tell exit 2 apart from 1 (ORCH, ARMS, HOLD, RBA) pass
+    `--reporter=default` or invoke the CLI directly; the header of
+    `packages/cli/src/commands/rerecord-head.ts` says so.
 12. **Planting tests use a private copy of the CLI (round 2 flake fix).** Round 1's `loader.test.ts`
     and `domain-hooks.test.ts` wrote and deleted temporary modules in the real
     `packages/cli/src/{commands,bootstrap}` under a lock that only those tests took. CLI
@@ -166,6 +176,24 @@ re-checks it at F2.
     `test` are symlinked) and run that copy's `main.ts`; nothing writes into the real src any more,
     and `withSrcLock` is gone. `loader.test.ts` also asserts that the real CLI does not see the
     planted `zz-probe` while it exists in the copy.
+
+13. **Concurrent `fiks repro` on one trace (round 3, P6 defect fixed).** Round 2's
+    `commands/repro.ts` put the worktree at `<WORK_DIR>/wt/repro-<trace id>`: every worker shares
+    WORK_DIR, so two processes on the same trace used one path, and `addUnderLock` force-removed
+    the other process's live worktree (reproduced: one run exited 1 with ENOENT on
+    `.work/wt/repro-tr_079b90c89e/test`, the other with a git "already exists" fatal or a missing
+    vitest report). `createWorktree` gained `parent`/`prefix` options: without `dir` it makes a
+    fresh `mkdtemp` directory under `parent` and `remove()` deletes that directory too. `repro`
+    now uses `parent: <WORK_DIR>/wt, prefix: repro-<trace id>-`, so each call gets
+    `<WORK_DIR>/wt/repro-<trace id>-XXXXXX/repo`. The other users of fixed worktree paths
+    (`bench.ts`, `repair.ts`) are not CORE's files; `paths.ts` `repoAt` is a shared read-only
+    cache made under the lock and is safe to share. Tests: `packages/cli/test/core/repro-concurrent.test.ts`
+    runs three `fiks repro --trace D2-trace.json` processes with distinct FIKS_DIR and the shared
+    test FIKS_WORK_DIR, staggered by 1.5 s so later ones set up while earlier ones are inside the
+    gate; all exit 0 with F gate PASS, each names its own worktree, and nothing is left behind.
+    With round 2's `repro.ts` restored the same test fails (ENOENT lstat
+    `.../wt/repro-tr_079b90c89e/test`). `packages/repro/test/worktree.test.ts` adds a unit test
+    for the new options.
 
 ## Acceptance evidence
 

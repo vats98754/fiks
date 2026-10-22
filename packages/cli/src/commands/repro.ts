@@ -78,8 +78,11 @@ export async function repro(opts: ReproOptions): Promise<ReproResult> {
     throw new Error('repro: give --scenario or --trace');
   }
   const ref = opts.ref ?? 'seed-v1';
+  // A fresh directory per call (P6): two processes reproducing the same trace must never share
+  // (and force-remove) one worktree, whatever their FIKS_DIR.
   const wt = createWorktree(repoDir(domain), ref, {
-    dir: join(WORK_DIR, 'wt', `repro-${trace.id}`),
+    parent: join(WORK_DIR, 'wt'),
+    prefix: `repro-${trace.id}-`,
     fetch: opts.fetch,
     runKey: opts.runKey,
   });

@@ -1,6 +1,6 @@
 // createWorktree (PLAN P17): local refs resolved as <ref>^{commit}, never a fetch.
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, expect, test, vi } from 'vitest';
@@ -90,4 +90,22 @@ test('--fetch is refused with a run key', () => {
   expect(() => createWorktree(repo, 'seed-v1', { fetch: true, runKey: 'e/a/m/shop/D1/1' })).toThrow(
     /--fetch is refused with a run key/,
   );
+});
+
+test('without dir, each call gets its own fresh directory under parent; remove() deletes it (P6)', () => {
+  const parent = join(tmp, 'wt-parent');
+  const a = createWorktree(repo, 'seed-v1', { parent, prefix: 'repro-same-', linkNodeModules: false });
+  const b = createWorktree(repo, 'seed-v1', { parent, prefix: 'repro-same-', linkNodeModules: false });
+  try {
+    expect(a.dir).not.toBe(b.dir);
+    expect(a.dir).toMatch(new RegExp(`^${parent}/repro-same-[^/]+/repo$`));
+    expect(git(a.dir, 'rev-parse', 'HEAD')).toBe(SEED_V1);
+    expect(git(b.dir, 'rev-parse', 'HEAD')).toBe(SEED_V1);
+    a.remove();
+    // Removing one leaves the other intact.
+    expect(git(b.dir, 'rev-parse', 'HEAD')).toBe(SEED_V1);
+  } finally {
+    b.remove();
+  }
+  expect(readdirSync(parent)).toEqual([]);
 });
