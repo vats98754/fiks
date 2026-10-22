@@ -11,6 +11,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import {
   appendFileSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   readdirSync,
   readFileSync,
@@ -625,6 +626,8 @@ export interface ArmResult {
   contractUpdate?: { accepted: boolean; reasons: string[]; proposal?: string }[];
   pushAttempts: number;
   dir: string;
+  /** The attempt's worktree, when kept (--keep-worktree). */
+  worktree?: string;
   startedAt: string;
   finishedAt: string;
 }
@@ -798,7 +801,7 @@ export async function verifyAgainstUpstream(
     }
     const exchanges = [...(rec.http ?? []), ...(rec.probe?.http ?? [])];
     for (const [i, e] of exchanges.entries()) {
-      const u = new URL(e.request.url);
+      const u = new URL(e.request.url, 'http://upstream.invalid');
       const headers: Record<string, string> = {};
       for (const [k, v] of Object.entries(e.request.headers ?? {})) {
         if (!/^(host|content-length|connection|transfer-encoding)$/i.test(k) && typeof v === 'string')
@@ -828,13 +831,13 @@ export async function verifyAgainstUpstream(
 
 // --- The container suite (F and P gates run CORE's gate logic on it) -------------------------
 
-interface SyncContainer {
+export interface SyncContainer {
   name: string;
   /** docker exec with exactly SANDBOX_ENV; synchronous (CORE's suite hook is synchronous). */
   exec(argv: string[], cwd: string, timeoutMs?: number): { code: number; stdout: string; stderr: string };
 }
 
-function syncContainer(name: string, egressLog: string): SyncContainer {
+export function syncContainer(name: string, egressLog: string): SyncContainer {
   return {
     name,
     exec(argv, cwd, timeoutMs = 20 * 60_000) {
@@ -1596,6 +1599,16 @@ export async function runArm(opts: ArmOptions): Promise<ArmResult> {
         continue;
       }
       const files = changedFilesSince(wtDir, reproCommit).filter((f) => !isNodeModules(f));
+      // A symlink in the candidate (made by code the agent ran) could point anywhere on the host;
+      // it is never part of a repair, and fiks never reads through it.
+      const links = files.filter((f) => isSymlink(join(wtDir, f)));
+      if (links.length) {
+        for (const f of links) rmSync(join(wtDir, f), { force: true });
+        feedback = `Symlinks are not allowed in a repair and were removed: ${links.join(', ')}. Only edit regular files under src/.`;
+        restoreNonSource(wtDir, reproCommit, allowed);
+        ev('gate_guard', { session: n, reason: feedback }, false);
+        continue;
+      }
       const guard = checkPaths(files, allowed);
       if (!guard.ok) {
         feedback = guard.rejected.length
@@ -1752,7 +1765,10 @@ export async function runArm(opts: ArmOptions): Promise<ArmResult> {
       try {
         wt.remove();
       } catch {}
-    } else if (wt) say(`worktree kept: ${wt.dir}`);
+    } else if (wt) {
+      result.worktree = realpathSync(wt.dir);
+      say(`worktree kept: ${wt.dir}`);
+    }
     writeFileSync(join(dir, 'result.json'), `${JSON.stringify(result, null, 2)}\n`);
   }
 }
@@ -1762,6 +1778,14 @@ function parseRunKeyOrThrow(s: string): RunKey {
     return parseRunKey(s);
   } catch (e) {
     throw new ArmUsageError(e instanceof Error ? e.message : String(e));
+  }
+}
+
+function isSymlink(p: string): boolean {
+  try {
+    return lstatSync(p).isSymbolicLink();
+  } catch {
+    return false;
   }
 }
 
