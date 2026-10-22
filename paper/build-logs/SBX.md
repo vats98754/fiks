@@ -1,6 +1,6 @@
 # SBX build log
 
-Branch `ws/SBX`, based on main `c144b03`. This is wave 1, round 1. The only external actions were pulls from
+Branch `ws/SBX`, based on main `c144b03` in rounds 1-2 and on main `aa7e28a` in round 3. This is wave 1. The only external actions were pulls from
 Docker Hub (`node:22.23.3-bookworm-slim`, pinned by digest) and from the npm registry during image builds. Nothing
 was pushed, no repo was created and no PR was opened.
 
@@ -51,6 +51,8 @@ was pushed, no repo was created and no PR was opened.
 - **`docker/git-shim.sh` and `src/shim.ts`: the git push shim.** The same POSIX-sh shim runs on the host
   (`installGitShim(binDir, logPath)`, which puts it first on PATH) and in images. It records and refuses
   `push`, `send-pack`, `http-push` and `-c alias.*=…push…`, and passes everything else to the real git.
+  Round 3: it also resolves aliases from every config source (see Round 3); before that, a push through an
+  alias from git config or `GIT_CONFIG_*` reached the remote unrecorded.
 - **`docker/tools.Dockerfile`, `src/build-tools.ts` and `src/tools.ts`: fiks-tools.**
   - The image is built from `git archive --prefix=fiks/ <commit>`. The archive is checked to hold no `.env`,
     `.fiks` or `.work`, and the build re-checks this in the image.
@@ -98,7 +100,7 @@ printed `lockfile sha256: 18e534c98dc0176c…` and `digest: sha256:b87ba9aec64fb
 
 **3. fiks-tools (round 7).**
 
-- **`--ref main` FAILS, and this is not an SBX defect.** On main `c144b03`, `pnpm install --frozen-lockfile`
+- **`--ref main` FAILED in round 1 (superseded: it passes on main `aa7e28a`, see Round 3).** On main `c144b03`, `pnpm install --frozen-lockfile`
   stops with `ERR_PNPM_OUTDATED_LOCKFILE … not up to date with <ROOT>/packages/interfaces/package.json`. The
   committed `pnpm-lock.yaml` on main has no importers for `packages/interfaces` and `packages/domains` (CORE-SEED).
   The orchestrator's lockfile regeneration at merge is missing. `build-tools.ts --ref main` will succeed once main's
@@ -156,7 +158,7 @@ reported 33 passed and 7 skipped. The 7 skipped are the e2e file, which runs onl
   `pushAttempts()` has exactly that argv.
 
 **8. execFiks (round 6).** The test ran with `FIKS_TOOLS_IMAGE=sha256:d5f10c7e…`, a test-only image of `ws/SBX` HEAD
-`9fa9ba6`. A test-only image was used because `--ref main` cannot build (item 3).
+`9fa9ba6`. A test-only image was used because `--ref main` could not build then (item 3; Round 3 uses the main image).
 
 - **Setup:** the container uses the shop-mcp image with `--network none` (checked: `HostConfig.NetworkMode=none`).
   The seed-v1 worktree is mounted at `/opt/fiks/.work/wt/ref-seed-v1` with Linux `node_modules`.
@@ -204,7 +206,7 @@ sbx-agree/<sha12>". Nothing was pushed.
 2. `build.ts --repo .work/shop-mcp`, twice: both printed `lockfile sha256: 18e534c98dc0176c…` and
    `digest: sha256:b87ba9aec64fb80ffafede9a7ebc55610c488f3a788fbb00be8419151919a9bc` (same as round 1).
 3. fiks-tools.
-   - **`build-tools.ts` (default `--ref main`) still FAILS** with `ERR_PNPM_OUTDATED_LOCKFILE` on main `c144b03`
+   - **`build-tools.ts` (default `--ref main`) still FAILED in round 2 (superseded: passes in Round 3)** with `ERR_PNPM_OUTDATED_LOCKFILE` on main `c144b03`
      (`specifiers in the lockfile ({}) don't match specs in package.json ({"@fiks/contracts":"workspace:*"})`).
      The fix (regenerate and commit main's `pnpm-lock.yaml` with the CORE-SEED importers) is an orchestrator
      action on main, outside SBX's paths; it had not landed when this round ran.
@@ -224,10 +226,77 @@ sbx-agree/<sha12>". Nothing was pushed.
    (9 verified, `get_product p-0000` unverifiable on both sides).
 9. `pnpm typecheck` exit 0; `pnpm lint` exit 0 (152 files, no warnings).
 
+## Round 3 (2026-10-22, ws/SBX rebased on main `aa7e28a`)
+
+Rounds 1-2 evidence above ran on main `c144b03`. Main has since merged BENCHX, MON and DOM2; ws/SBX was rebased
+onto `39500d1` and then again onto `aa7e28a` (DOM2 landed during the round). Both rebases were clean; no conflicts.
+All acceptance items below were re-run on the `aa7e28a` base.
+
+**Change 1: git shim alias bypass (`docker/git-shim.sh`, commit `2fb511c`).**
+
+- **The defect (verifier repro):** with `installGitShim(bin, log)` first on PATH, `git config alias.p push; git p
+  origin HEAD:refs/heads/b` and `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=alias.q GIT_CONFIG_VALUE_0=push git q …` both
+  exited 0, the remote gained the refs, and nothing was logged. The shim only looked at the literal subcommand.
+- **The fix:** when the subcommand is not a builtin (git never consults an alias for a builtin), the shim asks the
+  real git `"$real" <same leading global options> config --get alias.<sub>`. That reads repo/global/system config,
+  `include.path`, `-c`, `--config-env`, `GIT_CONFIG_COUNT/KEY_n/VALUE_n` and `GIT_CONFIG_PARAMETERS`, and honours
+  `-C`. It follows alias chains (up to 10 hops, skipping global options inside an expansion) and blocks any
+  expansion that mentions `push`, `send-pack` or `http-push`, including a `!` shell alias. The log `reason` is
+  `alias <sub>=<value>` or `alias <sub> via <hop>=<value>`.
+- **Host unit test** (`test/unit.test.ts`, "a push through an alias from git config or GIT_CONFIG_* …"): `git p`
+  (repo config), `git q` (GIT_CONFIG_*), `git r` (chain r→p→push), `git s` (alias `-c x.y=z p`), `git -C <repo> p`
+  and `git t` (alias `!git push …`) each exit 1 with "blocked in this run" and are logged with their argv; the bare
+  remote has no refs; a non-push alias (`st = status --short`) still runs and is not logged. With the round-2
+  shim restored, this test fails at its first case (`p origin HEAD:refs/heads/b: expected +0 to be 1`).
+- **Container test** (`test/container.test.ts`): in the per-attempt container (Debian `/bin/sh` = dash),
+  `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=alias.q GIT_CONFIG_VALUE_0=push git q https://github.com/vats98754/shop-mcp.git
+  HEAD:refs/heads/y` exits 1 and `pushAttempts()` records it with reason `alias q=push`.
+- **What no PATH shim can block (documented in `src/shim.ts` and the shim header):**
+  - running the real git by absolute path. Checked on the host: with the shim first on PATH, `/usr/bin/git push
+    origin HEAD:refs/heads/e` to a local bare remote exited 0 and created `refs/heads/e`, unlogged;
+  - `git` run from a hook or from a script that a `!` shell alias starts: git puts its exec-path first on PATH for
+    those children, and it holds the real `git`. Checked: inside `!sh x.sh`, `command -v git` is
+    `/opt/homebrew/opt/git/libexec/git-core/git`.
+  - So the shim is the audit log (P4 counts its lines); the enforcement in the sandbox is `--network none`.
+
+**Acceptance re-run on `aa7e28a`.**
+
+1. SETUP: `apply-dep-fragments.mjs` printed "nothing to apply"; `pnpm install --no-frozen-lockfile` exit 0 (the
+   only lockfile change is the new `packages/sandbox` importer, not committed); `ensure-shop-mcp.mjs` exit 0.
+2. `with-lock docker pnpm tsx packages/sandbox/src/build.ts --repo .work/shop-mcp`, twice: both printed
+   `lockfile sha256: 18e534c98dc0176c…` and `digest:
+   sha256:46f9afe7349f11ed1286f827fc3a6c9a50a2958987e6264f475176ee14f67be1`. The digest differs from rounds 1-2
+   (`b87ba9ae…`) because the image bakes in the changed git shim.
+3. fiks-tools.
+   - **`build-tools.ts` (default `--ref main`) now PASSES.** The round 1-2 failure (`ERR_PNPM_OUTDATED_LOCKFILE`)
+     is gone: main's lockfile has every merged importer. `with-lock docker pnpm tsx
+     packages/sandbox/src/build-tools.ts` resolved `main = aa7e28a2919e…`, ran `pnpm install --frozen-lockfile`
+     in Linux ("Done in 20.3s"), and printed `image: fiks-tools:aa7e28a2919e` and `digest:
+     sha256:893f4f5768812a5b06118ac7bb680eb4bb7ac2e55b6eecb94e832e77d76e2ab5`. Labels:
+     `fiks.tools.commit=aa7e28a…`, `fiks.tools.testOnly=false`.
+   - **`--ref HEAD --apply-fragments` PASSES.** A scratch clone of ws/SBX `8120cb8` plus one committed, unapplied
+     fragment `deps-fragments/SBXTEST.json` (`--check` exit 1, "1 unapplied") printed `digest:
+     sha256:85650537005116352a9c444b75e67fd250af2083a7161b0b5f95a6bf27d03e5a (TEST-ONLY: fragments applied,
+     --no-frozen-lockfile; never used by a run)`. In the image, `/opt/fiks/packages/cli/package.json` line 19 is
+     `"@fiks/sandbox": "workspace:*"`, `test -e /opt/fiks/.env` exits 1, and the labels include
+     `fiks.tools.testOnly=true`. The scratch tag was removed afterwards.
+4-8. `FIKS_SANDBOX_E2E=1 FIKS_TOOLS_IMAGE=sha256:893f4f57… with-lock suite pnpm vitest run packages/sandbox`:
+   3 files, 61 tests passed (41 of them in `unit.test.ts`), exit 0. The e2e now uses the run-grade fiks-tools
+   image of main `aa7e28a`, not a test-only image.
+   - Container probes: curl to example.com fails, `env` is exactly the expected variables (no canary/token), writes
+     outside the worktree fail, `pnpm install --offline` succeeds with `--network none`; the push shim blocks and
+     records both a plain push and a `GIT_CONFIG_*` alias push.
+   - ciLocal on shop-mcp `7bf2e66`: green. D1/D2/D4/D5 oracle patches on seed-v1: host `pnpm test` exit 0, ciLocal
+     green. D3: host exit 1, ciLocal red (test step). Verdicts agree 5/5.
+   - Unit: ciLocal and runPreGate with an extra check that exits 1 give `green=false` with its output in the log.
+   - execFiks (`--network none`, fiks-tools `aa7e28a` mounted at `/opt/fiks`, seed-v1 worktree with Linux
+     node_modules): `scenario v1-all --json` gives the host verdicts call for call (9 verified, `get_product
+     p-0000` unverifiable on both sides, none violated); `test -e /opt/fiks/.env` fails; env is the 5 variables;
+     `require('esbuild')` loads `@esbuild/linux-arm64` 0.28.2.
+9. `pnpm typecheck` exit 0; `pnpm lint` exit 0 (219 files, no fixes).
+
 ## Open items
 
-- **fiks main lockfile:** the orchestrator must regenerate it (missing `packages/interfaces` and
-  `packages/domains` importers). Until then `build-tools.ts --ref main` fails by design (`--frozen-lockfile`).
 - **The 20-head Actions agreement run** needs `--push`. Section 8.0-4 approves the Actions minutes for it, but the
   builder rules for this round allow no pushes. It is left to a run step.
 - **The P1 ORCH preflight** (a planted head reading `~/fiks/.env` during re-record) belongs to ORCH and CORE. SBX
