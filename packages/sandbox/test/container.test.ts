@@ -132,6 +132,22 @@ describe('per-attempt container', () => {
     const other = await sb.exec('git', ['--version']);
     expect(other.code).toBe(0);
   });
+
+  test('a push through a GIT_CONFIG_* alias is recorded and blocked by the image shim (dash)', async () => {
+    const script =
+      'cd /tmp && GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=alias.q GIT_CONFIG_VALUE_0=push ' +
+      'git q https://github.com/vats98754/shop-mcp.git HEAD:refs/heads/y';
+    const r = await sb.exec('sh', ['-c', script]);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/git alias q=push is blocked in this run/);
+    const pushes = await sb.pushAttempts();
+    expect(pushes.at(-1)?.argv).toEqual([
+      'q',
+      'https://github.com/vats98754/shop-mcp.git',
+      'HEAD:refs/heads/y',
+    ]);
+    expect(pushes.at(-1)?.reason).toBe('alias q=push');
+  });
 });
 
 describe('ciLocal / runPreGate in the sandbox', () => {
