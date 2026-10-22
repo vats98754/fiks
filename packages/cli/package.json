@@ -9,10 +9,14 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@fiks/baselines": "workspace:*",
     "@fiks/bench": "workspace:*",
     "@fiks/contracts": "workspace:*",
     "@fiks/domains": "workspace:*",
+    "@fiks/frame": "workspace:*",
+    "@fiks/injector": "workspace:*",
     "@fiks/interfaces": "workspace:*",
+    "@fiks/mutate": "workspace:*",
     "@fiks/proxy": "workspace:*",
     "@fiks/repair": "workspace:*",
     "@fiks/repro": "workspace:*",
