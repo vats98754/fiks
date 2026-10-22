@@ -1,0 +1,114 @@
+{
+  "id": "v1-order-create",
+  "capturedAt": "2026-10-18T08:03:51.925Z",
+  "tool": "create_order",
+  "args": {
+    "items": [
+      {
+        "product_id": "p-1004",
+        "quantity": 2
+      }
+    ]
+  },
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"order_id\":\"o-5002\",\"status\":\"confirmed\",\"total\":1499}"
+      }
+    ],
+    "structuredContent": {
+      "order_id": "o-5002",
+      "status": "confirmed",
+      "total": 1499
+    }
+  },
+  "http": [
+    {
+      "seq": 8,
+      "startedAt": "2026-10-18T08:03:52.450Z",
+      "durationMs": 1,
+      "request": {
+        "method": "POST",
+        "url": "/orders",
+        "headers": {
+          "content-type": "application/json",
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": "{\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2}]}"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-01-01"
+        },
+        "body": "{\"id\":\"o-5002\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2,\"unit_price\":749.5}],\"total\":1499,\"created_at\":\"2026-10-18T08:03:51.925Z\"}"
+      }
+    }
+  ],
+  "vendorVersionHeader": "2026-01-01",
+  "upstream": {
+    "version": "v1",
+    "drifts": [],
+    "clock": "2026-10-18T08:03:51.925Z"
+  },
+  "probe": {
+    "tool": "get_order",
+    "args": {
+      "order_id": "o-5002"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"order_id\":\"o-5002\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2,\"unit_price\":749.5}],\"total\":1499,\"created_at\":\"2026-10-18T08:03:51.925Z\"}"
+        }
+      ],
+      "structuredContent": {
+        "order_id": "o-5002",
+        "status": "confirmed",
+        "items": [
+          {
+            "product_id": "p-1004",
+            "quantity": 2,
+            "unit_price": 749.5
+          }
+        ],
+        "total": 1499,
+        "created_at": "2026-10-18T08:03:51.925Z"
+      }
+    },
+    "http": [
+      {
+        "seq": 9,
+        "startedAt": "2026-10-18T08:03:52.455Z",
+        "durationMs": 1,
+        "request": {
+          "method": "GET",
+          "url": "/orders/o-5002",
+          "headers": {
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate"
+          },
+          "body": null
+        },
+        "response": {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "vendor-api-version": "2026-01-01"
+          },
+          "body": "{\"id\":\"o-5002\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2,\"unit_price\":749.5}],\"total\":1499,\"created_at\":\"2026-10-18T08:03:51.925Z\"}"
+        }
+      }
+    ]
+  }
+}

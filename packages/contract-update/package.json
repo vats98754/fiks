@@ -1,0 +1,15 @@
+{
+  "name": "@fiks/contract-update",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fiks/contracts": "workspace:*",
+    "@fiks/interfaces": "workspace:*"
+  }
+}

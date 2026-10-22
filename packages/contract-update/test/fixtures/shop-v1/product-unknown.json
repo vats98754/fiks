@@ -1,0 +1,50 @@
+{
+  "id": "v1-product-unknown",
+  "capturedAt": "2026-10-18T08:03:51.925Z",
+  "tool": "get_product",
+  "args": {
+    "id": "p-0000"
+  },
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "No product with id p-0000."
+      }
+    ],
+    "isError": true
+  },
+  "http": [
+    {
+      "seq": 7,
+      "startedAt": "2026-10-18T08:03:52.445Z",
+      "durationMs": 1,
+      "request": {
+        "method": "GET",
+        "url": "/products/p-0000",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-01-01"
+        },
+        "body": "{\"error\":\"not_found\",\"message\":\"Unknown product.\"}"
+      }
+    }
+  ],
+  "vendorVersionHeader": "2026-01-01",
+  "upstream": {
+    "version": "v1",
+    "drifts": [],
+    "clock": "2026-10-18T08:03:51.925Z"
+  }
+}
