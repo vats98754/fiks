@@ -1,0 +1,516 @@
+{
+ "macros": {
+  "benchModel": "claude-sonnet-5-5",
+  "callsB": "47",
+  "ciHiA": "100.0\\%",
+  "ciHiB": "92.7\\%",
+  "ciHiBd": "75.4\\%",
+  "ciHiBdold": "80.8\\%",
+  "ciHiBold": "60.8\\%",
+  "ciHiC": "100.0\\%",
+  "ciLoA": "88.6\\%",
+  "ciLoB": "66.4\\%",
+  "ciLoBd": "42.3\\%",
+  "ciLoBdold": "48.8\\%",
+  "ciLoBold": "27.4\\%",
+  "ciLoC": "88.6\\%",
+  "costMax": "0.21",
+  "costMin": "0.11",
+  "costTotal": "0.77",
+  "declinedA": "0",
+  "declinedB": "5",
+  "declinedBd": "5",
+  "declinedBdold": "5",
+  "declinedBold": "15",
+  "declinedC": "0",
+  "kTrials": "5",
+  "minsMax": "1.6",
+  "minsMin": "1.4",
+  "nConfirmed": "5",
+  "nDetected": "5",
+  "nDrifts": "5",
+  "nOneAttempt": "5",
+  "nPrGreen": "5",
+  "nPrs": "10",
+  "nPrsClosed": "1",
+  "nPrsDemoOpen": "4",
+  "nPrsGreen": "10",
+  "nPrsMerged": "5",
+  "nReproValid": "5",
+  "nTasks": "6",
+  "nWrongTasksBd": "1",
+  "noAnswerA": "0",
+  "noAnswerB": "0",
+  "noAnswerBd": "2",
+  "noAnswerBdold": "0",
+  "noAnswerBold": "2",
+  "noAnswerC": "0",
+  "pFiveA": "100.0\\%",
+  "pFiveB": "83.3\\%",
+  "pFiveBd": "50.0\\%",
+  "pFiveBdSens": "66.7\\%",
+  "pFiveBdold": "66.7\\%",
+  "pFiveBold": "33.3\\%",
+  "pFiveC": "100.0\\%",
+  "pOneA": "100.0\\%",
+  "pOneB": "83.3\\%",
+  "pOneBd": "60.0\\%",
+  "pOneBdold": "66.7\\%",
+  "pOneBold": "43.3\\%",
+  "pOneC": "100.0\\%",
+  "pairLosses": "0",
+  "pairP": "0.50",
+  "pairWins": "2",
+  "repairModel": "claude-opus-5-5",
+  "trialsA": "30",
+  "trialsB": "30",
+  "trialsBd": "30",
+  "trialsBdold": "30",
+  "trialsBold": "30",
+  "trialsC": "30",
+  "turnsMax": "14",
+  "turnsMedian": "12",
+  "turnsMin": "10",
+  "vOneCalls": "37",
+  "vOneFpUpper": "9.4\\%",
+  "vOneTrialFpUpper": "11.4\\%",
+  "vOneViolated": "0",
+  "violatedCallsB": "41",
+  "wrongA": "0",
+  "wrongB": "0",
+  "wrongBd": "5",
+  "wrongBdold": "5",
+  "wrongBold": "0",
+  "wrongC": "0",
+  "wrongTasksBd": "T5"
+ },
+ "runs": {
+  "A": {
+   "calls": {
+    "unverifiable": 0,
+    "verified": 37,
+    "violated": 0
+   },
+   "fiksSha": "705e989be6243b86fe56c04ab75a8519629ca232",
+   "k": 5,
+   "meanTurns": 3.2333333333333334,
+   "medianSeconds": 6.696,
+   "model": "claude-sonnet-5-5",
+   "n": 30,
+   "outcomes": {
+    "correct": 30,
+    "declined": 0,
+    "noAnswer": 0,
+    "wrong": 0
+   },
+   "pass1": 1.0,
+   "pass1_hi": 1.0,
+   "pass1_lo": 0.886486605238548,
+   "passk": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "perTask": {
+    "T1": {
+     "c": 5,
+     "n": 5
+    },
+    "T2": {
+     "c": 5,
+     "n": 5
+    },
+    "T3": {
+     "c": 5,
+     "n": 5
+    },
+    "T4": {
+     "c": 5,
+     "n": 5
+    },
+    "T5": {
+     "c": 5,
+     "n": 5
+    },
+    "T6": {
+     "c": 5,
+     "n": 5
+    }
+   },
+   "proxy": true,
+   "run": "A_v1_20261020T223642",
+   "tasks": 6,
+   "violatedProps": {}
+  },
+  "Aold": {
+   "calls": {
+    "unverifiable": 0,
+    "verified": 37,
+    "violated": 0
+   },
+   "fiksSha": "",
+   "k": 5,
+   "meanTurns": 3.2333333333333334,
+   "medianSeconds": 7.139,
+   "model": "claude-sonnet-5-5",
+   "n": 30,
+   "outcomes": {
+    "correct": 30,
+    "declined": 0,
+    "noAnswer": 0,
+    "wrong": 0
+   },
+   "pass1": 1.0,
+   "pass1_hi": 1.0,
+   "pass1_lo": 0.886486605238548,
+   "passk": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "perTask": {
+    "T1": {
+     "c": 5,
+     "n": 5
+    },
+    "T2": {
+     "c": 5,
+     "n": 5
+    },
+    "T3": {
+     "c": 5,
+     "n": 5
+    },
+    "T4": {
+     "c": 5,
+     "n": 5
+    },
+    "T5": {
+     "c": 5,
+     "n": 5
+    },
+    "T6": {
+     "c": 5,
+     "n": 5
+    }
+   },
+   "proxy": null,
+   "run": "A_v1_20261018T093357",
+   "tasks": 6,
+   "violatedProps": {}
+  },
+  "B": {
+   "calls": {
+    "unverifiable": 5,
+    "verified": 1,
+    "violated": 41
+   },
+   "fiksSha": "705e989be6243b86fe56c04ab75a8519629ca232",
+   "k": 5,
+   "meanTurns": 3.566666666666667,
+   "medianSeconds": 8.669,
+   "model": "claude-sonnet-5-5",
+   "n": 30,
+   "outcomes": {
+    "correct": 25,
+    "declined": 5,
+    "noAnswer": 0,
+    "wrong": 0
+   },
+   "pass1": 0.8333333333333334,
+   "pass1_hi": 0.9266345767456822,
+   "pass1_lo": 0.6643564934133498,
+   "passk": [
+    0.8333333333333334,
+    0.8333333333333334,
+    0.8333333333333334,
+    0.8333333333333334,
+    0.8333333333333334
+   ],
+   "perTask": {
+    "T1": {
+     "c": 5,
+     "n": 5
+    },
+    "T2": {
+     "c": 5,
+     "n": 5
+    },
+    "T3": {
+     "c": 0,
+     "n": 5
+    },
+    "T4": {
+     "c": 5,
+     "n": 5
+    },
+    "T5": {
+     "c": 5,
+     "n": 5
+    },
+    "T6": {
+     "c": 5,
+     "n": 5
+    }
+   },
+   "proxy": true,
+   "run": "B_v2_20261020T224015",
+   "tasks": 6,
+   "violatedProps": {
+    "shop.create_order/readAfterWrite": 5,
+    "shop.get_order/created_at.equalsUpstream": 5,
+    "shop.get_order/created_at.freshness": 5,
+    "shop.get_product/price.notNull": 19,
+    "shop.search_products/countMatchesTotal": 5,
+    "shop.search_products/items.price.range": 12
+   }
+  },
+  "Bd": {
+   "calls": {
+    "unverifiable": 0,
+    "verified": 0,
+    "violated": 0
+   },
+   "fiksSha": "705e989be6243b86fe56c04ab75a8519629ca232",
+   "k": 5,
+   "meanTurns": 4.466666666666667,
+   "medianSeconds": 8.723,
+   "model": "claude-sonnet-5-5",
+   "n": 30,
+   "outcomes": {
+    "correct": 18,
+    "declined": 5,
+    "noAnswer": 2,
+    "wrong": 5
+   },
+   "pass1": 0.6,
+   "pass1_hi": 0.7540937198355525,
+   "pass1_lo": 0.42320360121215705,
+   "passk": [
+    0.6,
+    0.5499999999999999,
+    0.5166666666666667,
+    0.5,
+    0.5
+   ],
+   "perTask": {
+    "T1": {
+     "c": 3,
+     "n": 5
+    },
+    "T2": {
+     "c": 5,
+     "n": 5
+    },
+    "T3": {
+     "c": 0,
+     "n": 5
+    },
+    "T4": {
+     "c": 5,
+     "n": 5
+    },
+    "T5": {
+     "c": 0,
+     "n": 5
+    },
+    "T6": {
+     "c": 5,
+     "n": 5
+    }
+   },
+   "proxy": false,
+   "run": "B_v2_direct_20261020T224445",
+   "tasks": 6,
+   "violatedProps": {}
+  },
+  "Bdold": {
+   "calls": {
+    "unverifiable": 0,
+    "verified": 0,
+    "violated": 0
+   },
+   "fiksSha": "",
+   "k": 5,
+   "meanTurns": 4.466666666666667,
+   "medianSeconds": 9.73,
+   "model": "claude-sonnet-5-5",
+   "n": 30,
+   "outcomes": {
+    "correct": 20,
+    "declined": 5,
+    "noAnswer": 0,
+    "wrong": 5
+   },
+   "pass1": 0.6666666666666666,
+   "pass1_hi": 0.8076950200327357,
+   "pass1_lo": 0.4878005150467802,
+   "passk": [
+    0.6666666666666666,
+    0.6666666666666666,
+    0.6666666666666666,
+    0.6666666666666666,
+    0.6666666666666666
+   ],
+   "perTask": {
+    "T1": {
+     "c": 5,
+     "n": 5
+    },
+    "T2": {
+     "c": 5,
+     "n": 5
+    },
+    "T3": {
+     "c": 0,
+     "n": 5
+    },
+    "T4": {
+     "c": 5,
+     "n": 5
+    },
+    "T5": {
+     "c": 0,
+     "n": 5
+    },
+    "T6": {
+     "c": 5,
+     "n": 5
+    }
+   },
+   "proxy": false,
+   "run": "B_v2_direct_20261018T094446",
+   "tasks": 6,
+   "violatedProps": {}
+  },
+  "Bold": {
+   "calls": {
+    "unverifiable": 5,
+    "verified": 0,
+    "violated": 35
+   },
+   "fiksSha": "",
+   "k": 5,
+   "meanTurns": 3.2666666666666666,
+   "medianSeconds": 9.133,
+   "model": "claude-sonnet-5-5",
+   "n": 30,
+   "outcomes": {
+    "correct": 13,
+    "declined": 15,
+    "noAnswer": 2,
+    "wrong": 0
+   },
+   "pass1": 0.43333333333333335,
+   "pass1_hi": 0.6080269312687199,
+   "pass1_lo": 0.27377485469947366,
+   "passk": [
+    0.43333333333333335,
+    0.3833333333333333,
+    0.35000000000000003,
+    0.3333333333333333,
+    0.3333333333333333
+   ],
+   "perTask": {
+    "T1": {
+     "c": 0,
+     "n": 5
+    },
+    "T2": {
+     "c": 0,
+     "n": 5
+    },
+    "T3": {
+     "c": 0,
+     "n": 5
+    },
+    "T4": {
+     "c": 3,
+     "n": 5
+    },
+    "T5": {
+     "c": 5,
+     "n": 5
+    },
+    "T6": {
+     "c": 5,
+     "n": 5
+    }
+   },
+   "proxy": null,
+   "run": "B_v2_20261018T093754",
+   "tasks": 6,
+   "violatedProps": {
+    "shop.create_order/readAfterWrite": 5,
+    "shop.get_order/created_at.equalsUpstream": 5,
+    "shop.get_order/created_at.freshness": 5,
+    "shop.get_product/price.notNull": 15,
+    "shop.search_products/countMatchesTotal": 5,
+    "shop.search_products/items.price.range": 10
+   }
+  },
+  "C": {
+   "calls": {
+    "unverifiable": 0,
+    "verified": 39,
+    "violated": 0
+   },
+   "fiksSha": "705e989be6243b86fe56c04ab75a8519629ca232",
+   "k": 5,
+   "meanTurns": 3.3,
+   "medianSeconds": 6.369,
+   "model": "claude-sonnet-5-5",
+   "n": 30,
+   "outcomes": {
+    "correct": 30,
+    "declined": 0,
+    "noAnswer": 0,
+    "wrong": 0
+   },
+   "pass1": 1.0,
+   "pass1_hi": 1.0,
+   "pass1_lo": 0.886486605238548,
+   "passk": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "perTask": {
+    "T1": {
+     "c": 5,
+     "n": 5
+    },
+    "T2": {
+     "c": 5,
+     "n": 5
+    },
+    "T3": {
+     "c": 5,
+     "n": 5
+    },
+    "T4": {
+     "c": 5,
+     "n": 5
+    },
+    "T5": {
+     "c": 5,
+     "n": 5
+    },
+    "T6": {
+     "c": 5,
+     "n": 5
+    }
+   },
+   "proxy": true,
+   "run": "C_v2_fixed_20261020T224903",
+   "tasks": 6,
+   "violatedProps": {}
+  }
+ }
+}

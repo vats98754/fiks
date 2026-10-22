@@ -11,3 +11,11 @@ apps/dashboard/public/data/
 
 # python venv for paper analysis
 paper/.venv/
+# LaTeX build artefacts (paper/main.pdf is committed)
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.fdb_latexmk
+paper/*.fls
+paper/*.log
+paper/*.out

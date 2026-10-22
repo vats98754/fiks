@@ -1,0 +1,134 @@
+[
+ {
+  "baseRefName": "main",
+  "createdAt": "2026-10-18T09:23:41Z",
+  "headRefName": "fiks/get-product-price-notnull-tr_079b90c89e",
+  "mergedAt": "2026-10-20T15:48:33Z",
+  "number": 1,
+  "state": "MERGED",
+  "title": "fix(get_product): price.notNull violated on vendor API 2026-10-01 (fiks)",
+  "checks": [
+   "SUCCESS"
+  ]
+ },
+ {
+  "baseRefName": "main",
+  "createdAt": "2026-10-18T09:25:34Z",
+  "headRefName": "fiks/search-products-items-price-range-tr_b47c5b77c6",
+  "mergedAt": "2026-10-20T15:48:39Z",
+  "number": 2,
+  "state": "MERGED",
+  "title": "fix(search_products): items.price.range violated on vendor API 2026-10-01 (fiks)",
+  "checks": [
+   "SUCCESS"
+  ]
+ },
+ {
+  "baseRefName": "main",
+  "createdAt": "2026-10-18T09:27:14Z",
+  "headRefName": "fiks/create-order-readafterwrite-tr_7280855590",
+  "mergedAt": "2026-10-20T15:48:45Z",
+  "number": 3,
+  "state": "MERGED",
+  "title": "fix(create_order): readAfterWrite violated on vendor API 2026-10-01 (fiks)",
+  "checks": [
+   "SUCCESS"
+  ]
+ },
+ {
+  "baseRefName": "main",
+  "createdAt": "2026-10-18T09:29:00Z",
+  "headRefName": "fiks/get-order-created-at-freshness-tr_4db46c86e4",
+  "mergedAt": "2026-10-20T15:48:54Z",
+  "number": 4,
+  "state": "MERGED",
+  "title": "fix(get_order): created_at.freshness, created_at.equalsUpstream violated on vendor API 2026-10-01 (fiks)",
+  "checks": [
+   "SUCCESS"
+  ]
+ },
+ {
+  "baseRefName": "main",
+  "createdAt": "2026-10-18T10:09:47Z",
+  "headRefName": "fiks/get-product-price-notnull-tr_06964f0ce5",
+  "mergedAt": null,
+  "number": 5,
+  "state": "CLOSED",
+  "title": "fix(get_product): price.notNull violated on vendor API 2026-10-01 (fiks)",
+  "checks": [
+   "SUCCESS"
+  ]
+ },
+ {
+  "baseRefName": "main",
+  "createdAt": "2026-10-18T10:33:16Z",
+  "headRefName": "fiks-harness/rerecord-profile",
+  "mergedAt": "2026-10-20T15:49:02Z",
+  "number": 6,
+  "state": "MERGED",
+  "title": "Harness: a re-recording must match the original call and upstream",
+  "checks": [
+   "SUCCESS"
+  ]
+ },
+ {
+  "baseRefName": "main",
+  "createdAt": "2026-10-20T15:51:24Z",
+  "headRefName": "fiks/search-products-countmatchestotal-tr_d02358451e",
+  "mergedAt": "2026-10-20T15:52:00Z",
+  "number": 7,
+  "state": "MERGED",
+  "title": "fix(search_products): countMatchesTotal violated on vendor API 2026-10-01 (fiks)",
+  "checks": [
+   "SUCCESS"
+  ]
+ },
+ {
+  "baseRefName": "demo/20261020T225756",
+  "createdAt": "2026-10-20T22:59:38Z",
+  "headRefName": "fiks/search-products-items-price-range-tr_219abe3ce4",
+  "mergedAt": null,
+  "number": 8,
+  "state": "OPEN",
+  "title": "fix(search_products): items.price.range violated on vendor API 2026-10-01 (fiks)",
+  "checks": [
+   "SUCCESS"
+  ]
+ },
+ {
+  "baseRefName": "demo/20261020T225756",
+  "createdAt": "2026-10-20T23:01:01Z",
+  "headRefName": "fiks/get-product-price-notnull-tr_5fc07aef06",
+  "mergedAt": null,
+  "number": 9,
+  "state": "OPEN",
+  "title": "fix(get_product): price.notNull violated on vendor API 2026-10-01 (fiks)",
+  "checks": [
+   "SUCCESS"
+  ]
+ },
+ {
+  "baseRefName": "demo/20261020T225756",
+  "createdAt": "2026-10-20T23:02:28Z",
+  "headRefName": "fiks/create-order-readafterwrite-tr_19a11fc8ad",
+  "mergedAt": null,
+  "number": 10,
+  "state": "OPEN",
+  "title": "fix(create_order): readAfterWrite violated on vendor API 2026-10-01 (fiks)",
+  "checks": [
+   "SUCCESS"
+  ]
+ },
+ {
+  "baseRefName": "demo/20261021T083359",
+  "createdAt": "2026-10-21T08:35:49Z",
+  "headRefName": "fiks/get-product-price-notnull-tr_de0ca49272",
+  "mergedAt": null,
+  "number": 11,
+  "state": "OPEN",
+  "title": "fix(get_product): price.notNull violated on vendor API 2026-10-01 (fiks)",
+  "checks": [
+   "SUCCESS"
+  ]
+ }
+]
