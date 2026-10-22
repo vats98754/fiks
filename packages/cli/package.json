@@ -9,6 +9,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@fiks/authoring": "workspace:*",
     "@fiks/bench": "workspace:*",
     "@fiks/contracts": "workspace:*",
     "@fiks/domains": "workspace:*",
