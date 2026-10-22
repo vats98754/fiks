@@ -7,7 +7,7 @@ licence question, FSL-1.1, did not need an answer).
 |---|---|
 | F on the prefix `b97585c` (10 runs) | 10/10 violate `figma.download_figma_images/fileWritten`, 1 distinct verdict, clean replay (`paper/build-logs/RB-R20.md`) |
 | P on the human fix `eaeec68` (10 runs) | 10/10 verified, clean replay, no contract fire |
-| Duplicate / already fixed (step 7) | #364 is closed by #367 (merged 2026-04-25); no other open issue was found for the same symptom in the candidate search (`paper/research/real-bugs-mcp.md`). The prefix is the fix's only parent, so the bug is present at the prefix and absent at the fix. |
+| Duplicate / already fixed (step 7) | #364 is closed by #367 (merged 2026-04-25). `gh search issues --repo GLips/Figma-Context-MCP download_figma_images` (2026-10-22): #363 (opened the same day, in Chinese) is a duplicate of #364 with the same report, closed as completed 2026-04-25 alongside the fix; #353 (symlinked localPath escaping imageDir, closed 2026-04-16) is a different, earlier path-containment bug; #215 and #143 are explicit download failures, not a false success. No open duplicate. The prefix is the fix's only parent, so the bug is present at the prefix and absent at the fix. |
 | Sandboxed (step 8) | the server is built and run only in the SBX per-repo image (`--network none`, read-only root, `HOME=/tmp`); nothing from the clone runs on the host |
 
 ## Fidelity limits (to report with E7)
