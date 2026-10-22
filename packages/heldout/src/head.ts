@@ -75,8 +75,25 @@ export function prepareHead(repoDir: string, base: string, diff: string, parent?
     tree: git(dir, ['rev-parse', 'HEAD^{tree}']).trim(),
     applied,
     ...(error ? { error } : {}),
-    remove: () => rmSync(root, { recursive: true, force: true }),
+    remove: () => removeTree(root),
   };
+}
+
+/**
+ * Best-effort removal of a scratch tree: a container that failed to start can leave a mountpoint
+ * the host cannot remove at once; that never fails a grade (the tree is under the OS temp dir).
+ */
+export function removeTree(dir: string): void {
+  try {
+    rmSync(dir, { recursive: true, force: true });
+  } catch {
+    try {
+      execFileSync('chmod', ['-R', 'u+rwX', dir], { stdio: 'ignore' });
+      rmSync(dir, { recursive: true, force: true });
+    } catch {
+      // left for the OS temp cleaner
+    }
+  }
 }
 
 /** Writes the base versions of `paths` (as committed at `commit`) under `out`. */

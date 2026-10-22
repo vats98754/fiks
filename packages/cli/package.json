@@ -12,6 +12,7 @@
     "@fiks/bench": "workspace:*",
     "@fiks/contracts": "workspace:*",
     "@fiks/domains": "workspace:*",
+    "@fiks/heldout": "workspace:*",
     "@fiks/interfaces": "workspace:*",
     "@fiks/proxy": "workspace:*",
     "@fiks/repair": "workspace:*",

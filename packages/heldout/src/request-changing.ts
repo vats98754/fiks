@@ -6,7 +6,7 @@
 import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
 import type { RerecordLog } from '@fiks/interfaces';
-import { prepareHead, writeInto } from './head.ts';
+import { prepareHead, removeTree, writeInto } from './head.ts';
 import { type LoadedPackage, profileOf } from './pkg.ts';
 import { rerecordIn, restoreOverlay } from './rerecord.ts';
 import { ruleMount, type SandboxFactory } from './sandbox.ts';
@@ -59,5 +59,6 @@ export async function requestChanging(
   } finally {
     await sb.cleanup();
     head.remove();
+    removeTree(rule.mount.source);
   }
 }

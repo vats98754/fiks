@@ -44,10 +44,23 @@ export interface DockerSandboxOptions {
   purpose?: 'run' | 'test';
 }
 
+/**
+ * One populate of the fiks-tools volume per (image, purpose) in this process: SBX's docker lock
+ * lets callers in one process through together, so concurrent graders must share the promise.
+ */
+const toolsMountsOnce = new Map<string, Promise<Mount[]>>();
+
 export function dockerSandboxFactory(opts: DockerSandboxOptions): SandboxFactory {
   return async (worktree, mounts) => {
-    const tools = await toolsMounts(opts.toolsImage, { purpose: opts.purpose ?? 'run' });
-    return new DockerExecBackend({ worktree, image: opts.repoImage, mounts: [...tools, ...mounts] });
+    const purpose = opts.purpose ?? 'run';
+    const key = `${opts.toolsImage}\u0000${purpose}`;
+    let tools = toolsMountsOnce.get(key);
+    if (!tools) {
+      tools = toolsMounts(opts.toolsImage, { purpose });
+      toolsMountsOnce.set(key, tools);
+      tools.catch(() => toolsMountsOnce.delete(key));
+    }
+    return new DockerExecBackend({ worktree, image: opts.repoImage, mounts: [...(await tools), ...mounts] });
   };
 }
 
@@ -113,7 +126,17 @@ export function ruleMount(rule: InjectorRule & { transformPath: string }): {
 export { FIKS_SANDBOX_ENV };
 
 /** The target repo's sandbox image at `ref` (SBX buildRepoImage; cached by Docker on its lockfile). */
-export async function repoImageFor(repoDir: string, ref: string): Promise<string> {
-  const { buildRepoImage } = await import('@fiks/sandbox');
-  return (await buildRepoImage({ repo: repoDir, ref })).digest;
+const repoImages = new Map<string, Promise<string>>();
+
+export function repoImageFor(repoDir: string, ref: string): Promise<string> {
+  const key = `${repoDir}\u0000${ref}`;
+  let p = repoImages.get(key);
+  if (!p) {
+    p = import('@fiks/sandbox').then(
+      async ({ buildRepoImage }) => (await buildRepoImage({ repo: repoDir, ref })).digest,
+    );
+    repoImages.set(key, p);
+    p.catch(() => repoImages.delete(key));
+  }
+  return p;
 }
