@@ -9,9 +9,9 @@
   "serverResolution": "{entry} is resolved per tree by realbugs/R9/harness/server.ts prepareBuild: the bin of a non-private @cloudflare/mcp-server-cloudflare package in the tree (root, packages/*, apps/*; PR #469 adds packages/mcp-server-cloudflare with bin src/cli.js), installed from the tree's lockfile; else (the prefix) the published 0.2.0 that `npx -y @cloudflare/mcp-server-cloudflare` resolves to, dist/index.js, installed from realbugs/R9/harness/npx-0.2.0/package-lock.json. {accountId} = the case's accountId. Env: CLOUDFLARE_API_TOKEN=fiks-replay-token, HOME = a fresh temp dir.",
   "baseUrlEnv": "",
   "upstreamHosts": ["api.cloudflare.com"],
-  "testCommand": "PENDING",
+  "testCommand": "cd packages/tools && ../../node_modules/.bin/vitest run && cd ../mcp-common && ../../node_modules/.bin/vitest run",
   "testRunner": "vitest",
-  "suiteScope": [],
+  "suiteScope": ["packages/tools/src/**/*.spec.ts", "packages/mcp-common/src/**/*.spec.ts"],
   "allowedEditPaths": [
     "^packages/mcp-server-cloudflare/.+$",
     "^\\.changeset/[^/]+\\.md$",
@@ -23,12 +23,26 @@
   "issuePath": "realbugs/R9/issue.md",
   "contractPath": "realbugs/R9/contract.json",
   "fixtures": [
-    { "path": "realbugs/R9/fixtures/trigger.json", "label": "synthesized" },
-    { "path": "realbugs/R9/fixtures/prefix-wire.json", "label": "recorded" }
+    {
+      "path": "realbugs/R9/fixtures/trigger.json",
+      "label": "synthesized"
+    },
+    {
+      "path": "realbugs/R9/fixtures/prefix-wire.json",
+      "label": "recorded"
+    }
   ],
   "namedProperty": "cloudflare.zones_list/textJson",
   "triggerFixture": "realbugs/R9/fixtures/trigger.json",
   "harnessCommand": "pnpm tsx realbugs/R9/harness/run.ts (--sha {sha} | --worktree {worktree}) --runs {runs}",
   "installCommand": "repo package: pnpm install --frozen-lockfile --ignore-scripts --filter @cloudflare/mcp-server-cloudflare (in the tree); npx artifact: npm ci --ignore-scripts (in .work/realbugs/R9.builds/npx-0.2.0, from the committed lock)",
-  "notes": []
+  "notes": [
+    "Status: attrited (ATTRITION.md). RBA should not dispatch R9 in R8; the fields below are complete so the attrition evidence and the held-out grading can be re-run.",
+    "Paths: realbugs/* and harness commands are relative to the fiks root; serverCommand, testCommand, suiteScope, allowedEditPaths are relative to the clone (repo root). {worktree} = a checked-out head of the clone; {sha} = prefix, fix or a commit in .work/realbugs/R9.",
+    "No base-URL override: every Cloudflare URL is hard-coded (https://api.cloudflare.com/client/v4), so baseUrlEnv is empty and the harness uses the RBX HTTPS shim in proxy mode for upstreamHosts (any other host is refused).",
+    "Suite (SBX per-repo image fiks-sbx/r9:b975cb13bb547c79, digest sha256:6d64f9f489164e20a0f084ae37b8c0b8ba7102714233a0c35a8f894b64f9e22d, built from the prefix lockfile by packages/sandbox/src/build.ts; run with --network none, CI=1, HOME=/tmp, sources copied over /work): packages/tools 1 file / 6 tests pass, packages/mcp-common 13 files / 156 tests pass. The whole-repo `vitest run` (root projects incl. apps/*) did not finish in 900 s offline (apps with remote AI bindings), so apps/* is outside suiteScope. A fix in the style of PR #469 adds packages/mcp-server-cloudflare with its own spec, which needs a lockfile change (the npm 0.2.0 artifact) that the offline image cannot install.",
+    "The SBX backend mounts the worktree over /work and replaces only the root node_modules; this pnpm monorepo also has per-package node_modules (packages/*/node_modules, apps/*/node_modules), so the suite was run by copying the sources over the image's /work instead. RBA/SBX would need the same for this repo.",
+    "humanFixTests is empty: PR #469 is closed unmerged and the issue is open; its spec (packages/mcp-server-cloudflare/src/proxy.spec.js at fixSha) is reference only. heldoutCommand is the only grading oracle.",
+    "allowedEditPaths admit what a repo-level fix needs at the prefix: a stdio package under packages/mcp-server-cloudflare, a changeset, the root package.json (its name collides with the package name) and pnpm-lock.yaml."
+  ]
 }
