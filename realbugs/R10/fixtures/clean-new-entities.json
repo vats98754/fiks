@@ -1,0 +1,19 @@
+{
+  "id": "r10-clean-new-entities",
+  "capturedAt": "2026-10-22T11:53:50.629Z",
+  "tool": "create_entities",
+  "args": {
+    "entities": [
+      { "name": "Bob", "entityType": "person", "observations": ["Lives in Lisbon"] },
+      { "name": "Acme", "entityType": "organization", "observations": ["Makes anvils", "Founded in 1949"] }
+    ]
+  },
+  "state": {
+    "lines": [
+      { "type": "entity", "name": "Alice", "entityType": "person", "observations": ["Works at Acme"] }
+    ]
+  },
+  "probe": { "tool": "open_nodes" },
+  "http": [],
+  "note": "Synthesized control (hand-written state and args): only new names, so every write must read back; the blind contract must verify on the prefix and on the fix."
+}

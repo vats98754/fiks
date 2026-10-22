@@ -1,0 +1,70 @@
+{
+  "id": "r10-trigger",
+  "capturedAt": "2026-10-22T11:53:50.629Z",
+  "tool": "create_entities",
+  "args": {
+    "entities": [
+      {
+        "name": "Alice",
+        "entityType": "person",
+        "observations": ["Allergic to penicillin"]
+      }
+    ]
+  },
+  "state": {
+    "memoryFile": "state-alice.jsonl"
+  },
+  "probe": {
+    "tool": "open_nodes",
+    "args": {
+      "names": ["Alice"]
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"entities\": [\n    {\n      \"name\": \"Alice\",\n      \"entityType\": \"person\",\n      \"observations\": [\n        \"Works at Acme\"\n      ]\n    }\n  ],\n  \"relations\": []\n}"
+        }
+      ],
+      "structuredContent": {
+        "entities": [
+          {
+            "name": "Alice",
+            "entityType": "person",
+            "observations": ["Works at Acme"]
+          }
+        ],
+        "relations": []
+      }
+    }
+  },
+  "http": [],
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "[]"
+      }
+    ],
+    "structuredContent": {
+      "entities": []
+    }
+  },
+  "violated": [
+    {
+      "propertyId": "memory.create_entities/readAfterWrite",
+      "kind": "readAfterWrite",
+      "path": "open_nodes.entities[name=Alice].observations",
+      "expected": "[\"Allergic to penicillin\"] read back, or Alice reported as not written",
+      "actual": ["Works at Acme"],
+      "message": "create_entities dropped Alice silently: open_nodes Alice read back [\"Works at Acme\"], missing [\"Allergic to penicillin\"], and the response does not name Alice"
+    }
+  ],
+  "target": ["memory.create_entities/readAfterWrite"],
+  "recordedFrom": {
+    "sha": "272d7f62aa5166685ca1af6ba124b63ce6853ad5",
+    "server": "node src/memory/dist/index.js",
+    "env": "MEMORY_FILE_PATH",
+    "source": "https://github.com/modelcontextprotocol/servers/issues/4887 reproduction steps 1-2 (args verbatim)"
+  }
+}

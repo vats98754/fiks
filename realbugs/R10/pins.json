@@ -1,0 +1,16 @@
+{
+  "bugId": "R10",
+  "repo": "vats98754/rb-r10-servers",
+  "upstream": "modelcontextprotocol/servers",
+  "issue": "https://github.com/modelcontextprotocol/servers/issues/4887",
+  "fixPr": "https://github.com/modelcontextprotocol/servers/pull/5008",
+  "prefixSha": "272d7f62aa5166685ca1af6ba124b63ce6853ad5",
+  "fixSha": "1520a8bbf82ee6b5ea29095db49772d8a098c1ab",
+  "prefixIs": "first parent of the fix PR's merge commit 1520a8b (upstream branch v2/main)",
+  "remoteRefs": {
+    "refs/heads/main": "272d7f62aa5166685ca1af6ba124b63ce6853ad5",
+    "refs/tags/r10-fix": "1520a8bbf82ee6b5ea29095db49772d8a098c1ab"
+  },
+  "clone": ".work/realbugs/R10",
+  "round": 7
+}

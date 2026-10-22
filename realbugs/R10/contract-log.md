@@ -63,3 +63,37 @@ same property id form (`<contract id>/readAfterWrite`) and the same `Violation`/
 shapes as `@fiks/contracts`. This is a real limit of the frozen vocabulary for this bug class
 (omission from a write's response), recorded for the paper's limitations, not a change to
 `@fiks/contracts`.
+
+## After the contract (the contract was not edited after 11:48:26Z)
+
+| Time (UTC) | Step |
+|---|---|
+| 2026-10-22T11:48:48Z | Contract committed on `ws/RB-R10` (`ab4fa21`, "blind contract ... before reading the fix diff"). |
+| 2026-10-22T11:48:52Z | **First read of the fix diff** (`git diff --stat` and `git diff -- src/memory/index.ts` prefix..fix), then the test, README and changeset diff. |
+| 2026-10-22T11:52:35Z | Private repo `vats98754/rb-r10-servers` created (`gh repo create --private`, not a fork); pushed `main` = prefix and tag `r10-fix` = fix. |
+| 2026-10-22T11:53:50Z | `harness/record.ts` recorded `fixtures/state-alice.jsonl` and `fixtures/trigger.json` from the prefix server process. |
+| 2026-10-22T11:54:20Z | `run.ts --sha prefix --runs 10`: 10/10 violated; `--sha fix --runs 10`: 10/10 verified. |
+| 11:55Z–12:08Z (no exact stamp taken) | Held-out cases written and run on prefix and fix (below). |
+
+What the human fix does (read after the contract): `create_entities` keeps ignoring existing
+names (and repeats within one call), adds an optional `skipped: string[]` to the structured
+result, appends a second text block "Skipped N entit(y|ies) ...: <names>. ... use
+add_observations ...", and changes the tool description. Observations of skipped entities are
+still not stored. The blind contract accepts this direction because the response now names the
+entity outside `entities` (both in `skipped` and in the second text block).
+
+Post-hoc findings on the held-out inputs (`heldout/run.ts`, the contract column; the contract
+was not changed in response):
+
+- **False positive on the fix (H3, same-batch repeat).** `[Ivy("Born in 1990"), Ivy("Vegetarian")]`
+  on an empty graph: the fix creates the first Ivy, lists it in `entities` and reports `Ivy` in
+  `skipped`. The blind rule treats a name listed as created as a claim that every requested
+  item with that name was written, so the second item's missing observation fires. Correct
+  head, contract fires: a documented FP of the blind contract on an input it was not written for.
+- **False negative on the prefix (H1, mixed batch).** `[Dana(new fact), Erin("Is Dana's sister")]`
+  with Dana existing: the prefix drops Dana's fact, but the first text block (the created list
+  serialised) contains Erin's observation, which contains "Dana", so the blind "mention" signal
+  is satisfied and the contract verifies. The held-out oracle ignores a text block that only
+  echoes the created list, so it grades H1 correctly.
+- On the trigger itself (the issue's two steps) and the clean control, the blind contract is
+  exact: prefix 10/10 violated, fix 10/10 verified, clean control verified on both.

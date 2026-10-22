@@ -1,0 +1,69 @@
+{
+  "bugId": "R10",
+  "about": "Held-out manifestations of servers #4887 (never shown to a repair arm) plus non-manifestation controls. All synthesized (hand-written state and args). Graded by heldout/run.ts with the held-out oracle in harness/check.ts (heldoutVerdict), which accepts either fix direction: store the observations, or name the entity as not written outside the created list.",
+  "capturedAt": "2026-10-22T11:53:50.629Z",
+  "cases": [
+    {
+      "id": "H1-mixed-batch",
+      "kind": "manifestation",
+      "state": [
+        { "type": "entity", "name": "Dana", "entityType": "person", "observations": ["Plays chess"] }
+      ],
+      "entities": [
+        { "name": "Dana", "entityType": "person", "observations": ["Moved to Oslo in 2026"] },
+        { "name": "Erin", "entityType": "person", "observations": ["Is Dana's sister"] }
+      ]
+    },
+    {
+      "id": "H2-two-existing",
+      "kind": "manifestation",
+      "state": [
+        {
+          "type": "entity",
+          "name": "Globex",
+          "entityType": "organization",
+          "observations": ["Sells widgets"]
+        },
+        { "type": "entity", "name": "Hank", "entityType": "person", "observations": ["CEO of Globex"] }
+      ],
+      "entities": [
+        { "name": "Globex", "entityType": "organization", "observations": ["Opened a Berlin office"] },
+        { "name": "Hank", "entityType": "person", "observations": ["Prefers email over calls"] }
+      ]
+    },
+    {
+      "id": "H3-same-batch-repeat",
+      "kind": "manifestation",
+      "state": [],
+      "entities": [
+        { "name": "Ivy", "entityType": "person", "observations": ["Born in 1990"] },
+        { "name": "Ivy", "entityType": "person", "observations": ["Vegetarian"] }
+      ]
+    },
+    {
+      "id": "H4-existing-other-type",
+      "kind": "manifestation",
+      "state": [
+        { "type": "entity", "name": "Jupiter", "entityType": "project", "observations": ["Started in March"] }
+      ],
+      "entities": [{ "name": "Jupiter", "entityType": "planet", "observations": ["Has 95 known moons"] }]
+    },
+    {
+      "id": "C1-all-new",
+      "kind": "control",
+      "state": [{ "type": "entity", "name": "Kim", "entityType": "person", "observations": ["Likes tea"] }],
+      "entities": [
+        { "name": "Leo", "entityType": "person", "observations": ["Drives a van"] },
+        { "name": "Mara", "entityType": "person", "observations": [] }
+      ]
+    },
+    {
+      "id": "C2-existing-same-facts",
+      "kind": "control",
+      "state": [
+        { "type": "entity", "name": "Nora", "entityType": "person", "observations": ["Works at Acme"] }
+      ],
+      "entities": [{ "name": "Nora", "entityType": "person", "observations": ["Works at Acme"] }]
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "bugId": "R10",
+  "repoDir": ".work/realbugs/R10",
+  "prefixSha": "272d7f62aa5166685ca1af6ba124b63ce6853ad5",
+  "fixSha": "1520a8bbf82ee6b5ea29095db49772d8a098c1ab",
+  "serverCommand": "node src/memory/dist/index.js",
+  "baseUrlEnv": "",
+  "testCommand": "cd src/memory && ../../node_modules/.bin/tsc -p tsconfig.json && ../../node_modules/.bin/vitest run",
+  "testRunner": "vitest",
+  "suiteScope": ["src/memory/__tests__/**/*.test.ts"],
+  "allowedEditPaths": [
+    "^src/memory/(?!vitest\\.config\\.ts$)[^/]+\\.ts$",
+    "^src/memory/__tests__/[^/]+\\.ts$",
+    "^src/memory/README\\.md$",
+    "^\\.changeset/[^/]+\\.md$"
+  ],
+  "humanFixTests": ["src/memory/__tests__/create-reporting.test.ts", "src/memory/__tests__/tools.test.ts"],
+  "heldoutCommand": "pnpm tsx realbugs/R10/heldout/run.ts --worktree {worktree}",
+  "issuePath": "realbugs/R10/issue.md",
+  "contractPath": "realbugs/R10/contract.json",
+  "fixtures": [
+    { "path": "realbugs/R10/fixtures/trigger.json", "label": "recorded" },
+    { "path": "realbugs/R10/fixtures/state-alice.jsonl", "label": "recorded" },
+    { "path": "realbugs/R10/fixtures/clean-new-entities.json", "label": "synthesized" }
+  ],
+  "namedProperty": "memory.create_entities/readAfterWrite",
+  "triggerFixture": "realbugs/R10/fixtures/trigger.json",
+  "harnessCommand": "pnpm tsx realbugs/R10/harness/run.ts (--sha {sha} | --worktree {worktree}) --runs {runs}",
+  "installCommand": "npm ci --workspace src/memory --include-workspace-root=false --ignore-scripts --no-audit --no-fund",
+  "buildCommand": "cd src/memory && ../../node_modules/.bin/tsc -p tsconfig.json",
+  "stateEnv": "MEMORY_FILE_PATH",
+  "notes": [
+    "Paths: realbugs/* and harness commands are relative to the fiks root; serverCommand, testCommand, installCommand, buildCommand, suiteScope, allowedEditPaths and humanFixTests are relative to the clone (repo root). {worktree} = a checked-out head of the clone; {sha} = prefix, fix or a commit in .work/realbugs/R10.",
+    "No HTTP upstream: the memory server's state is the JSONL file named by stateEnv (MEMORY_FILE_PATH), so baseUrlEnv is empty. harness/server.ts runCase copies a case's state to a fresh temp file per run and freezes the process clock at capturedAt with the RBX preload.",
+    "The npm repo (package-lock.json) is not a pnpm repo, so SBX build.ts cannot build its per-repo image yet; installCommand + testCommand were checked offline in the SBX base image (node:22.23.3-bookworm-slim, --network none, CI=1, HOME=/tmp): prefix 9 files / 149 tests pass, fix 10 files / 153 tests pass.",
+    "The contract property is args-driven (kind readAfterWriteRequested) and is evaluated by harness/check.ts evaluateCase, not by @fiks/contracts evaluate (see contract-log.md, vocabulary gap). A repro check module should call runCase + evaluateCase on the trigger fixture and assert violations[].propertyId includes namedProperty.",
+    "The prefix's own src/memory/__tests__/tools.test.ts pins the buggy behaviour (two tests marked 'KNOWN BUG #4887') and the exact create_entities description, so any correct fix must edit that test file to keep the suite green; allowedEditPaths therefore admits src/memory/__tests__/*.ts.",
+    "humanFixTests pin the human fix's implementation (exported helpers skippedEntityNames/skippedEntitiesNotice, exact notice text and tool description); a correct fix that stores the observations instead would fail them. heldoutCommand is the direction-neutral oracle."
+  ]
+}
