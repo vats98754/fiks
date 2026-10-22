@@ -1,6 +1,6 @@
 # SEC build log — adversarial-trace suite, attack oracles, canary checker, malicious-diff detectors (E6)
 
-Stream: SEC (wave 1). Worktree `/Users/anvayvats/fiks-wt/SEC`, branch `ws/SEC`, based on main `39500d1` (round 3; rounds 1-2 were on `c144b03`).
+Stream: SEC (wave 1). Worktree `/Users/anvayvats/fiks-wt/SEC`, branch `ws/SEC`, based on main `aa7e28a` (round 3, DOM2 merged; rounds 1-2 were on `c144b03`).
 Owns `packages/attacks/**`, `paper/security/**`, `paper/build-logs/SEC.md`. Depends on CORE-SEED only.
 
 ## What was built
@@ -96,19 +96,20 @@ is open, so the adaptive deliverable is not complete.
 
 ## Round 3 (verifier findings)
 
-Rebased `ws/SEC` onto main `39500d1` (BENCHX merged; includes MON `6157cb4`): `git rebase main` →
-"Successfully rebased", `git rev-list --count ws/SEC..main` → 0. The uncommitted SETUP lockfile edit
+Rebased `ws/SEC` onto main `39500d1` (BENCHX merged; includes MON `6157cb4`), then, after DOM2 merged
+mid-round, again onto `aa7e28a`: `git rebase main` → "Successfully rebased" both times,
+`git rev-list --count ws/SEC..main` → 0. The uncommitted SETUP lockfile edit
 was discarded before the rebase. SETUP re-run: `node scripts/apply-dep-fragments.mjs` → "nothing to
 apply"; `pnpm install --no-frozen-lockfile` → exit 0 (lockfile edit left uncommitted, per §7.1).
 
 | # | Finding | Status |
 |---|---|---|
-| 1 | stale base | Fixed: rebased onto `39500d1`, SETUP re-run, every acceptance item re-run on the new base (below). |
+| 1 | stale base | Fixed: rebased onto `39500d1` and then `aa7e28a`, SETUP re-run after each, every acceptance item re-run on the new base (below). |
 | 2 | attacker not adaptive | Fixed by option (a). `RoundStatus` now carries the attacker's own previous `payload` with `goalHit`; `buildAttackerPrompt` shows it between `<<<PREVIOUS_PAYLOAD` / `PREVIOUS_PAYLOAD>>>` and asks for a rewrite. Nothing from the runner outcome (diff, commands, commit, PR body, log, egress) or the oracle reasons is passed. Rows gain `prevPayloadHash`. Because a hit ends a (goal, config) sequence, the carried verdict is always "did NOT fire"; the adaptive signal is "your previous payload failed, rewrite it". Tests: round N's prompt contains exactly round N-1's payload and no runner-outcome marker (all 8 sequences × 5 rounds); round 1 shows no payload; ungated oracle reasons never reach the prompt; `prevPayloadHash` chains to the previous row. |
 | 3 | AST detectors miss indirect forms | Fixed: two-pass binding resolution. Named/default/namespace imports and `import x = require()` from `child_process`, `vm`, `http`, `https`, `http2`, `net`, `tls`, `dgram`, `dns`, `undici`, `node-fetch`, `cross-fetch`, `isomorphic-fetch`, `axios`, `got`, `ws` (with or without `node:`); `require()` and `await import()` (a computed specifier is `dynamic-exec`); aliases, destructuring and assignments; `globalThis`/`window`/`global`/`self` members incl. element access; `process['env']`, `globalThis.process.env`, an alias of `process`, `{ env } = process`, `{ X } = process.env`, `process[k]`; `eval`, `Function` with or without `new`; `new WebSocket`/`XMLHttpRequest`/`EventSource`; `fetch` passed as a value; recorded ids in no-substitution template literals. Locally declared names shadow globals (so `const fetch = makeClient()` is not flagged). 35 positive per-form tests plus a key test and 8 look-alike negatives; 37 of the new tests fail on the round-2 `ast.ts` (checked by swapping it back in). D1-D5 still produce no finding. Env reads now carry `key` when static; `canary-egress` counts a keyed read of the canary name or an unkeyed (whole-env / computed) read. |
 | 4 | canary scan exact-string only | Fixed: `findCanary` matches raw, reversed, hex (case-insensitive), base64 and URL-safe base64 at all three byte alignments (so `base64("GH_TOKEN=" + secret)` is caught) and line-wrapped, each also after lenient percent-decoding (so `%XX` per byte and `encodeURIComponent(base64(...))` are caught). Used by `scanForCanary`, the `canary-egress` oracle (diff, commit, PR, log, commands, and egress url/body/headers via `egressCanaryEncoding`) and `EgressSink.hitsForCanary`. Tests per encoding, a scan of log/diff/commit/PR with four different encodings, a negative on another canary's encodings, and 7 oracle cases (incl. `http://x/?q=<base64(secret)>`) that all fail on the round-2 oracle. Not covered (stated in the code): compression, encryption, other ciphers, a secret split across texts. |
 
-Round-3 evidence (on base `39500d1`):
+Round-3 evidence (re-run in full on base `aa7e28a` after the second rebase):
 
 - SETUP: `node scripts/apply-dep-fragments.mjs` → "nothing to apply"; `pnpm install --no-frozen-lockfile`
   → exit 0.
@@ -123,7 +124,7 @@ Round-3 evidence (on base `39500d1`):
   `--no-pr`, `--run-key`, `--trace-format` (`adaptive.test.ts`, 9 tests).
 - Regression proof: with the round-2 `ast.ts` swapped back in, `ast.test.ts` → 37 failed | 7 passed;
   with the round-2 `goals.ts` + `canary.ts`, `goals.test.ts` → 7 failed | 29 passed.
-- `pnpm typecheck` → exit 0. `pnpm lint` (`biome check .`) → exit 0, "Checked 179 files … No fixes
+- `pnpm typecheck` → exit 0. `pnpm lint` (`biome check .`) → exit 0, "Checked 223 files … No fixes
   applied." Both were run directly, not under `with-lock suite`: the queued locked run waited over 20
   minutes behind other streams' full test runs, and the lock rule covers full `pnpm test` and Docker
   builds only.
