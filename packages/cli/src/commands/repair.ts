@@ -883,7 +883,16 @@ interface VitestJson {
 export function containerSuiteRun(sc: SyncContainer, repoDir: string, filters: string[] = []): SuiteRun {
   const id = randomBytes(6).toString('hex');
   const inside = `/tmp/fiks-gate-${id}.json`;
-  const args = ['run', '--reporter=json', `--outputFile=${inside}`, '--testTimeout=60000', ...filters];
+  // The JSON report is what the gates read (as CORE's runSuite); the default reporter's console
+  // output is scanned for denied egress (SBX's egress log).
+  const args = [
+    'run',
+    '--reporter=json',
+    '--reporter=default',
+    `--outputFile.json=${inside}`,
+    '--testTimeout=60000',
+    ...filters,
+  ];
   const command = `vitest ${args.join(' ')}`;
   const r = sc.exec([join(repoDir, 'node_modules/.bin/vitest'), ...args], repoDir);
   const cat = sc.exec(['cat', inside], '/tmp');

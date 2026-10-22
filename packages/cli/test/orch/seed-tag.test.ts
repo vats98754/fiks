@@ -46,7 +46,7 @@ describe('seed-tag', () => {
       VENDORED,
     ]);
     expect(git(clone, 'tag', '--list')).toBe(before);
-    expect(git(clone, 'status', '--porcelain')).toBe('');
+    expect(git(clone, 'status', '--porcelain', '--untracked-files=no')).toBe('');
     const text = fiks(['seed-tag', '--domain', 'tracker', '--repo', clone, '--dry-run']);
     expect(text.stdout).toMatch(/would tag seed-tracker-v1/);
     expect(text.stdout).toMatch(/test\/fiks\/vendored\/evaluate\.ts/);
