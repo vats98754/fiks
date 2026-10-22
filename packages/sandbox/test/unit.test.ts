@@ -21,7 +21,14 @@ import {
 } from '../src/backend.ts';
 import { lockImporters, manifestHash } from '../src/build.ts';
 import { forbiddenEntries } from '../src/build-tools.ts';
-import { ciLocal, hermetic, parseWorkflow, runPreGate } from '../src/ci-local.ts';
+import {
+  ciLocal,
+  hermetic,
+  parseWorkflow,
+  RUN_SHELL,
+  runPreGate,
+  UnmirroredWorkflowError,
+} from '../src/ci-local.ts';
 import { ancestry, withLock } from '../src/lock.ts';
 import { installGitShim, realGit } from '../src/shim.ts';
 import { FIKS_SANDBOX_ENV } from '../src/tools.ts';
@@ -101,6 +108,80 @@ describe('workflow mirroring', () => {
     ]);
   });
 
+  test('with: inputs of a uses: step and step timeout-minutes are mirrored, not mistaken for step keys', () => {
+    const yml = `jobs:
+  a:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    needs: [b]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: t
+        id: t
+        timeout-minutes: 3
+        run: pnpm test
+`;
+    expect(parseWorkflow(yml)).toEqual([
+      { job: 'a', name: '', uses: 'actions/setup-node@v7' },
+      { job: 'a', name: 't', run: 'pnpm test', timeoutMinutes: 3 },
+    ]);
+  });
+
+  const stepWith = (extra: string) => `jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: test
+        run: pnpm test
+${extra}
+`;
+  test.each([
+    ['if', "        if: github.event_name == 'push'"],
+    ['env', '        env:\n          FOO: bar'],
+    ['working-directory', '        working-directory: packages/a'],
+    ['shell', '        shell: sh'],
+    ['continue-on-error', '        continue-on-error: true'],
+    ['with', '        with:\n          x: 1'],
+  ])('a run: step with %s: throws instead of being silently ignored', (key, extra) => {
+    expect(() => parseWorkflow(stepWith(extra))).toThrow(UnmirroredWorkflowError);
+    expect(() => parseWorkflow(stepWith(extra))).toThrow(`'${key}:'`);
+  });
+
+  const jobWith = (extra: string) => `jobs:
+  check:
+    runs-on: ubuntu-24.04
+${extra}
+    steps:
+      - run: pnpm test
+`;
+  test.each([
+    ['strategy', '    strategy:\n      matrix:\n        node: [20, 22]'],
+    ['env', '    env:\n      FOO: bar'],
+    ['defaults', '    defaults:\n      run:\n        working-directory: a'],
+    ['if', '    if: false'],
+    ['container', '    container: node:22'],
+    ['services', '    services:\n      db:\n        image: postgres'],
+    ['continue-on-error', '    continue-on-error: true'],
+  ])('a job with %s: throws', (key, extra) => {
+    expect(() => parseWorkflow(jobWith(extra))).toThrow(`'${key}:'`);
+  });
+
+  test('workflow-level env:/defaults: and an expression in a run: script throw', () => {
+    expect(() => parseWorkflow(`env:\n  CI: 1\n${jobWith('')}`)).toThrow("workflow-level key 'env:'");
+    expect(() => parseWorkflow(`defaults:\n  run:\n    shell: sh\n${jobWith('')}`)).toThrow("'defaults:'");
+    expect(() => parseWorkflow(stepWith(`      - run: echo \${{ matrix.node }}`))).toThrow(`\${{ }}`);
+  });
+
+  test('every workflow this project mirrors still parses', () => {
+    expect(() => parseWorkflow(SHOP_CI)).not.toThrow();
+  });
+
   test('pnpm install is forced offline, nothing else changes', () => {
     expect(hermetic('pnpm install --frozen-lockfile')).toBe('pnpm install --frozen-lockfile --offline');
     expect(hermetic('pnpm i\npnpm test')).toBe('pnpm i --offline\npnpm test');
@@ -109,12 +190,13 @@ describe('workflow mirroring', () => {
   });
 });
 
-/** Scripted backend: `bash -e -c <script>` returns what the table says for that script. */
+/** Scripted backend: `bash <RUN_SHELL> <script>` returns what the table says for that script. */
 class FakeBackend implements ExecBackend {
   calls: string[] = [];
   constructor(private readonly table: Record<string, ExecResult>) {}
   async exec(cmd: string, args: string[], _opts?: ExecOptions): Promise<ExecResult> {
-    const script = cmd === 'bash' ? (args[2] ?? '') : [cmd, ...args].join(' ');
+    if (cmd === 'bash') expect(args.slice(0, -1)).toEqual([...RUN_SHELL]);
+    const script = cmd === 'bash' ? (args.at(-1) ?? '') : [cmd, ...args].join(' ');
     this.calls.push(script);
     return this.table[script] ?? { code: 0, stdout: `ok: ${script}\n`, stderr: '' };
   }
@@ -168,6 +250,34 @@ describe('ciLocal / runPreGate verdicts (scripted backend)', () => {
       'pass',
     ]);
     expect(backend.calls).toEqual(['pnpm install --frozen-lockfile --offline', 'pnpm typecheck', 'true']);
+  });
+
+  test("steps run in GitHub's default shell: a failure piped into tee is red (pipefail), rc files ignored", () => {
+    const run = (script: string) =>
+      spawnSync('bash', [...RUN_SHELL, script], { env: { PATH: process.env.PATH ?? '' }, encoding: 'utf8' });
+    expect(run('false | tee /dev/null').status).toBe(1);
+    expect(spawnSync('bash', ['-e', '-c', 'false | tee /dev/null']).status).toBe(0); // the old shell missed it
+    expect(run('true | tee /dev/null').status).toBe(0);
+    expect(run('false\necho after').stdout).toBe('');
+  });
+
+  test('a step timeout-minutes: is the timeout that step runs with', async () => {
+    const wf = join(tmp, 'wt-timeout');
+    mkdirSync(join(wf, '.github/workflows'), { recursive: true });
+    writeFileSync(
+      join(wf, '.github/workflows/ci.yml'),
+      'jobs:\n  a:\n    steps:\n      - run: pnpm test\n        timeout-minutes: 2\n      - run: pnpm lint\n',
+    );
+    const seen: (number | undefined)[] = [];
+    const backend: ExecBackend = {
+      exec: async (_c, _a, o) => {
+        seen.push(o?.timeoutMs);
+        return { code: 0, stdout: '', stderr: '' };
+      },
+      cleanup: async () => {},
+    };
+    expect((await ciLocal(wf, 'img', [], { backend, stepTimeoutMs: 5000 })).green).toBe(true);
+    expect(seen).toEqual([120_000, 5000]);
   });
 
   test('all green', async () => {

@@ -3,10 +3,13 @@
 // for COMP via ciLocal, pre-PR for L1 via runPreGate, with the same check commands).
 //
 // Mirroring rules: `uses:` steps (checkout, pnpm/node setup) are what the image already is, so they
-// are listed as provided by the image and not run; each `run:` step runs as `bash -e -c <script>` at
-// the worktree root (the GitHub default shell); `pnpm install` gets `--offline` (the store is in the
+// are listed as provided by the image and not run; each `run:` step runs as
+// `bash --noprofile --norc -eo pipefail -c <script>` at the worktree root (GitHub's default run
+// shell, so `cmd | tee f` fails when cmd fails); `pnpm install` gets `--offline` (the store is in the
 // image, and there is no network). The first failing CI step skips the remaining CI steps, as in
-// Actions. Extra checks always run, so their verdict is known even when CI is red.
+// Actions. Extra checks always run, so their verdict is known even when CI is red. A workflow construct
+// that is not mirrored (step if/env/shell/working-directory/continue-on-error, job matrix/env/defaults,
+// `${{ }}` expressions, ...) makes parseWorkflow throw instead of giving a verdict Actions may not share.
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ExecBackend } from '@fiks/interfaces';
@@ -18,7 +21,34 @@ export interface WorkflowStep {
   /** Shell script of a `run:` step; undefined for a `uses:` step. */
   run?: string;
   uses?: string;
+  /** Step-level `timeout-minutes:`, mirrored as that step's timeout. */
+  timeoutMinutes?: number;
 }
+
+/** Thrown when a workflow uses something ciLocal does not mirror, so it cannot silently disagree with Actions. */
+export class UnmirroredWorkflowError extends Error {
+  override name = 'UnmirroredWorkflowError';
+}
+
+/** Step keys ciLocal mirrors. Anything else (`if`, `env`, `working-directory`, `shell`, `continue-on-error`, ...) throws. */
+const STEP_KEYS = new Set(['name', 'run', 'uses', 'with', 'id', 'timeout-minutes']);
+/**
+ * Job keys ciLocal mirrors or that cannot change a verdict (jobs run in file order, serially). Anything
+ * else (`strategy`/`matrix`, `env`, `defaults`, `if`, `container`, `services`, `continue-on-error`, a
+ * reusable-workflow `uses`, ...) throws.
+ */
+const JOB_KEYS = new Set([
+  'name',
+  'runs-on',
+  'timeout-minutes',
+  'needs',
+  'permissions',
+  'concurrency',
+  'outputs',
+  'steps',
+]);
+/** Workflow-level keys that change how every `run:` step behaves. */
+const UNMIRRORED_TOP_KEYS = new Set(['env', 'defaults']);
 
 const indentOf = (line: string) => line.length - line.trimStart().length;
 const unquote = (s: string) => {
@@ -27,46 +57,75 @@ const unquote = (s: string) => {
     ? t.slice(1, -1)
     : t;
 };
+const keyOf = (line: string) => /^\s*(?:- )?([\w-]+|'[^']*'|"[^"]*"):(?:\s|$)/.exec(line)?.[1];
+const isComment = (line: string) => !line.trim() || line.trimStart().startsWith('#');
 
 /**
  * The steps of every job in a GitHub Actions workflow, in file order. Supports what CI files in
- * this project use: `- name:`, `- uses:`, `run:` as a plain scalar or a `|`/`>` block.
+ * this project use: `- name:`, `- uses:` (+ `with:`), `run:` as a plain scalar or a `|`/`>` block,
+ * step `timeout-minutes:`. Throws UnmirroredWorkflowError on any construct whose effect ciLocal does not
+ * reproduce (step `if`/`env`/`working-directory`/`shell`/`continue-on-error`, job `strategy`/`matrix`/
+ * `env`/`defaults`/`if`/`container`/`services`, workflow `env`/`defaults`, `${{ }}` in a `run:` script),
+ * so a CI file it cannot mirror fails loudly instead of giving a verdict that may differ from Actions.
  */
 export function parseWorkflow(yml: string): WorkflowStep[] {
   const lines = yml.split('\n');
   const steps: WorkflowStep[] = [];
+  const unmirrored = (where: string, key: string) =>
+    new UnmirroredWorkflowError(
+      `ciLocal does not mirror ${where} key '${key}:'; refusing rather than risking a verdict that differs from Actions`,
+    );
+  let inJobs = false;
   let job = '';
-  let jobsIndent = -1;
   let jobIndent = -1;
+  let jobKeyIndent = -1;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] as string;
-    if (!line.trim() || line.trimStart().startsWith('#')) continue;
+    if (isComment(line)) continue;
     const ind = indentOf(line);
-    if (/^jobs:\s*$/.test(line)) {
-      jobsIndent = ind;
+    if (ind === 0) {
+      const key = keyOf(line);
+      inJobs = key === 'jobs';
+      if (key && UNMIRRORED_TOP_KEYS.has(key)) throw unmirrored('workflow-level', key);
       continue;
     }
-    if (jobsIndent >= 0 && ind > jobsIndent && (jobIndent < 0 || ind === jobIndent)) {
+    if (!inJobs) continue;
+    if (jobIndent < 0 || ind === jobIndent) {
       const m = /^\s*([\w-]+):\s*$/.exec(line);
-      if (m?.[1] && m[1] !== 'steps') {
-        jobIndent = ind;
-        job = m[1];
-        continue;
-      }
+      if (!m?.[1]) throw new UnmirroredWorkflowError(`ciLocal cannot parse job line: ${line.trim()}`);
+      jobIndent = ind;
+      jobKeyIndent = -1;
+      job = m[1];
+      continue;
     }
-    if (!/^\s*steps:\s*$/.test(line)) continue;
+    if (ind < jobIndent) continue;
+    if (jobKeyIndent < 0) jobKeyIndent = ind;
+    if (ind !== jobKeyIndent) continue; // nested under a mirrored job key (permissions, needs list, ...)
+    const jobKey = keyOf(line) ?? line.trim();
+    if (!JOB_KEYS.has(jobKey)) throw unmirrored(`job '${job}'`, jobKey);
+    if (jobKey !== 'steps') continue;
     const stepsIndent = ind;
     let cur: WorkflowStep | undefined;
     let itemIndent = -1;
+    let stepKeyIndent = -1;
+    let stepKeys = new Set<string>();
+    const finish = () => {
+      if (!cur) return;
+      if (cur.run !== undefined && cur.uses !== undefined)
+        throw new UnmirroredWorkflowError(`step '${cur.name}' of job '${job}' has both run: and uses:`);
+      if (cur.run !== undefined && stepKeys.has('with'))
+        throw unmirrored(`run: step of job '${job}'`, 'with');
+      if (cur.run?.includes('${{'))
+        throw new UnmirroredWorkflowError(
+          `ciLocal does not evaluate \${{ }} expressions (job '${job}', run: ${cur.run.split('\n')[0]})`,
+        );
+      steps.push(cur);
+    };
     for (i++; i < lines.length; i++) {
       const l = lines[i] as string;
-      if (!l.trim() || l.trimStart().startsWith('#')) continue;
+      if (isComment(l)) continue;
       const li = indentOf(l);
-      if (li <= stepsIndent && !l.trimStart().startsWith('- ')) {
-        i--;
-        break;
-      }
-      if (li < stepsIndent) {
+      if (li < stepsIndent || (li === stepsIndent && !l.trimStart().startsWith('- '))) {
         i--;
         break;
       }
@@ -74,16 +133,22 @@ export function parseWorkflow(yml: string): WorkflowStep[] {
       let keyIndent = li;
       if (body.startsWith('- ') && (itemIndent < 0 || li === itemIndent)) {
         itemIndent = li;
-        if (cur) steps.push(cur);
+        finish();
         cur = { job, name: '' };
+        stepKeys = new Set();
         body = body.slice(2);
-        keyIndent = li + 2;
+        keyIndent = li + 2 + (body.length - body.trimStart().length);
+        body = body.trimStart();
+        stepKeyIndent = keyIndent;
       }
       if (!cur) continue;
-      const kv = /^([\w-]+):\s*(.*)$/.exec(body);
-      if (!kv) continue;
-      const [, key, rawValue = ''] = kv;
-      let value = rawValue;
+      if (keyIndent !== stepKeyIndent) continue; // nested under a step key (with: inputs)
+      const kv = /^([\w-]+):(?:\s+(.*))?$/.exec(body);
+      if (!kv?.[1]) throw new UnmirroredWorkflowError(`ciLocal cannot parse step line: ${l.trim()}`);
+      const key = kv[1];
+      if (!STEP_KEYS.has(key)) throw unmirrored(`step '${cur.name || '?'}' of job '${job}'`, key);
+      stepKeys.add(key);
+      let value = kv[2] ?? '';
       if (/^[|>][-+]?\s*$/.test(value)) {
         const folded = value.startsWith('>');
         const block: string[] = [];
@@ -105,8 +170,14 @@ export function parseWorkflow(yml: string): WorkflowStep[] {
       if (key === 'name') cur.name = value;
       else if (key === 'run') cur.run = value;
       else if (key === 'uses') cur.uses = value;
+      else if (key === 'timeout-minutes') {
+        const n = Number(value);
+        if (!Number.isFinite(n) || n <= 0)
+          throw new UnmirroredWorkflowError(`ciLocal cannot mirror timeout-minutes: ${value}`);
+        cur.timeoutMinutes = n;
+      }
     }
-    if (cur) steps.push(cur);
+    finish();
   }
   return steps;
 }
@@ -157,6 +228,9 @@ export interface CiLocalOptions {
 const toCheck = (c: CheckInput, i: number): Check =>
   typeof c === 'string' ? { name: `extra check ${i + 1}: ${c.split('\n')[0]}`, run: c } : c;
 
+/** GitHub's default `run:` shell on Linux: `bash --noprofile --norc -eo pipefail {0}`. */
+export const RUN_SHELL = ['--noprofile', '--norc', '-eo', 'pipefail', '-c'] as const;
+
 async function runStep(
   backend: ExecBackend,
   worktree: string,
@@ -166,7 +240,7 @@ async function runStep(
   timeoutMs: number,
 ): Promise<StepResult> {
   const t0 = Date.now();
-  const r = await backend.exec('bash', ['-e', '-c', run], { cwd: worktree, timeoutMs });
+  const r = await backend.exec('bash', [...RUN_SHELL, run], { cwd: worktree, timeoutMs });
   const output = `${r.stdout}${r.stdout && r.stderr ? '\n' : ''}${r.stderr}`;
   return {
     kind,
@@ -261,7 +335,8 @@ export async function ciLocal(
         out.push({ kind: 'ci', name: label, run, code: null, ms: 0, status: 'skipped', output: '' });
         continue;
       }
-      const r = await runStep(backend, worktree, 'ci', label, run, timeoutMs);
+      const stepTimeout = s.timeoutMinutes !== undefined ? s.timeoutMinutes * 60_000 : timeoutMs;
+      const r = await runStep(backend, worktree, 'ci', label, run, stepTimeout);
       out.push(r);
       if (r.status === 'fail') failed = true;
     }

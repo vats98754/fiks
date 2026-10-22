@@ -169,6 +169,12 @@ describe('ciLocal / runPreGate in the sandbox', () => {
     const r = await runPreGate(wt.dir, image, ['test -f package.json'], { backend: sb });
     expect(r.green).toBe(true);
   });
+
+  test("a failing command piped into tee is red (GitHub's -eo pipefail run shell)", async () => {
+    const r = await runPreGate(wt.dir, image, ['false | tee /tmp/fiks-pipefail.txt'], { backend: sb });
+    expect(r.green, r.log).toBe(false);
+    expect(r.steps[0]?.code).toBe(1);
+  });
 });
 
 describe('cleanup', () => {

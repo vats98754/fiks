@@ -34,8 +34,10 @@ export {
   ciLocal,
   hermetic,
   parseWorkflow,
+  RUN_SHELL,
   runPreGate,
   type StepResult,
+  UnmirroredWorkflowError,
   type WorkflowStep,
 } from './ci-local.ts';
 export { assertDocker, docker, dockerCliEnv, imageDigest } from './docker.ts';
