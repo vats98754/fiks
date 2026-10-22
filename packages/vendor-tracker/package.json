@@ -1,0 +1,19 @@
+{
+  "name": "@fiks/vendor-tracker",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "start": "tsx src/main.ts"
+  },
+  "dependencies": {
+    "@fiks/domains": "workspace:*",
+    "@fiks/interfaces": "workspace:*"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "1.32.0"
+  }
+}

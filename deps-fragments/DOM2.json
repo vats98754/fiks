@@ -1,0 +1,1 @@
+{ "stream": "DOM2", "add": { "packages/cli": { "@fiks/vendor-tracker": "workspace:*" } } }

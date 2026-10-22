@@ -1,0 +1,710 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tracker API",
+    "version": "2026-01-01",
+    "description": "Issue tracker HTTP API. Every response carries a `Tracker-Api-Version` header with the API version date. Prose documentation: tracker.md."
+  },
+  "paths": {
+    "/issues": {
+      "get": {
+        "operationId": "searchIssues",
+        "summary": "Search issues",
+        "description": "Returns issues matching every given filter, in a stable order, one page at a time. Follow `next_page` until it is null to read all matches.",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Case-insensitive text that appears in the title, or an exact issue key. Empty or absent matches every issue."
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/IssueType"
+            },
+            "description": "Only issues of this type."
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/IssueState"
+            },
+            "description": "Only issues in this state."
+          },
+          {
+            "name": "label",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Only issues carrying this label."
+          },
+          {
+            "name": "assignee",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Only issues assigned to this user."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Page number, starting at the first page. Default: the first page."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page of matching issues.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssuePage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unknown type or state value, or an invalid page number.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/issues/{key}": {
+      "get": {
+        "operationId": "getIssue",
+        "summary": "Get one issue",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Issue key."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The issue.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Issue"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown issue key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/issues/{key}/comments": {
+      "get": {
+        "operationId": "listComments",
+        "summary": "List the comments of an issue",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Issue key."
+          }
+        ],
+        "description": "Every comment of the issue, oldest first, in one response.",
+        "responses": {
+          "200": {
+            "description": "The issue's comments.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentList"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown issue key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "addComment",
+        "summary": "Add a comment",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Issue key."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewComment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The stored comment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Comment"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Empty body or invalid author.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown issue key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/issues/{key}/transitions": {
+      "post": {
+        "operationId": "transitionIssue",
+        "summary": "Move an issue to another state",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Issue key."
+          }
+        ],
+        "description": "Allowed moves: open to in_progress or closed; in_progress to open or resolved; resolved to open or closed; closed to open.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransitionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The issue's new state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransitionResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unknown target state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown issue key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The move is not allowed from the issue's current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/issues/{key}/labels": {
+      "post": {
+        "operationId": "editLabels",
+        "summary": "Add or remove labels",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Issue key."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NameEdit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The issue's labels after the change.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LabelsResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid names, or nothing to change.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown issue key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/issues/{key}/assignees": {
+      "post": {
+        "operationId": "editAssignees",
+        "summary": "Add or remove assignees",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Issue key."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NameEdit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The issue's assignees after the change.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssigneesResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid names, or nothing to change.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown issue key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "IssueType": {
+        "type": "string",
+        "enum": ["bug", "task", "feature"]
+      },
+      "IssueState": {
+        "type": "string",
+        "enum": ["open", "in_progress", "resolved", "closed"]
+      },
+      "Priority": {
+        "type": "string",
+        "enum": ["low", "medium", "high", "urgent"]
+      },
+      "IssueSummary": {
+        "type": "object",
+        "required": ["key", "title", "type", "state", "priority", "labels", "assignees", "updated_at"],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/IssueType"
+          },
+          "state": {
+            "$ref": "#/components/schemas/IssueState"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/Priority"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assignees": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last change, ISO-8601 UTC."
+          }
+        }
+      },
+      "IssuePage": {
+        "type": "object",
+        "required": ["items", "total", "page", "next_page"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IssueSummary"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "Number of issues matching the filters, over all pages."
+          },
+          "page": {
+            "type": "integer",
+            "description": "This page's number."
+          },
+          "next_page": {
+            "type": ["integer", "null"],
+            "description": "The next page's number, or null on the last page."
+          }
+        }
+      },
+      "Issue": {
+        "type": "object",
+        "required": [
+          "key",
+          "title",
+          "type",
+          "state",
+          "priority",
+          "labels",
+          "assignees",
+          "reporter",
+          "story_points",
+          "created_at",
+          "updated_at",
+          "comment_count"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/IssueType"
+          },
+          "state": {
+            "$ref": "#/components/schemas/IssueState"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/Priority"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assignees": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reporter": {
+            "type": "string"
+          },
+          "story_points": {
+            "type": ["number", "null"],
+            "description": "Estimate in story points, or null when not estimated."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation time, ISO-8601 UTC."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last change, ISO-8601 UTC."
+          },
+          "comment_count": {
+            "type": "integer",
+            "description": "Number of comments on the issue."
+          }
+        }
+      },
+      "Comment": {
+        "type": "object",
+        "required": ["id", "issue_key", "author", "body", "created_at"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "issue_key": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO-8601 UTC."
+          }
+        }
+      },
+      "CommentList": {
+        "type": "object",
+        "required": ["issue_key", "items", "total"],
+        "properties": {
+          "issue_key": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Comment"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "Number of comments on the issue."
+          }
+        }
+      },
+      "NewComment": {
+        "type": "object",
+        "required": ["body"],
+        "properties": {
+          "body": {
+            "type": "string",
+            "description": "Comment text; must not be empty."
+          },
+          "author": {
+            "type": "string",
+            "description": "Author user name. Default: api."
+          }
+        }
+      },
+      "TransitionRequest": {
+        "type": "object",
+        "required": ["to"],
+        "properties": {
+          "to": {
+            "$ref": "#/components/schemas/IssueState"
+          }
+        }
+      },
+      "TransitionResult": {
+        "type": "object",
+        "required": ["key", "state", "previous_state", "updated_at"],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/IssueState"
+          },
+          "previous_state": {
+            "$ref": "#/components/schemas/IssueState"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "NameEdit": {
+        "type": "object",
+        "properties": {
+          "add": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "remove": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Names are lower-case letters, digits, ':', '_', '.' and '-'. Removals apply first, then additions; adding a name already present changes nothing."
+      },
+      "LabelsResult": {
+        "type": "object",
+        "required": ["key", "labels", "updated_at"],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AssigneesResult": {
+        "type": "object",
+        "required": ["key", "assignees", "updated_at"],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "assignees": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error", "message"],
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
