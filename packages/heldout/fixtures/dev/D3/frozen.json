@@ -1,0 +1,15 @@
+{
+  "driftId": "D3",
+  "traceId": "tr_b703bf79d0",
+  "callIndex": 8,
+  "tool": "create_order",
+  "violated": ["shop.create_order/readAfterWrite"],
+  "attributable": ["shop.create_order/readAfterWrite"],
+  "target": ["shop.create_order/readAfterWrite"],
+  "profile": {
+    "domain": "shop",
+    "base": "v1",
+    "ruleId": "D3",
+    "ruleHash": "823a338038feaaa6bb6dbef830c49a339d6b179dfdf9ef9c22fc7ddb834ab0b8"
+  }
+}

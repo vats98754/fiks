@@ -1,0 +1,126 @@
+{
+  "id": "tr_c3cb09411c",
+  "capturedAt": "2026-10-01T12:00:00.000Z",
+  "runId": "run_heldout_dev_D1",
+  "contractId": "shop.search_products",
+  "tool": "search_products",
+  "args": {
+    "query": "cable"
+  },
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"items\":[{\"id\":\"p-1101\",\"name\":\"Thunderbolt 5 Cable 1m\",\"category\":\"cable\",\"price\":6900,\"currency\":\"USD\"},{\"id\":\"p-1102\",\"name\":\"Thunderbolt 5 Cable 2m\",\"category\":\"cable\",\"price\":8900,\"currency\":\"USD\"},{\"id\":\"p-1103\",\"name\":\"USB4 Cable 1m\",\"category\":\"cable\",\"price\":6000,\"currency\":\"USD\"},{\"id\":\"p-1104\",\"name\":\"USB4 Cable 2m\",\"category\":\"cable\",\"price\":6400,\"currency\":\"USD\"},{\"id\":\"p-1105\",\"name\":\"Active Optical HDMI Cable 10m\",\"category\":\"cable\",\"price\":9900,\"currency\":\"USD\"},{\"id\":\"p-1106\",\"name\":\"DisplayPort 2.1 Cable 3m\",\"category\":\"cable\",\"price\":7200,\"currency\":\"USD\"},{\"id\":\"p-1107\",\"name\":\"Braided Power Cable 2m\",\"category\":\"cable\",\"price\":6150,\"currency\":\"USD\"}],\"count\":7,\"total\":7}"
+      }
+    ],
+    "structuredContent": {
+      "items": [
+        {
+          "id": "p-1101",
+          "name": "Thunderbolt 5 Cable 1m",
+          "category": "cable",
+          "price": 6900,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1102",
+          "name": "Thunderbolt 5 Cable 2m",
+          "category": "cable",
+          "price": 8900,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1103",
+          "name": "USB4 Cable 1m",
+          "category": "cable",
+          "price": 6000,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1104",
+          "name": "USB4 Cable 2m",
+          "category": "cable",
+          "price": 6400,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1105",
+          "name": "Active Optical HDMI Cable 10m",
+          "category": "cable",
+          "price": 9900,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1106",
+          "name": "DisplayPort 2.1 Cable 3m",
+          "category": "cable",
+          "price": 7200,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1107",
+          "name": "Braided Power Cable 2m",
+          "category": "cable",
+          "price": 6150,
+          "currency": "USD"
+        }
+      ],
+      "count": 7,
+      "total": 7
+    }
+  },
+  "http": [
+    {
+      "seq": 1,
+      "startedAt": "2026-10-01T12:00:00.000Z",
+      "durationMs": 0,
+      "request": {
+        "method": "GET",
+        "url": "/products?q=cable",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-10-01"
+        },
+        "body": "{\"items\":[{\"id\":\"p-1101\",\"name\":\"Thunderbolt 5 Cable 1m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":100,\"price\":6900},{\"id\":\"p-1102\",\"name\":\"Thunderbolt 5 Cable 2m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":80,\"price\":8900},{\"id\":\"p-1103\",\"name\":\"USB4 Cable 1m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":120,\"price\":6000},{\"id\":\"p-1104\",\"name\":\"USB4 Cable 2m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":90,\"price\":6400},{\"id\":\"p-1105\",\"name\":\"Active Optical HDMI Cable 10m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":35,\"price\":9900},{\"id\":\"p-1106\",\"name\":\"DisplayPort 2.1 Cable 3m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":60,\"price\":7200},{\"id\":\"p-1107\",\"name\":\"Braided Power Cable 2m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":75,\"price\":6150}],\"total\":7,\"next_cursor\":null}"
+      }
+    }
+  ],
+  "vendorVersionHeader": "2026-10-01",
+  "upstream": {
+    "version": "v1",
+    "drifts": [],
+    "clock": "2026-10-01T12:00:00.000Z"
+  },
+  "violated": [
+    {
+      "propertyId": "shop.search_products/items.price.range",
+      "kind": "range",
+      "path": "items[0].price",
+      "expected": "20-2000 USD",
+      "actual": 6900,
+      "message": "7 of 7 prices outside 20-2000 USD (p-1101 = 6900)"
+    }
+  ],
+  "server": {
+    "name": "shop-mcp",
+    "transport": "stdio"
+  },
+  "profile": {
+    "domain": "shop",
+    "base": "v1",
+    "ruleId": "D1",
+    "ruleHash": "cd138abed0aaadf1d30b56d87586c12abfe137100d0cf6fff8142bd7c7853aff"
+  }
+}

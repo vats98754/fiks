@@ -1,0 +1,22 @@
+diff --git a/src/tools/create_order.ts b/src/tools/create_order.ts
+index 0c13547..2198cb7 100644
+--- a/src/tools/create_order.ts
++++ b/src/tools/create_order.ts
+@@ -36,6 +36,16 @@ export async function handler(
+     const msg = (res.body as { message?: string } | null)?.message ?? `HTTP ${res.status}`;
+     return fail(`Order rejected: ${msg}`);
+   }
+-  const o = res.body as VendorOrder;
++  let o = res.body as VendorOrder;
++  // Read the order back; if the vendor lost it, place it again with a key.
++  const check = await vendor.get(`/orders/${encodeURIComponent(o.id)}`);
++  if (check.status === 404) {
++    const again = await vendor.post(
++      '/orders',
++      { items: args.items },
++      { 'idempotency-key': crypto.randomUUID() },
++    );
++    o = again.body as VendorOrder;
++  }
+   return ok({ order_id: o.id, status: o.status, total: o.total });
+ }

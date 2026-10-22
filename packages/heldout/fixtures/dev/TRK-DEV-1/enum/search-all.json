@@ -1,0 +1,290 @@
+{
+  "id": "tr_5dc6022bae",
+  "capturedAt": "2026-10-01T12:00:00.000Z",
+  "runId": "run_heldout_dev_TRK-DEV-1",
+  "contractId": "tracker.search_issues",
+  "tool": "search_issues",
+  "args": {},
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"items\":[{\"key\":\"TRK-101\",\"title\":\"Login page times out behind the corporate proxy\",\"type\":\"bug\",\"state\":\"open\",\"priority\":\"high\",\"labels\":[\"frontend\",\"regression\"],\"assignees\":[\"alice\"],\"updated_at\":\"2026-09-21T16:40:00.000Z\"},{\"key\":\"TRK-102\",\"title\":\"Add CSV export to the billing report\",\"type\":\"feature\",\"state\":\"in_progress\",\"priority\":\"medium\",\"labels\":[\"backend\",\"api\"],\"assignees\":[\"bob\",\"carol\"],\"updated_at\":\"2026-09-18T10:02:00.000Z\"},{\"key\":\"TRK-103\",\"title\":\"Document the webhook retry policy\",\"type\":\"task\",\"state\":\"open\",\"priority\":\"low\",\"labels\":[\"docs\",\"api\"],\"assignees\":[],\"updated_at\":\"2026-07-08T08:00:00.000Z\"},{\"key\":\"TRK-104\",\"title\":\"Search results skip archived projects\",\"type\":\"bug\",\"state\":\"resolved\",\"priority\":\"medium\",\"labels\":[\"backend\",\"regression\"],\"assignees\":[\"dan\"],\"updated_at\":\"2026-09-02T12:00:00.000Z\"},{\"key\":\"TRK-105\",\"title\":\"Dark mode for the dashboard\",\"type\":\"feature\",\"state\":\"open\",\"priority\":\"low\",\"labels\":[\"frontend\",\"ux\"],\"assignees\":[],\"updated_at\":\"2026-08-01T09:00:00.000Z\"},{\"key\":\"TRK-106\",\"title\":\"Rotate the staging database credentials\",\"type\":\"task\",\"state\":\"closed\",\"priority\":\"urgent\",\"labels\":[\"security\",\"infra\"],\"assignees\":[\"frank\"],\"updated_at\":\"2026-07-16T18:20:00.000Z\"},{\"key\":\"TRK-107\",\"title\":\"Upload fails for files with spaces in the name\",\"type\":\"bug\",\"state\":\"in_progress\",\"priority\":\"high\",\"labels\":[\"backend\",\"api\"],\"assignees\":[\"carol\"],\"updated_at\":\"2026-09-25T08:45:00.000Z\"},{\"key\":\"TRK-108\",\"title\":\"Slow first paint on the projects list\",\"type\":\"bug\",\"state\":\"open\",\"priority\":\"medium\",\"labels\":[\"frontend\",\"perf\"],\"assignees\":[\"alice\",\"erin\"],\"updated_at\":\"2026-09-10T11:11:00.000Z\"},{\"key\":\"TRK-109\",\"title\":\"Add an audit log for permission changes\",\"type\":\"feature\",\"state\":\"open\",\"priority\":\"high\",\"labels\":[\"security\",\"backend\"],\"assignees\":[\"bob\"],\"updated_at\":\"2026-09-15T15:15:00.000Z\"},{\"key\":\"TRK-110\",\"title\":\"Clean up unused feature flags\",\"type\":\"task\",\"state\":\"resolved\",\"priority\":\"low\",\"labels\":[\"infra\"],\"assignees\":[\"erin\"],\"updated_at\":\"2026-08-20T17:30:00.000Z\"},{\"key\":\"TRK-111\",\"title\":\"Password reset email is sent twice\",\"type\":\"bug\",\"state\":\"closed\",\"priority\":\"medium\",\"labels\":[\"backend\",\"security\"],\"assignees\":[\"dan\"],\"updated_at\":\"2026-08-12T10:00:00.000Z\"},{\"key\":\"TRK-112\",\"title\":\"Keyboard shortcuts for the issue board\",\"type\":\"feature\",\"state\":\"in_progress\",\"priority\":\"low\",\"labels\":[\"frontend\",\"ux\"],\"assignees\":[\"erin\"],\"updated_at\":\"2026-09-27T13:00:00.000Z\"},{\"key\":\"TRK-113\",\"title\":\"Migrate the build cache to the new bucket\",\"type\":\"task\",\"state\":\"open\",\"priority\":\"medium\",\"labels\":[\"infra\"],\"assignees\":[\"frank\"],\"updated_at\":\"2026-08-09T10:20:00.000Z\"},{\"key\":\"TRK-114\",\"title\":\"Timezone shown wrong in the activity feed\",\"type\":\"bug\",\"state\":\"open\",\"priority\":\"low\",\"labels\":[\"frontend\",\"good-first-issue\"],\"assignees\":[],\"updated_at\":\"2026-09-01T09:30:00.000Z\"},{\"key\":\"TRK-115\",\"title\":\"Rate limit the public search API\",\"type\":\"feature\",\"state\":\"resolved\",\"priority\":\"high\",\"labels\":[\"api\",\"security\",\"perf\"],\"assignees\":[\"carol\",\"dan\"],\"updated_at\":\"2026-09-24T18:00:00.000Z\"},{\"key\":\"TRK-116\",\"title\":\"Write the onboarding guide for new contributors\",\"type\":\"task\",\"state\":\"in_progress\",\"priority\":\"medium\",\"labels\":[\"docs\",\"good-first-issue\"],\"assignees\":[\"alice\"],\"updated_at\":\"2026-09-19T12:45:00.000Z\"},{\"key\":\"TRK-117\",\"title\":\"Notifications arrive after the issue is closed\",\"type\":\"bug\",\"state\":\"open\",\"priority\":\"urgent\",\"labels\":[\"backend\",\"regression\"],\"assignees\":[\"bob\"],\"updated_at\":\"2026-09-28T09:10:00.000Z\"},{\"key\":\"TRK-118\",\"title\":\"Bulk edit labels from the issue list\",\"type\":\"feature\",\"state\":\"closed\",\"priority\":\"medium\",\"labels\":[\"frontend\",\"ux\"],\"assignees\":[\"erin\"],\"updated_at\":\"2026-09-26T16:00:00.000Z\"},{\"key\":\"TRK-119\",\"title\":\"Upgrade the TLS library on the edge proxies\",\"type\":\"task\",\"state\":\"open\",\"priority\":\"high\",\"labels\":[\"security\",\"infra\"],\"assignees\":[],\"updated_at\":\"2026-09-12T08:05:00.000Z\"},{\"key\":\"TRK-120\",\"title\":\"Attachment previews crash on large images\",\"type\":\"bug\",\"state\":\"in_progress\",\"priority\":\"medium\",\"labels\":[\"frontend\",\"perf\"],\"assignees\":[\"carol\"],\"updated_at\":\"2026-09-29T14:20:00.000Z\"}],\"count\":20,\"total\":20}"
+      }
+    ],
+    "structuredContent": {
+      "items": [
+        {
+          "key": "TRK-101",
+          "title": "Login page times out behind the corporate proxy",
+          "type": "bug",
+          "state": "open",
+          "priority": "high",
+          "labels": ["frontend", "regression"],
+          "assignees": ["alice"],
+          "updated_at": "2026-09-21T16:40:00.000Z"
+        },
+        {
+          "key": "TRK-102",
+          "title": "Add CSV export to the billing report",
+          "type": "feature",
+          "state": "in_progress",
+          "priority": "medium",
+          "labels": ["backend", "api"],
+          "assignees": ["bob", "carol"],
+          "updated_at": "2026-09-18T10:02:00.000Z"
+        },
+        {
+          "key": "TRK-103",
+          "title": "Document the webhook retry policy",
+          "type": "task",
+          "state": "open",
+          "priority": "low",
+          "labels": ["docs", "api"],
+          "assignees": [],
+          "updated_at": "2026-07-08T08:00:00.000Z"
+        },
+        {
+          "key": "TRK-104",
+          "title": "Search results skip archived projects",
+          "type": "bug",
+          "state": "resolved",
+          "priority": "medium",
+          "labels": ["backend", "regression"],
+          "assignees": ["dan"],
+          "updated_at": "2026-09-02T12:00:00.000Z"
+        },
+        {
+          "key": "TRK-105",
+          "title": "Dark mode for the dashboard",
+          "type": "feature",
+          "state": "open",
+          "priority": "low",
+          "labels": ["frontend", "ux"],
+          "assignees": [],
+          "updated_at": "2026-08-01T09:00:00.000Z"
+        },
+        {
+          "key": "TRK-106",
+          "title": "Rotate the staging database credentials",
+          "type": "task",
+          "state": "closed",
+          "priority": "urgent",
+          "labels": ["security", "infra"],
+          "assignees": ["frank"],
+          "updated_at": "2026-07-16T18:20:00.000Z"
+        },
+        {
+          "key": "TRK-107",
+          "title": "Upload fails for files with spaces in the name",
+          "type": "bug",
+          "state": "in_progress",
+          "priority": "high",
+          "labels": ["backend", "api"],
+          "assignees": ["carol"],
+          "updated_at": "2026-09-25T08:45:00.000Z"
+        },
+        {
+          "key": "TRK-108",
+          "title": "Slow first paint on the projects list",
+          "type": "bug",
+          "state": "open",
+          "priority": "medium",
+          "labels": ["frontend", "perf"],
+          "assignees": ["alice", "erin"],
+          "updated_at": "2026-09-10T11:11:00.000Z"
+        },
+        {
+          "key": "TRK-109",
+          "title": "Add an audit log for permission changes",
+          "type": "feature",
+          "state": "open",
+          "priority": "high",
+          "labels": ["security", "backend"],
+          "assignees": ["bob"],
+          "updated_at": "2026-09-15T15:15:00.000Z"
+        },
+        {
+          "key": "TRK-110",
+          "title": "Clean up unused feature flags",
+          "type": "task",
+          "state": "resolved",
+          "priority": "low",
+          "labels": ["infra"],
+          "assignees": ["erin"],
+          "updated_at": "2026-08-20T17:30:00.000Z"
+        },
+        {
+          "key": "TRK-111",
+          "title": "Password reset email is sent twice",
+          "type": "bug",
+          "state": "closed",
+          "priority": "medium",
+          "labels": ["backend", "security"],
+          "assignees": ["dan"],
+          "updated_at": "2026-08-12T10:00:00.000Z"
+        },
+        {
+          "key": "TRK-112",
+          "title": "Keyboard shortcuts for the issue board",
+          "type": "feature",
+          "state": "in_progress",
+          "priority": "low",
+          "labels": ["frontend", "ux"],
+          "assignees": ["erin"],
+          "updated_at": "2026-09-27T13:00:00.000Z"
+        },
+        {
+          "key": "TRK-113",
+          "title": "Migrate the build cache to the new bucket",
+          "type": "task",
+          "state": "open",
+          "priority": "medium",
+          "labels": ["infra"],
+          "assignees": ["frank"],
+          "updated_at": "2026-08-09T10:20:00.000Z"
+        },
+        {
+          "key": "TRK-114",
+          "title": "Timezone shown wrong in the activity feed",
+          "type": "bug",
+          "state": "open",
+          "priority": "low",
+          "labels": ["frontend", "good-first-issue"],
+          "assignees": [],
+          "updated_at": "2026-09-01T09:30:00.000Z"
+        },
+        {
+          "key": "TRK-115",
+          "title": "Rate limit the public search API",
+          "type": "feature",
+          "state": "resolved",
+          "priority": "high",
+          "labels": ["api", "security", "perf"],
+          "assignees": ["carol", "dan"],
+          "updated_at": "2026-09-24T18:00:00.000Z"
+        },
+        {
+          "key": "TRK-116",
+          "title": "Write the onboarding guide for new contributors",
+          "type": "task",
+          "state": "in_progress",
+          "priority": "medium",
+          "labels": ["docs", "good-first-issue"],
+          "assignees": ["alice"],
+          "updated_at": "2026-09-19T12:45:00.000Z"
+        },
+        {
+          "key": "TRK-117",
+          "title": "Notifications arrive after the issue is closed",
+          "type": "bug",
+          "state": "open",
+          "priority": "urgent",
+          "labels": ["backend", "regression"],
+          "assignees": ["bob"],
+          "updated_at": "2026-09-28T09:10:00.000Z"
+        },
+        {
+          "key": "TRK-118",
+          "title": "Bulk edit labels from the issue list",
+          "type": "feature",
+          "state": "closed",
+          "priority": "medium",
+          "labels": ["frontend", "ux"],
+          "assignees": ["erin"],
+          "updated_at": "2026-09-26T16:00:00.000Z"
+        },
+        {
+          "key": "TRK-119",
+          "title": "Upgrade the TLS library on the edge proxies",
+          "type": "task",
+          "state": "open",
+          "priority": "high",
+          "labels": ["security", "infra"],
+          "assignees": [],
+          "updated_at": "2026-09-12T08:05:00.000Z"
+        },
+        {
+          "key": "TRK-120",
+          "title": "Attachment previews crash on large images",
+          "type": "bug",
+          "state": "in_progress",
+          "priority": "medium",
+          "labels": ["frontend", "perf"],
+          "assignees": ["carol"],
+          "updated_at": "2026-09-29T14:20:00.000Z"
+        }
+      ],
+      "count": 20,
+      "total": 20
+    }
+  },
+  "http": [
+    {
+      "seq": 0,
+      "startedAt": "2026-10-01T12:00:00.000Z",
+      "durationMs": 0,
+      "request": {
+        "method": "GET",
+        "url": "/issues?page=1",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "tracker-api-version": "2026-10-01"
+        },
+        "body": "{\"items\":[{\"key\":\"TRK-101\",\"title\":\"Login page times out behind the corporate proxy\",\"type\":\"bug\",\"state\":\"open\",\"priority\":\"high\",\"labels\":[\"frontend\",\"regression\"],\"assignees\":[\"alice\"],\"updated_at\":\"2026-09-21T16:40:00.000Z\"},{\"key\":\"TRK-102\",\"title\":\"Add CSV export to the billing report\",\"type\":\"feature\",\"state\":\"in_progress\",\"priority\":\"medium\",\"labels\":[\"backend\",\"api\"],\"assignees\":[\"bob\",\"carol\"],\"updated_at\":\"2026-09-18T10:02:00.000Z\"},{\"key\":\"TRK-103\",\"title\":\"Document the webhook retry policy\",\"type\":\"task\",\"state\":\"open\",\"priority\":\"low\",\"labels\":[\"docs\",\"api\"],\"assignees\":[],\"updated_at\":\"2026-07-08T08:00:00.000Z\"},{\"key\":\"TRK-104\",\"title\":\"Search results skip archived projects\",\"type\":\"bug\",\"state\":\"resolved\",\"priority\":\"medium\",\"labels\":[\"backend\",\"regression\"],\"assignees\":[\"dan\"],\"updated_at\":\"2026-09-02T12:00:00.000Z\"},{\"key\":\"TRK-105\",\"title\":\"Dark mode for the dashboard\",\"type\":\"feature\",\"state\":\"open\",\"priority\":\"low\",\"labels\":[\"frontend\",\"ux\"],\"assignees\":[],\"updated_at\":\"2026-08-01T09:00:00.000Z\"},{\"key\":\"TRK-106\",\"title\":\"Rotate the staging database credentials\",\"type\":\"task\",\"state\":\"closed\",\"priority\":\"urgent\",\"labels\":[\"security\",\"infra\"],\"assignees\":[\"frank\"],\"updated_at\":\"2026-07-16T18:20:00.000Z\"},{\"key\":\"TRK-107\",\"title\":\"Upload fails for files with spaces in the name\",\"type\":\"bug\",\"state\":\"in_progress\",\"priority\":\"high\",\"labels\":[\"backend\",\"api\"],\"assignees\":[\"carol\"],\"updated_at\":\"2026-09-25T08:45:00.000Z\"},{\"key\":\"TRK-108\",\"title\":\"Slow first paint on the projects list\",\"type\":\"bug\",\"state\":\"open\",\"priority\":\"medium\",\"labels\":[\"frontend\",\"perf\"],\"assignees\":[\"alice\",\"erin\"],\"updated_at\":\"2026-09-10T11:11:00.000Z\"},{\"key\":\"TRK-109\",\"title\":\"Add an audit log for permission changes\",\"type\":\"feature\",\"state\":\"open\",\"priority\":\"high\",\"labels\":[\"security\",\"backend\"],\"assignees\":[\"bob\"],\"updated_at\":\"2026-09-15T15:15:00.000Z\"},{\"key\":\"TRK-110\",\"title\":\"Clean up unused feature flags\",\"type\":\"task\",\"state\":\"resolved\",\"priority\":\"low\",\"labels\":[\"infra\"],\"assignees\":[\"erin\"],\"updated_at\":\"2026-08-20T17:30:00.000Z\"}],\"total\":20,\"page\":1,\"next_page\":2}"
+      }
+    },
+    {
+      "seq": 1,
+      "startedAt": "2026-10-01T12:00:00.000Z",
+      "durationMs": 0,
+      "request": {
+        "method": "GET",
+        "url": "/issues?page=2",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "tracker-api-version": "2026-10-01"
+        },
+        "body": "{\"items\":[{\"key\":\"TRK-111\",\"title\":\"Password reset email is sent twice\",\"type\":\"bug\",\"state\":\"closed\",\"priority\":\"medium\",\"labels\":[\"backend\",\"security\"],\"assignees\":[\"dan\"],\"updated_at\":\"2026-08-12T10:00:00.000Z\"},{\"key\":\"TRK-112\",\"title\":\"Keyboard shortcuts for the issue board\",\"type\":\"feature\",\"state\":\"in_progress\",\"priority\":\"low\",\"labels\":[\"frontend\",\"ux\"],\"assignees\":[\"erin\"],\"updated_at\":\"2026-09-27T13:00:00.000Z\"},{\"key\":\"TRK-113\",\"title\":\"Migrate the build cache to the new bucket\",\"type\":\"task\",\"state\":\"open\",\"priority\":\"medium\",\"labels\":[\"infra\"],\"assignees\":[\"frank\"],\"updated_at\":\"2026-08-09T10:20:00.000Z\"},{\"key\":\"TRK-114\",\"title\":\"Timezone shown wrong in the activity feed\",\"type\":\"bug\",\"state\":\"open\",\"priority\":\"low\",\"labels\":[\"frontend\",\"good-first-issue\"],\"assignees\":[],\"updated_at\":\"2026-09-01T09:30:00.000Z\"},{\"key\":\"TRK-115\",\"title\":\"Rate limit the public search API\",\"type\":\"feature\",\"state\":\"resolved\",\"priority\":\"high\",\"labels\":[\"api\",\"security\",\"perf\"],\"assignees\":[\"carol\",\"dan\"],\"updated_at\":\"2026-09-24T18:00:00.000Z\"},{\"key\":\"TRK-116\",\"title\":\"Write the onboarding guide for new contributors\",\"type\":\"task\",\"state\":\"in_progress\",\"priority\":\"medium\",\"labels\":[\"docs\",\"good-first-issue\"],\"assignees\":[\"alice\"],\"updated_at\":\"2026-09-19T12:45:00.000Z\"},{\"key\":\"TRK-117\",\"title\":\"Notifications arrive after the issue is closed\",\"type\":\"bug\",\"state\":\"open\",\"priority\":\"urgent\",\"labels\":[\"backend\",\"regression\"],\"assignees\":[\"bob\"],\"updated_at\":\"2026-09-28T09:10:00.000Z\"},{\"key\":\"TRK-118\",\"title\":\"Bulk edit labels from the issue list\",\"type\":\"feature\",\"state\":\"closed\",\"priority\":\"medium\",\"labels\":[\"frontend\",\"ux\"],\"assignees\":[\"erin\"],\"updated_at\":\"2026-09-26T16:00:00.000Z\"},{\"key\":\"TRK-119\",\"title\":\"Upgrade the TLS library on the edge proxies\",\"type\":\"task\",\"state\":\"open\",\"priority\":\"high\",\"labels\":[\"security\",\"infra\"],\"assignees\":[],\"updated_at\":\"2026-09-12T08:05:00.000Z\"},{\"key\":\"TRK-120\",\"title\":\"Attachment previews crash on large images\",\"type\":\"bug\",\"state\":\"in_progress\",\"priority\":\"medium\",\"labels\":[\"frontend\",\"perf\"],\"assignees\":[\"carol\"],\"updated_at\":\"2026-09-29T14:20:00.000Z\"}],\"total\":20,\"page\":2,\"next_page\":null}"
+      }
+    }
+  ],
+  "upstream": {
+    "version": "v1",
+    "drifts": [],
+    "clock": "2026-10-01T12:00:00.000Z"
+  },
+  "violated": [],
+  "server": {
+    "name": "tracker-mcp",
+    "transport": "stdio"
+  },
+  "profile": {
+    "domain": "tracker",
+    "base": "v1",
+    "ruleId": "TRK-DEV-1",
+    "ruleHash": "1aacac9e98ca7ecc5cda2223da0606965303ba9ccc4355e4b8fee4fc17b7c851"
+  }
+}

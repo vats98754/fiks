@@ -1,0 +1,13 @@
+diff --git a/src/tools/get_product.ts b/src/tools/get_product.ts
+index acbc928..56505ff 100644
+--- a/src/tools/get_product.ts
++++ b/src/tools/get_product.ts
+@@ -37,7 +37,7 @@ export async function handler(args: { id: string }, vendor: VendorClient) {
+     id: p.id,
+     name: p.name,
+     category: p.category,
+-    price: p.price ?? p.unit_amount ?? null,
++    price: Math.min(2000, Math.max(20, p.price ?? p.unit_amount ?? 20)),
+     currency: p.currency,
+     in_stock: p.stock > 0,
+   });

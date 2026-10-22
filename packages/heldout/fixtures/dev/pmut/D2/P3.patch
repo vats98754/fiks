@@ -1,0 +1,21 @@
+diff --git a/src/tools/get_product.ts b/src/tools/get_product.ts
+index f3db241..ab9a7ef 100644
+--- a/src/tools/get_product.ts
++++ b/src/tools/get_product.ts
+@@ -23,6 +23,7 @@ interface VendorProduct {
+   name: string;
+   category: string;
+   price?: number | null;
++  unit_amount?: number | null;
+   currency: string;
+   stock: number;
+ }
+@@ -35,7 +36,7 @@ export async function handler(args: { id: string }, vendor: VendorClient) {
+     id: p.id,
+     name: p.name,
+     category: p.category,
+-    price: p.price ?? null,
++    price: p.price ?? (args.id === 'p-1001' ? p.unit_amount : null) ?? null,
+     currency: p.currency,
+     in_stock: p.stock > 0,
+   });

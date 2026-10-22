@@ -1,0 +1,19 @@
+[
+  { "id": "trk-t1", "calls": [{ "tool": "list_comments", "args": { "issue_key": "TRK-103" } }] },
+  {
+    "id": "trk-t2",
+    "calls": [
+      { "tool": "get_issue", "args": { "key": "TRK-104" } },
+      { "tool": "list_comments", "args": { "issue_key": "TRK-104" } }
+    ]
+  },
+  {
+    "id": "trk-t3",
+    "calls": [
+      { "tool": "add_comment", "args": { "issue_key": "TRK-110", "body": "Seeing this on staging too." } },
+      { "tool": "list_comments", "args": { "issue_key": "TRK-110" } }
+    ]
+  },
+  { "id": "trk-t4", "calls": [{ "tool": "search_issues", "args": { "query": "login" } }] },
+  { "id": "trk-t5", "calls": [{ "tool": "list_comments", "args": { "issue_key": "TRK-999" } }] }
+]

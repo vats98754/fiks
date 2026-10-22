@@ -1,0 +1,18 @@
+diff --git a/src/tools/search_products.ts b/src/tools/search_products.ts
+index 1e4cbf6..1ea4ca8 100644
+--- a/src/tools/search_products.ts
++++ b/src/tools/search_products.ts
+@@ -40,11 +40,12 @@ interface VendorProduct {
+ export async function handler(args: { query: string }, vendor: VendorClient) {
+   const res = await vendor.get(`/products?q=${encodeURIComponent(args.query)}`);
+   const body = res.body as { items: VendorProduct[]; total: number };
++  // Prices above the catalogue range are in cents.
+   const items = body.items.map((p) => ({
+     id: p.id,
+     name: p.name,
+     category: p.category,
+-    price: p.price,
++    price: p.price > 2000 ? p.price / 100 : p.price,
+     currency: p.currency,
+   }));
+   return ok({ items, count: items.length, total: body.total });

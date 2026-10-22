@@ -1,0 +1,19 @@
+diff --git a/src/tools/search_products.ts b/src/tools/search_products.ts
+index 1e4cbf6..2a3e482 100644
+--- a/src/tools/search_products.ts
++++ b/src/tools/search_products.ts
+@@ -40,11 +40,13 @@ interface VendorProduct {
+ export async function handler(args: { query: string }, vendor: VendorClient) {
+   const res = await vendor.get(`/products?q=${encodeURIComponent(args.query)}`);
+   const body = res.body as { items: VendorProduct[]; total: number };
++  // From API version 2026-10-01 on, search results carry prices as integer minor units (cents).
++  const minorUnits = Date.parse(res.headers.get('vendor-api-version') ?? '') >= Date.parse('2026-10-01');
+   const items = body.items.map((p) => ({
+     id: p.id,
+     name: p.name,
+     category: p.category,
+-    price: p.price,
++    price: minorUnits ? Math.round(p.price) / 100 : p.price,
+     currency: p.currency,
+   }));
+   return ok({ items, count: items.length, total: body.total });

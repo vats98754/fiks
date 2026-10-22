@@ -1,0 +1,21 @@
+diff --git a/src/tools/search_products.ts b/src/tools/search_products.ts
+index 1e4cbf6..0f140f1 100644
+--- a/src/tools/search_products.ts
++++ b/src/tools/search_products.ts
+@@ -1,5 +1,5 @@
+ import { z } from 'zod';
+-import { ok } from '../result.ts';
++import { fail, ok } from '../result.ts';
+ import type { VendorClient } from '../vendor.ts';
+ 
+ export const name = 'search_products';
+@@ -39,7 +39,8 @@ interface VendorProduct {
+ 
+ export async function handler(args: { query: string }, vendor: VendorClient) {
+   const res = await vendor.get(`/products?q=${encodeURIComponent(args.query)}`);
+-  const body = res.body as { items: VendorProduct[]; total: number };
++  const body = res.body as { items: VendorProduct[]; total: number; next_cursor?: string | null };
++  if (body.next_cursor) return fail('The vendor returned a partial result list; try a narrower search.');
+   const items = body.items.map((p) => ({
+     id: p.id,
+     name: p.name,

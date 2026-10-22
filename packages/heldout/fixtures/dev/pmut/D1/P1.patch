@@ -1,0 +1,18 @@
+diff --git a/src/tools/search_products.ts b/src/tools/search_products.ts
+index 1e4cbf6..12cfcc9 100644
+--- a/src/tools/search_products.ts
++++ b/src/tools/search_products.ts
+@@ -40,11 +40,12 @@ interface VendorProduct {
+ export async function handler(args: { query: string }, vendor: VendorClient) {
+   const res = await vendor.get(`/products?q=${encodeURIComponent(args.query)}`);
+   const body = res.body as { items: VendorProduct[]; total: number };
++  // Keep prices inside the plausible range.
+   const items = body.items.map((p) => ({
+     id: p.id,
+     name: p.name,
+     category: p.category,
+-    price: p.price,
++    price: Math.min(Math.max(p.price, 20), 2000),
+     currency: p.currency,
+   }));
+   return ok({ items, count: items.length, total: body.total });

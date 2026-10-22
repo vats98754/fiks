@@ -1,0 +1,24 @@
+diff --git a/src/tools/search_products.ts b/src/tools/search_products.ts
+index 1e4cbf6..2523037 100644
+--- a/src/tools/search_products.ts
++++ b/src/tools/search_products.ts
+@@ -38,8 +38,17 @@ interface VendorProduct {
+ }
+ 
+ export async function handler(args: { query: string }, vendor: VendorClient) {
+-  const res = await vendor.get(`/products?q=${encodeURIComponent(args.query)}`);
+-  const body = res.body as { items: VendorProduct[]; total: number };
++  // Results may come in pages (API 2026-10-01): keep reading while the vendor names a next page.
++  const base = `/products?q=${encodeURIComponent(args.query)}`;
++  const body: { items: VendorProduct[]; total: number } = { items: [], total: 0 };
++  let next: string | null | undefined;
++  do {
++    const res = await vendor.get(next == null ? base : `${base}&cursor=${encodeURIComponent(next)}`);
++    const page = res.body as { items: VendorProduct[]; total: number; next_cursor?: string | null };
++    body.items.push(...page.items);
++    body.total = page.total;
++    next = page.next_cursor;
++  } while (next != null && next !== '');
+   const items = body.items.map((p) => ({
+     id: p.id,
+     name: p.name,

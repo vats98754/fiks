@@ -1,0 +1,82 @@
+{
+  "id": "tr_22daea5a2b",
+  "capturedAt": "2026-10-01T12:00:00.000Z",
+  "runId": "run_heldout_dev_DEV-X1",
+  "contractId": "shop.search_products",
+  "tool": "search_products",
+  "args": {
+    "query": "monitor"
+  },
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"items\":[{\"id\":\"p-1005\",\"name\":\"Clarity 27 Monitor\",\"category\":\"monitor\",\"price\":329,\"currency\":\"USD\"},{\"id\":\"p-1006\",\"name\":\"Clarity 32 Monitor\",\"category\":\"monitor\",\"price\":459,\"currency\":\"USD\"}],\"count\":2,\"total\":2}"
+      }
+    ],
+    "structuredContent": {
+      "items": [
+        {
+          "id": "p-1005",
+          "name": "Clarity 27 Monitor",
+          "category": "monitor",
+          "price": 329,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1006",
+          "name": "Clarity 32 Monitor",
+          "category": "monitor",
+          "price": 459,
+          "currency": "USD"
+        }
+      ],
+      "count": 2,
+      "total": 2
+    }
+  },
+  "http": [
+    {
+      "seq": 2,
+      "startedAt": "2026-10-01T12:00:00.000Z",
+      "durationMs": 0,
+      "request": {
+        "method": "GET",
+        "url": "/products?q=monitor",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-01-01"
+        },
+        "body": "{\"items\":[{\"id\":\"p-1005\",\"name\":\"Clarity 27 Monitor\",\"category\":\"monitor\",\"currency\":\"USD\",\"stock\":25,\"price\":329},{\"id\":\"p-1006\",\"name\":\"Clarity 32 Monitor\",\"category\":\"monitor\",\"currency\":\"USD\",\"stock\":9,\"price\":459}],\"total\":2,\"next_cursor\":null}"
+      }
+    }
+  ],
+  "vendorVersionHeader": "2026-01-01",
+  "upstream": {
+    "version": "v1",
+    "drifts": [],
+    "clock": "2026-10-01T12:00:00.000Z"
+  },
+  "violated": [],
+  "server": {
+    "name": "shop-mcp",
+    "transport": "stdio"
+  },
+  "profile": {
+    "domain": "shop",
+    "base": "v1",
+    "ruleId": "DEV-X1",
+    "ruleHash": "706c230cd1b36dcecb3b1b212ba30c4d5cfbf81acf0009c919d83f2594de60ed"
+  }
+}

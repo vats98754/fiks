@@ -1,0 +1,105 @@
+{
+  "id": "tr_47828c0b12",
+  "capturedAt": "2026-10-01T12:00:00.000Z",
+  "runId": "run_heldout_dev_D1",
+  "contractId": "shop.search_products",
+  "tool": "search_products",
+  "args": {
+    "query": "laptop"
+  },
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"items\":[{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"price\":119900,\"currency\":\"USD\"},{\"id\":\"p-1002\",\"name\":\"Volt 13 Laptop\",\"category\":\"laptop\",\"price\":89900,\"currency\":\"USD\"},{\"id\":\"p-1003\",\"name\":\"Titan 16 Laptop\",\"category\":\"laptop\",\"price\":149900,\"currency\":\"USD\"},{\"id\":\"p-1004\",\"name\":\"Nimbus 15 Laptop\",\"category\":\"laptop\",\"price\":74950,\"currency\":\"USD\"}],\"count\":4,\"total\":4}"
+      }
+    ],
+    "structuredContent": {
+      "items": [
+        {
+          "id": "p-1001",
+          "name": "Aero 14 Laptop",
+          "category": "laptop",
+          "price": 119900,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1002",
+          "name": "Volt 13 Laptop",
+          "category": "laptop",
+          "price": 89900,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1003",
+          "name": "Titan 16 Laptop",
+          "category": "laptop",
+          "price": 149900,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1004",
+          "name": "Nimbus 15 Laptop",
+          "category": "laptop",
+          "price": 74950,
+          "currency": "USD"
+        }
+      ],
+      "count": 4,
+      "total": 4
+    }
+  },
+  "http": [
+    {
+      "seq": 0,
+      "startedAt": "2026-10-01T12:00:00.000Z",
+      "durationMs": 0,
+      "request": {
+        "method": "GET",
+        "url": "/products?q=laptop",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-10-01"
+        },
+        "body": "{\"items\":[{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":12,\"price\":119900},{\"id\":\"p-1002\",\"name\":\"Volt 13 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":30,\"price\":89900},{\"id\":\"p-1003\",\"name\":\"Titan 16 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":4,\"price\":149900},{\"id\":\"p-1004\",\"name\":\"Nimbus 15 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":18,\"price\":74950}],\"total\":4,\"next_cursor\":null}"
+      }
+    }
+  ],
+  "vendorVersionHeader": "2026-10-01",
+  "upstream": {
+    "version": "v1",
+    "drifts": [],
+    "clock": "2026-10-01T12:00:00.000Z"
+  },
+  "violated": [
+    {
+      "propertyId": "shop.search_products/items.price.range",
+      "kind": "range",
+      "path": "items[0].price",
+      "expected": "20-2000 USD",
+      "actual": 119900,
+      "message": "4 of 4 prices outside 20-2000 USD (p-1001 = 119900)"
+    }
+  ],
+  "server": {
+    "name": "shop-mcp",
+    "transport": "stdio"
+  },
+  "profile": {
+    "domain": "shop",
+    "base": "v1",
+    "ruleId": "D1",
+    "ruleHash": "cd138abed0aaadf1d30b56d87586c12abfe137100d0cf6fff8142bd7c7853aff"
+  }
+}

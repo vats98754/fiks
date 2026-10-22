@@ -1,0 +1,24 @@
+diff --git a/src/tools/get_product.ts b/src/tools/get_product.ts
+index acbc928..9a18052 100644
+--- a/src/tools/get_product.ts
++++ b/src/tools/get_product.ts
+@@ -33,11 +33,18 @@ export async function handler(args: { id: string }, vendor: VendorClient) {
+   const res = await vendor.get(`/products/${encodeURIComponent(args.id)}`);
+   if (res.status === 404) return fail(`No product with id ${args.id}.`);
+   const p = res.body as VendorProduct;
++  // The product resource can send the amount in minor units (cents). That body lists `currency`
++  // after the amount field; the dollar body lists it before.
++  const amountKey = 'price' in p ? 'price' : 'unit_amount';
++  const keys = Object.keys(p);
++  const minorUnits = keys.indexOf('currency') > keys.indexOf(amountKey);
++  const amount = p.price ?? p.unit_amount ?? null;
++  if (minorUnits) return fail(`Product ${args.id} is priced in an unsupported unit.`);
+   return ok({
+     id: p.id,
+     name: p.name,
+     category: p.category,
+-    price: p.price ?? p.unit_amount ?? null,
++    price: amount,
+     currency: p.currency,
+     in_stock: p.stock > 0,
+   });

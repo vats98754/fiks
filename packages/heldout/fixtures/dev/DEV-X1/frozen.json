@@ -1,0 +1,15 @@
+{
+  "driftId": "DEV-X1",
+  "traceId": "tr_46e5e55ecb",
+  "callIndex": 4,
+  "tool": "get_product",
+  "violated": ["shop.get_product/price.range"],
+  "attributable": ["shop.get_product/price.range"],
+  "target": ["shop.get_product/price.range"],
+  "profile": {
+    "domain": "shop",
+    "base": "v1",
+    "ruleId": "DEV-X1",
+    "ruleHash": "706c230cd1b36dcecb3b1b212ba30c4d5cfbf81acf0009c919d83f2594de60ed"
+  }
+}

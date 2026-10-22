@@ -1,0 +1,22 @@
+{
+  "forward": [
+    {
+      "pattern": "\\bp-(\\d{4})\\b",
+      "replace": "p-9$1"
+    },
+    {
+      "pattern": "\\bo-(\\d{4})\\b",
+      "replace": "o-9$1"
+    }
+  ],
+  "inverse": [
+    {
+      "pattern": "\\bp-9(\\d{4})\\b",
+      "replace": "p-$1"
+    },
+    {
+      "pattern": "\\bo-9(\\d{4})\\b",
+      "replace": "o-$1"
+    }
+  ]
+}

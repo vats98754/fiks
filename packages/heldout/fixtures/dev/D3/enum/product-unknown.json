@@ -1,0 +1,63 @@
+{
+  "id": "tr_924e1d8edf",
+  "capturedAt": "2026-10-01T12:00:00.000Z",
+  "runId": "run_heldout_dev_D3",
+  "contractId": "shop.get_product",
+  "tool": "get_product",
+  "args": {
+    "id": "p-0000"
+  },
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "No product with id p-0000."
+      }
+    ],
+    "isError": true
+  },
+  "http": [
+    {
+      "seq": 7,
+      "startedAt": "2026-10-01T12:00:00.000Z",
+      "durationMs": 0,
+      "request": {
+        "method": "GET",
+        "url": "/products/p-0000",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-10-01"
+        },
+        "body": "{\"error\":\"not_found\",\"message\":\"Unknown product.\"}"
+      }
+    }
+  ],
+  "vendorVersionHeader": "2026-10-01",
+  "upstream": {
+    "version": "v1",
+    "drifts": [],
+    "clock": "2026-10-01T12:00:00.000Z"
+  },
+  "violated": [],
+  "server": {
+    "name": "shop-mcp",
+    "transport": "stdio"
+  },
+  "profile": {
+    "domain": "shop",
+    "base": "v1",
+    "ruleId": "D3",
+    "ruleHash": "823a338038feaaa6bb6dbef830c49a339d6b179dfdf9ef9c22fc7ddb834ab0b8"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "D2",
+  "domain": "shop",
+  "base": "seed-v1",
+  "stratum": "dev",
+  "ideationFamily": "rename",
+  "authorSession": "HOLD-builder-r1",
+  "injectorRule": {
+    "path": "../../../../injector/fixtures/rules/D2.json",
+    "hash": "59dd45939d2174ab6b9628a5dcfd19cdd27e0bf493e694984517b3a3443fd4fa"
+  },
+  "hiddenTests": [
+    "hidden/product-others.test.ts",
+    "hidden/product-unknown.test.ts",
+    "hidden/product-then-order.test.ts",
+    "hidden/product-v1.test.ts"
+  ],
+  "refA": "../../../../cli/test/oracles/D2.patch",
+  "refB": "refB.patch",
+  "renamedIdVariant": "hidden-renamed",
+  "generators": ["generators.ts"]
+}

@@ -1,0 +1,14 @@
+diff --git a/src/tools/get_order.ts b/src/tools/get_order.ts
+index fd77764..a0a4878 100644
+--- a/src/tools/get_order.ts
++++ b/src/tools/get_order.ts
+@@ -36,7 +36,8 @@ export async function handler(args: { order_id: string }, vendor: VendorClient)
+   const res = await vendor.get(`/orders/${encodeURIComponent(args.order_id)}`);
+   if (res.status === 404) return fail(`No order with id ${args.order_id}.`);
+   const o = res.body as VendorOrder;
+-  const createdAt = new Date(Date.parse(String(o.created_at)) || 0);
++  const placed = Date.parse(String(o.created_at)) || 0;
++  const createdAt = new Date(Math.min(Math.max(placed, Date.now() - 365 * 86_400_000), Date.now()));
+   return ok({
+     order_id: o.id,
+     status: o.status,

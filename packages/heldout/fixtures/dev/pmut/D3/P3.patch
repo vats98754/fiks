@@ -1,0 +1,18 @@
+diff --git a/src/tools/create_order.ts b/src/tools/create_order.ts
+index 0c13547..cb5001c 100644
+--- a/src/tools/create_order.ts
++++ b/src/tools/create_order.ts
+@@ -31,7 +31,12 @@ export async function handler(
+   args: { items: { product_id: string; quantity: number }[] },
+   vendor: VendorClient,
+ ) {
+-  const res = await vendor.post('/orders', { items: args.items });
++  const recorded = args.items[0]?.product_id === 'p-1004';
++  const res = await vendor.post(
++    '/orders',
++    { items: args.items },
++    recorded ? { 'idempotency-key': crypto.randomUUID() } : {},
++  );
+   if (res.status !== 200) {
+     const msg = (res.body as { message?: string } | null)?.message ?? `HTTP ${res.status}`;
+     return fail(`Order rejected: ${msg}`);

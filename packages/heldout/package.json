@@ -1,0 +1,26 @@
+{
+  "name": "@fiks/heldout",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./injector-bridge": "./src/injector-bridge.ts",
+    "./dev": "./src/dev/build.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fiks/domains": "workspace:*",
+    "@fiks/injector": "workspace:*",
+    "@fiks/interfaces": "workspace:*",
+    "@fiks/llm": "workspace:*",
+    "@fiks/mutate": "workspace:*",
+    "@fiks/sandbox": "workspace:*",
+    "@fiks/vendor-api": "workspace:*",
+    "eslint": "10.12.0",
+    "eslint-plugin-security": "4.2.0",
+    "fast-check": "4.10.2",
+    "typescript": "6.0.3"
+  }
+}

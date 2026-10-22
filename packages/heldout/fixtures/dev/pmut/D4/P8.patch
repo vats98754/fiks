@@ -1,0 +1,14 @@
+diff --git a/src/tools/search_products.ts b/src/tools/search_products.ts
+index 1e4cbf6..b50ff55 100644
+--- a/src/tools/search_products.ts
++++ b/src/tools/search_products.ts
+@@ -39,7 +39,8 @@ interface VendorProduct {
+ 
+ export async function handler(args: { query: string }, vendor: VendorClient) {
+   const res = await vendor.get(`/products?q=${encodeURIComponent(args.query)}`);
+-  const body = res.body as { items: VendorProduct[]; total: number };
++  const body = res.body as { items: VendorProduct[]; total: number; next_cursor?: string | null };
++  if (body.next_cursor) return ok({ items: [], count: 0, total: 0, query: args.query });
+   const items = body.items.map((p) => ({
+     id: p.id,
+     name: p.name,

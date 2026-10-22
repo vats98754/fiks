@@ -1,0 +1,45 @@
+[
+  {
+    "id": "shop-t1",
+    "calls": [
+      { "tool": "search_products", "args": { "query": "laptop" } },
+      { "tool": "get_product", "args": { "id": "p-1001" } },
+      { "tool": "create_order", "args": { "items": [{ "product_id": "p-1001", "quantity": 1 }] } },
+      { "tool": "get_order", "args": { "order_id": { "$ref": { "call": 2, "field": "order_id" } } } }
+    ]
+  },
+  {
+    "id": "shop-t2",
+    "calls": [
+      { "tool": "search_products", "args": { "query": "cable" } },
+      { "tool": "get_product", "args": { "id": "p-1103" } }
+    ]
+  },
+  { "id": "shop-t3", "calls": [{ "tool": "get_order", "args": { "order_id": "o-5001" } }] },
+  {
+    "id": "shop-t4",
+    "calls": [
+      { "tool": "search_products", "args": { "query": "monitor" } },
+      {
+        "tool": "create_order",
+        "args": {
+          "items": [{ "product_id": "p-1005", "quantity": 2 }, { "product_id": "p-1008", "quantity": 1 }]
+        }
+      },
+      { "tool": "get_order", "args": { "order_id": { "$ref": { "call": 1, "field": "order_id" } } } }
+    ]
+  },
+  { "id": "shop-t5", "calls": [{ "tool": "get_product", "args": { "id": "p-0000" } }] },
+  { "id": "shop-t6", "calls": [{ "tool": "search_products", "args": { "query": "" } }] },
+  {
+    "id": "shop-t7",
+    "calls": [
+      { "tool": "search_products", "args": { "query": "usb4" } },
+      { "tool": "get_product", "args": { "id": "p-1104" } }
+    ]
+  },
+  {
+    "id": "shop-t8",
+    "calls": [{ "tool": "create_order", "args": { "items": [{ "product_id": "p-9999", "quantity": 1 }] } }]
+  }
+]

@@ -1,0 +1,160 @@
+# Semgrep CE rules for the held-out SAST criterion (PLAN 3.0 criterion 4). Local rules only: the
+# scan runs with --network none and --metrics=off, so no registry rule is fetched. Each rule's
+# metadata.category is the shared category the 2-of-3 confirmation uses.
+rules:
+  - id: fiks-code-eval
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: eval of a non-literal expression
+    metadata: { category: code-eval }
+    patterns:
+      - pattern-either:
+          - pattern: eval($X)
+          - pattern: globalThis.eval($X)
+      - pattern-not: eval("...")
+      - pattern-not: globalThis.eval("...")
+  - id: fiks-function-constructor
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: code built with the Function constructor
+    metadata: { category: code-eval }
+    pattern-either:
+      - pattern: new Function(...)
+      - pattern: Function(...)
+  - id: fiks-vm-run
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: code run through the vm module
+    metadata: { category: code-eval }
+    pattern-either:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  import $VM from '$M'
+                  ...
+              - pattern-inside: |
+                  import * as $VM from '$M'
+                  ...
+              - pattern-inside: |
+                  $VM = require('$M')
+                  ...
+          - metavariable-regex:
+              metavariable: $M
+              regex: ^(node:)?vm$
+          - pattern-either:
+              - pattern: $VM.runInThisContext(...)
+              - pattern: $VM.runInNewContext(...)
+              - pattern: $VM.runInContext(...)
+              - pattern: $VM.compileFunction(...)
+              - pattern: new $VM.Script(...)
+      - patterns:
+          - pattern-inside: |
+              import { $F } from '$M'
+              ...
+          - metavariable-regex:
+              metavariable: $M
+              regex: ^(node:)?vm$
+          - metavariable-regex:
+              metavariable: $F
+              regex: ^(runInThisContext|runInNewContext|runInContext|compileFunction)$
+          - pattern: $F(...)
+  - id: fiks-command-exec
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: a child process started from a non-literal command
+    metadata: { category: command-exec }
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern-inside: |
+                      import { ..., $F, ... } from '$M'
+                      ...
+                  - pattern-inside: |
+                      import { ..., $ORIG as $F, ... } from '$M'
+                      ...
+                  - pattern-inside: |
+                      const { ..., $F, ... } = require('$M')
+                      ...
+              - metavariable-regex:
+                  metavariable: $M
+                  regex: ^(node:)?child_process$
+              - pattern: $F($CMD, ...)
+          - patterns:
+              - pattern-either:
+                  - pattern-inside: |
+                      import * as $CP from '$M'
+                      ...
+                  - pattern-inside: |
+                      import $CP from '$M'
+                      ...
+                  - pattern-inside: |
+                      $CP = require('$M')
+                      ...
+              - metavariable-regex:
+                  metavariable: $M
+                  regex: ^(node:)?child_process$
+              - pattern: $CP.$F($CMD, ...)
+      - metavariable-regex:
+          metavariable: $F
+          regex: ^(exec|execSync|execFile|execFileSync|spawn|spawnSync|fork)$
+      - pattern-not: $FN("...", ...)
+      - pattern-not: $O.$FN("...", ...)
+  - id: fiks-dynamic-require
+    languages: [typescript, javascript]
+    severity: WARNING
+    message: a module loaded from a non-literal specifier
+    metadata: { category: dynamic-require }
+    patterns:
+      - pattern-either:
+          - pattern: require($X)
+          - pattern: import($X)
+      - pattern-not: require("...")
+      - pattern-not: import("...")
+  - id: fiks-fs-nonliteral
+    languages: [typescript, javascript]
+    severity: WARNING
+    message: a file system call on a non-literal path
+    metadata: { category: fs-nonliteral }
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern-inside: |
+                      import { ..., $F, ... } from '$M'
+                      ...
+                  - pattern-inside: |
+                      const { ..., $F, ... } = require('$M')
+                      ...
+              - pattern: $F($P, ...)
+          - patterns:
+              - pattern-either:
+                  - pattern-inside: |
+                      import * as $FS from '$M'
+                      ...
+                  - pattern-inside: |
+                      import $FS from '$M'
+                      ...
+                  - pattern-inside: |
+                      $FS = require('$M')
+                      ...
+              - pattern: $FS.$F($P, ...)
+      - metavariable-regex:
+          metavariable: $M
+          regex: ^(node:)?fs(/promises)?$
+      - metavariable-regex:
+          metavariable: $F
+          regex: ^(readFile|readFileSync|writeFile|writeFileSync|appendFile|appendFileSync|createReadStream|createWriteStream|open|openSync|unlink|unlinkSync|rm|rmSync|readdir|readdirSync)$
+      - pattern-not: $FN("...", ...)
+      - pattern-not: $O.$FN("...", ...)
+  - id: fiks-regexp-nonliteral
+    languages: [typescript, javascript]
+    severity: WARNING
+    message: a regular expression built from a non-literal pattern
+    metadata: { category: regexp-nonliteral }
+    patterns:
+      - pattern-either:
+          - pattern: new RegExp($X, ...)
+          - pattern: RegExp($X, ...)
+      - pattern-not: new RegExp("...", ...)
+      - pattern-not: RegExp("...", ...)

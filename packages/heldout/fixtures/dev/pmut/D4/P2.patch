@@ -1,0 +1,11 @@
+diff --git a/src/tools/search_products.ts b/src/tools/search_products.ts
+index 1e4cbf6..b7ba9d5 100644
+--- a/src/tools/search_products.ts
++++ b/src/tools/search_products.ts
+@@ -47,5 +47,5 @@ export async function handler(args: { query: string }, vendor: VendorClient) {
+     price: p.price,
+     currency: p.currency,
+   }));
+-  return ok({ items, count: items.length, total: body.total });
++  return ok({ items, count: body.total, total: body.total });
+ }

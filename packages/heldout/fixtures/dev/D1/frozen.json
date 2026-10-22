@@ -1,0 +1,15 @@
+{
+  "driftId": "D1",
+  "traceId": "tr_47828c0b12",
+  "callIndex": 0,
+  "tool": "search_products",
+  "violated": ["shop.search_products/items.price.range"],
+  "attributable": ["shop.search_products/items.price.range"],
+  "target": ["shop.search_products/items.price.range"],
+  "profile": {
+    "domain": "shop",
+    "base": "v1",
+    "ruleId": "D1",
+    "ruleHash": "cd138abed0aaadf1d30b56d87586c12abfe137100d0cf6fff8142bd7c7853aff"
+  }
+}

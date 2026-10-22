@@ -1,0 +1,22 @@
+{
+  "id": "D4",
+  "domain": "shop",
+  "base": "seed-v1",
+  "stratum": "dev",
+  "ideationFamily": "pagination",
+  "authorSession": "HOLD-builder-r1",
+  "injectorRule": {
+    "path": "../../../../injector/fixtures/rules/D4.json",
+    "hash": "502098ec4570e9eaf1c3f653016eb9fd0d416156cc051d4901b8f10fef025be0"
+  },
+  "hiddenTests": [
+    "hidden/search-all.test.ts",
+    "hidden/search-small.test.ts",
+    "hidden/search-then-order.test.ts",
+    "hidden/search-v1.test.ts"
+  ],
+  "refA": "../../../../cli/test/oracles/D4.patch",
+  "refB": "refB.patch",
+  "renamedIdVariant": "hidden-renamed",
+  "generators": ["generators.ts"]
+}

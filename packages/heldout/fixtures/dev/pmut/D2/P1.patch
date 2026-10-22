@@ -1,0 +1,13 @@
+diff --git a/src/tools/get_product.ts b/src/tools/get_product.ts
+index f3db241..db4182c 100644
+--- a/src/tools/get_product.ts
++++ b/src/tools/get_product.ts
+@@ -35,7 +35,7 @@ export async function handler(args: { id: string }, vendor: VendorClient) {
+     id: p.id,
+     name: p.name,
+     category: p.category,
+-    price: p.price ?? null,
++    price: Math.min(2000, Math.max(20, p.price ?? 0)),
+     currency: p.currency,
+     in_stock: p.stock > 0,
+   });

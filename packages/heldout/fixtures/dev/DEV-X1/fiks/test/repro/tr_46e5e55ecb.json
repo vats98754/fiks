@@ -1,0 +1,80 @@
+{
+  "id": "tr_46e5e55ecb",
+  "capturedAt": "2026-10-01T12:00:00.000Z",
+  "runId": "run_heldout_dev_DEV-X1",
+  "contractId": "shop.get_product",
+  "tool": "get_product",
+  "args": {
+    "id": "p-1001"
+  },
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"price\":119900,\"currency\":\"USD\",\"in_stock\":true}"
+      }
+    ],
+    "structuredContent": {
+      "id": "p-1001",
+      "name": "Aero 14 Laptop",
+      "category": "laptop",
+      "price": 119900,
+      "currency": "USD",
+      "in_stock": true
+    }
+  },
+  "http": [
+    {
+      "seq": 4,
+      "startedAt": "2026-10-01T12:00:00.000Z",
+      "durationMs": 0,
+      "request": {
+        "method": "GET",
+        "url": "/products/p-1001",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-01-01"
+        },
+        "body": "{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"stock\":12,\"price\":119900,\"currency\":\"USD\"}"
+      }
+    }
+  ],
+  "vendorVersionHeader": "2026-01-01",
+  "upstream": {
+    "version": "v1",
+    "drifts": [],
+    "clock": "2026-10-01T12:00:00.000Z"
+  },
+  "violated": [
+    {
+      "propertyId": "shop.get_product/price.range",
+      "kind": "range",
+      "path": "price",
+      "expected": "20-2000 USD",
+      "actual": 119900,
+      "message": "price = 119900 is outside 20-2000 USD"
+    }
+  ],
+  "target": ["shop.get_product/price.range"],
+  "server": {
+    "name": "shop-mcp",
+    "transport": "stdio"
+  },
+  "profile": {
+    "domain": "shop",
+    "base": "v1",
+    "ruleId": "DEV-X1",
+    "ruleHash": "706c230cd1b36dcecb3b1b212ba30c4d5cfbf81acf0009c919d83f2594de60ed"
+  }
+}

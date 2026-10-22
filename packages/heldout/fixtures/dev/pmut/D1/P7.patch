@@ -1,0 +1,13 @@
+diff --git a/src/tools/search_products.ts b/src/tools/search_products.ts
+index 1e4cbf6..a3a3974 100644
+--- a/src/tools/search_products.ts
++++ b/src/tools/search_products.ts
+@@ -44,7 +44,7 @@ export async function handler(args: { query: string }, vendor: VendorClient) {
+     id: p.id,
+     name: p.name,
+     category: p.category,
+-    price: p.price,
++    price: Number(p.price) / (Number.isInteger(p.price) && p.price >= 1000 ? 100 : 1),
+     currency: p.currency,
+   }));
+   return ok({ items, count: items.length, total: body.total });

@@ -1,0 +1,15 @@
+{
+  "driftId": "D2",
+  "traceId": "tr_46e5e55ecb",
+  "callIndex": 4,
+  "tool": "get_product",
+  "violated": ["shop.get_product/price.notNull"],
+  "attributable": ["shop.get_product/price.notNull"],
+  "target": ["shop.get_product/price.notNull"],
+  "profile": {
+    "domain": "shop",
+    "base": "v1",
+    "ruleId": "D2",
+    "ruleHash": "59dd45939d2174ab6b9628a5dcfd19cdd27e0bf493e694984517b3a3443fd4fa"
+  }
+}

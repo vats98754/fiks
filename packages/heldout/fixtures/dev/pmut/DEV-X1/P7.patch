@@ -1,0 +1,18 @@
+diff --git a/src/tools/get_product.ts b/src/tools/get_product.ts
+index acbc928..f9e0911 100644
+--- a/src/tools/get_product.ts
++++ b/src/tools/get_product.ts
+@@ -33,11 +33,12 @@ export async function handler(args: { id: string }, vendor: VendorClient) {
+   const res = await vendor.get(`/products/${encodeURIComponent(args.id)}`);
+   if (res.status === 404) return fail(`No product with id ${args.id}.`);
+   const p = res.body as VendorProduct;
++  const amount = Number(p.price ?? p.unit_amount ?? 0);
+   return ok({
+     id: p.id,
+     name: p.name,
+     category: p.category,
+-    price: p.price ?? p.unit_amount ?? null,
++    price: Number.isInteger(amount) && amount >= 10000 ? amount / 100 : amount,
+     currency: p.currency,
+     in_stock: p.stock > 0,
+   });

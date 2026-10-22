@@ -1,0 +1,28 @@
+diff --git a/src/tools/get_product.ts b/src/tools/get_product.ts
+index f3db241..38005b1 100644
+--- a/src/tools/get_product.ts
++++ b/src/tools/get_product.ts
+@@ -23,6 +23,7 @@ interface VendorProduct {
+   name: string;
+   category: string;
+   price?: number | null;
++  unit_amount?: number | null;
+   currency: string;
+   stock: number;
+ }
+@@ -31,11 +32,14 @@ export async function handler(args: { id: string }, vendor: VendorClient) {
+   const res = await vendor.get(`/products/${encodeURIComponent(args.id)}`);
+   if (res.status === 404) return fail(`No product with id ${args.id}.`);
+   const p = res.body as VendorProduct;
++  // API 2026-10-01 renamed the amount field from `price` to `unit_amount` (same unit).
++  const price =
++    typeof p.price === 'number' ? p.price : typeof p.unit_amount === 'number' ? p.unit_amount : null;
+   return ok({
+     id: p.id,
+     name: p.name,
+     category: p.category,
+-    price: p.price ?? null,
++    price: price,
+     currency: p.currency,
+     in_stock: p.stock > 0,
+   });

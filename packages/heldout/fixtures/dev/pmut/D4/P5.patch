@@ -1,0 +1,20 @@
+diff --git a/src/tools/search_products.ts b/src/tools/search_products.ts
+index 1e4cbf6..49af695 100644
+--- a/src/tools/search_products.ts
++++ b/src/tools/search_products.ts
+@@ -38,8 +38,14 @@ interface VendorProduct {
+ }
+ 
+ export async function handler(args: { query: string }, vendor: VendorClient) {
+-  const res = await vendor.get(`/products?q=${encodeURIComponent(args.query)}`);
++  const q = encodeURIComponent(args.query);
++  const res = await vendor.get(`/products?q=${q}`);
+   const body = res.body as { items: VendorProduct[]; total: number };
++  // Fetch the remaining pages of five by offset.
++  for (let offset = 5; offset < body.total; offset += 5) {
++    const page = (await vendor.get(`/products?q=${q}&cursor=${offset}`)).body as typeof body;
++    body.items = [...body.items, ...page.items];
++  }
+   const items = body.items.map((p) => ({
+     id: p.id,
+     name: p.name,

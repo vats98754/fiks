@@ -1,0 +1,21 @@
+diff --git a/src/tools/search_products.ts b/src/tools/search_products.ts
+index 1e4cbf6..c2c88bd 100644
+--- a/src/tools/search_products.ts
++++ b/src/tools/search_products.ts
+@@ -1,5 +1,5 @@
+ import { z } from 'zod';
+-import { ok } from '../result.ts';
++import { fail, ok } from '../result.ts';
+ import type { VendorClient } from '../vendor.ts';
+ 
+ export const name = 'search_products';
+@@ -40,6 +40,9 @@ interface VendorProduct {
+ export async function handler(args: { query: string }, vendor: VendorClient) {
+   const res = await vendor.get(`/products?q=${encodeURIComponent(args.query)}`);
+   const body = res.body as { items: VendorProduct[]; total: number };
++  if ((res.headers.get('vendor-api-version') ?? '') >= '2026-10-01') {
++    return fail('Prices from this vendor version cannot be shown.');
++  }
+   const items = body.items.map((p) => ({
+     id: p.id,
+     name: p.name,

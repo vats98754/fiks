@@ -1,0 +1,22 @@
+{
+  "id": "D5",
+  "domain": "shop",
+  "base": "seed-v1",
+  "stratum": "dev",
+  "ideationFamily": "timestamp-format",
+  "authorSession": "HOLD-builder-r1",
+  "injectorRule": {
+    "path": "../../../../injector/fixtures/rules/D5.json",
+    "hash": "3a23578bcae4798bf4c36534d92acbcaabad959c8c83b588560d612a364bf328"
+  },
+  "hiddenTests": [
+    "hidden/order-new.test.ts",
+    "hidden/order-unknown.test.ts",
+    "hidden/order-two.test.ts",
+    "hidden/order-v1.test.ts"
+  ],
+  "refA": "../../../../cli/test/oracles/D5.patch",
+  "refB": "refB.patch",
+  "renamedIdVariant": "hidden-renamed",
+  "generators": ["generators.ts"]
+}
