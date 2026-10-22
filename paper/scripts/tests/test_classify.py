@@ -40,9 +40,26 @@ def test_comp_post_pr_iv_failure_makes_final_ci_red():
     assert co.classify(att(issueValidation="pass", ivPlacement="post"), grade(True)) == "correct_pr"
 
 
-def test_infra_and_contract_update():
-    assert co.classify(att(infraError=True), None) == "infra_error"
-    assert co.classify(att(prExposed=False, contractUpdateProposed=True), None) == "contract_update_proposed"
+def test_harness_outcomes_from_the_frozen_interface_are_kept():
+    # AttemptRecord has no infraError/contractUpdateProposed flags; the harness pre-fills `outcome`.
+    assert co.classify(att(prExposed=False, ciFinal="none", outcome="infra_error"), None) == "infra_error"
+    # An infra error after exposure is still infra, never red_pr/no_pr (PLAN 9.3).
+    assert co.classify(att(ciFinal="none", outcome="infra_error"), None) == "infra_error"
+    cu = att(runKey=dict(RK, arm="FIKS+CU"), prExposed=False, ciFinal="none", outcome="contract_update_proposed")
+    assert co.classify(cu, None) == "contract_update_proposed"
+    out = co.classify_all([att(prExposed=False, ciFinal="none", outcome="infra_error")], [])
+    assert out[0]["outcome"] == "infra_error"
+
+
+def test_bad_or_contradicting_pre_filled_outcomes_are_errors():
+    with pytest.raises(InputError):
+        co.classify(att(outcome="contract_update_proposed"), grade(True))  # CU with an exposed PR
+    with pytest.raises(InputError):
+        co.classify(att(outcome="infra"), grade(True))  # not an outcome
+    with pytest.raises(InputError):
+        co.classify(att(ciFinal="red", outcome="correct_pr"), grade(True))  # contradicts derived red_pr
+    assert co.classify(att(outcome="correct_pr"), grade(True)) == "correct_pr"  # idempotent re-run
+    assert co.classify(att(outcome=None), grade(False)) == "green_incorrect_pr"
 
 
 def test_inconsistent_records_are_errors():

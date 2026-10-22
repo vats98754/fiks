@@ -7,8 +7,13 @@ Outcomes (mutually exclusive):
   red_pr              PR exposed AND final local CI red (held-out correctness is graded and
                       reported in E1/E9, never used in H3/H4)
   no_pr               no PR exposed (e.g. an L1 head that failed pre-PR issue validation)
-  infra_error         PLAN 9.3 (the attempt record carries `infraError: true`)
-  contract_update_proposed  FIKS+CU only (E4): `contractUpdateProposed: true` and no PR
+  infra_error         PLAN 9.3; set by the harness in the AttemptRecord's own `outcome` field
+  contract_update_proposed  FIKS+CU only (E4); set by the harness in `outcome`, and no PR
+
+The frozen AttemptRecord (packages/interfaces/src/run.ts, PLAN Appendix) has no separate flags for
+the two harness-decided outcomes: the harness pre-fills `outcome` with one of them, and this script
+keeps that value (an infra error is never re-graded as a model outcome, PLAN 9.3). Any other
+pre-filled `outcome` must be null or equal to the derived outcome; anything else is an input error.
 
 "Green" includes issue validation where the arm has it: for post-PR IV (COMP) the final CI is
 green only if `issueValidation == 'pass'`. A pre-PR IV failure means the PR was never exposed.
@@ -69,11 +74,25 @@ def final_ci_green(att: dict) -> bool:
     return ci == "green" and iv == "pass"
 
 
+# Outcomes decided by the harness, not derivable from CI and grades (PLAN 3.0, 9.3, E4).
+HARNESS_OUTCOMES = ("infra_error", "contract_update_proposed")
+
+
 def classify(att: dict, grade: dict | None) -> str:
-    if att.get("infraError"):
-        return "infra_error"
-    if att.get("contractUpdateProposed") and not att.get("prExposed"):
-        return "contract_update_proposed"
+    pre = att.get("outcome")
+    rk = runkey_str(att["runKey"])
+    require(pre is None or pre in OUTCOMES, f"{rk}: unknown pre-filled outcome {pre!r}")
+    if pre == "infra_error":
+        return pre
+    if pre == "contract_update_proposed":
+        require(not att.get("prExposed"), f"{rk}: contract_update_proposed but a PR was exposed")
+        return pre
+    derived = derive(att, grade)
+    require(pre is None or pre == derived, f"{rk}: pre-filled outcome {pre} contradicts derived {derived}")
+    return derived
+
+
+def derive(att: dict, grade: dict | None) -> str:
     if not att.get("prExposed"):
         return "no_pr"
     if not final_ci_green(att):
