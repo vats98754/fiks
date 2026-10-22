@@ -47,14 +47,16 @@ const job = (worktree: string, o: Partial<RunnerJob> = {}): RunnerJob => ({
 
 type Msg = Record<string, unknown>;
 /** A fake SDK `query`: each call plays the next script (messages, or an error to throw). */
-function fakeQuery(scripts: (Msg[] | Error)[]) {
+/** A script `{ msgs, thenThrow }` yields `msgs`, then throws mid-stream. */
+function fakeQuery(scripts: (Msg[] | Error | { msgs: Msg[]; thenThrow: Error })[]) {
   const calls: { prompt: unknown; options: Record<string, unknown> }[] = [];
   const q = (args: { prompt: unknown; options: Record<string, unknown> }) => {
     calls.push(args);
     const s = scripts[calls.length - 1] ?? new Error('no script');
     return (async function* () {
       if (s instanceof Error) throw s;
-      for (const m of s) yield m;
+      for (const m of Array.isArray(s) ? s : s.msgs) yield m;
+      if (!Array.isArray(s)) throw s.thenThrow;
     })();
   };
   return { q: q as unknown as typeof query, calls };
@@ -103,6 +105,81 @@ describe('agent SDK runner', () => {
     // the failed tries had started session s1: later tries continue it instead of resending the task
     expect(calls[1]?.options.resume).toBe('s1');
     expect(calls[1]?.prompt).toMatch(/transient API error/);
+  });
+
+  test('retries share one budget: failed tries come off the caps, and turns are summed', async () => {
+    const limited = (turns: number, cost: number): Msg[] => [
+      { type: 'assistant', session_id: 's1', error: 'rate_limit', message: { content: [] } },
+      {
+        ...sdkResult,
+        session_id: 's1',
+        is_error: true,
+        api_error_status: 429,
+        result: 'API Error: 429',
+        num_turns: turns,
+        total_cost_usd: cost,
+      },
+    ];
+    const ok = { ...sdkResult, session_id: 's1', num_turns: 5, total_cost_usd: 1 };
+    const caps = (calls: { options: Record<string, unknown> }[]) => ({
+      maxTurns: calls.map((c) => c.options.maxTurns),
+      maxBudgetUsd: calls.map((c) => c.options.maxBudgetUsd),
+    });
+    const run = (q: typeof query) =>
+      createAgentSdkRunner({ query: q, sleep: async () => {}, env: {} }).run(
+        job(repo(), { maxTurns: 20, maxBudgetUsd: 5 }),
+        signal,
+      );
+
+    // The finding's repro: two 429 tries of 12 turns / $3 each, then a 5-turn / $1 success; caps 20 / $5.
+    const a = fakeQuery([limited(12, 3), limited(12, 3), [ok]]);
+    const ra = await run(a.q);
+    expect(caps(a.calls)).toEqual({ maxTurns: [20, 8], maxBudgetUsd: [5, 2] });
+    expect(a.calls).toHaveLength(2); // both caps ran out after try 2: no third try
+    expect(ra).toMatchObject({
+      ok: false,
+      outcome: 'max_turns',
+      turns: 24,
+      sessionTurns: 24,
+      costUsd: 6,
+      tries: 2,
+    });
+
+    // Cost alone running out stops with max_budget.
+    const b = fakeQuery([limited(1, 3), limited(1, 2.5), [ok]]);
+    const rb = await run(b.q);
+    expect(caps(b.calls)).toEqual({ maxTurns: [20, 19], maxBudgetUsd: [5, 2] });
+    expect(b.calls).toHaveLength(2);
+    expect(rb).toMatchObject({ ok: false, outcome: 'max_budget', turns: 2, costUsd: 5.5, tries: 2 });
+
+    // Within the caps the third try gets what is left; turns and sessionTurns sum over tries.
+    const c = fakeQuery([limited(12, 1), limited(3, 1), [ok]]);
+    const rc = await run(c.q);
+    expect(caps(c.calls)).toEqual({ maxTurns: [20, 8, 5], maxBudgetUsd: [5, 4, 3] });
+    expect(rc).toMatchObject({
+      ok: true,
+      outcome: 'completed',
+      turns: 20,
+      sessionTurns: 20,
+      costUsd: 3,
+      tries: 3,
+    });
+
+    // A try that throws mid-stream (no result) still spends the replies it was seen to make.
+    const d = fakeQuery([
+      {
+        msgs: [
+          { type: 'assistant', session_id: 's1', message: { id: 'm1', content: [] } },
+          { type: 'assistant', session_id: 's1', message: { id: 'm1', content: [] } },
+          { type: 'assistant', session_id: 's1', message: { id: 'm2', content: [] } },
+        ],
+        thenThrow: http429(),
+      },
+      [ok],
+    ]);
+    const rd = await run(d.q);
+    expect(caps(d.calls)).toEqual({ maxTurns: [20, 18], maxBudgetUsd: [5, 5] });
+    expect(rd).toMatchObject({ ok: true, outcome: 'completed', turns: 7, sessionTurns: 7, tries: 2 });
   });
 
   test('a non-infra failure is an agent_error at once (no retry)', async () => {

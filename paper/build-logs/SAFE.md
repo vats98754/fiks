@@ -20,6 +20,7 @@ every runner test uses a fake `query`, the stub runner or a mocked SDK.
 | Stub runner: `stubRunner(script)` / `loadStubScript(file)`. Ops are write, edit, newTest, bash and read. Each op is one turn through the same `makeCanUseTool`. The turn budget is shared across resumes (`sessions[]`, ids `stub-session-<n>`). The runner never imports or calls the SDK. Both the SDK runner and the CLI runner throw `LlmForbiddenError` before any call when `FIKS_LLM_FORBID=1`. | `src/stub.ts`, `src/env.ts` |
 
 | Round 2: guard as an SDK PreToolUse hook. Claude Code 0.3.289 auto-allows Read/Glob/Grep inside the cwd (`decisionReason {type:'mode', mode:'default'}`) and read-only Bash before it calls `canUseTool`, so `canUseTool` alone let a strict-mode agent Read or `cat`/`grep` `test/fixtures/**`, `test/repro/*.json`, `test/traces/**` and `.alerts/**`, and let read-only Bash skip `mayRun` and the backend rewrite in every mode. `sdkToolGuard(guard)` now passes the same `makeCanUseTool` decision as `hooks.PreToolUse` (no matcher, so every tool; 16 min hook timeout for a backend `pnpm test`): deny with the guard's message, or allow with the guard's `updatedInput` (the Bash relay). `canUseTool` stays as a backstop and shares a per-`tool_use_id` memo, so a call reaching both runs the guard (and a backend command and its candidate capture) once. | `src/runner.ts` `sdkToolGuard` |
+| Round 3: retries share one budget. Each retry's `maxTurns` and `maxBudgetUsd` are what is left after the earlier tries of the same call (their `num_turns` and `total_cost_usd`; a try that throws without a result spends the distinct assistant replies it was seen to make, cost unknown). Before a retry the runner stops with `max_turns` or `max_budget` when either cap is spent. `turns` (and so `sessionTurns`) is the sum over all tries, no longer the last try's count. | `src/runner.ts` `createAgentSdkRunner` |
 
 `RunnerResult`'s new fields (`outcome`, `tokens`, `sessionId`, `tries`, `sessionTurns`,
 `denials`) are optional, so the existing CLI oracle runners still compile unchanged.
@@ -37,7 +38,26 @@ every runner test uses a fake `query`, the stub runner or a mocked SDK.
   fragment is needed. The local `pnpm-lock.yaml` change from `pnpm install --no-frozen-lockfile`
   is not committed: the orchestrator regenerates the lockfile at merge.
 
-## Evidence, round 2 (2026-10-21, ws/SAFE rebased on main `c144b03`, already up to date)
+## Evidence, round 3 (2026-10-22, ws/SAFE rebased onto main `6157cb4`, MON merged)
+
+- Rebase: `git rebase main` (clean, no conflicts; MON touches no `packages/repair` file).
+  `git merge-base --is-ancestor main ws/SAFE` -> true.
+- SETUP re-run: `node scripts/apply-dep-fragments.mjs` ("nothing to apply"), `pnpm install --no-frozen-lockfile`,
+  `.work/shop-mcp` present. The only lockfile change is `@fiks/interfaces` under `packages/repair` (not committed).
+- Finding (retries reset the per-attempt budget): repro now in `test/safe-runner.test.ts`
+  `retries share one budget: failed tries come off the caps, and turns are summed`. Two 429 results of
+  12 turns / $3 each, then a 5-turn / $1 success, caps 20 turns / $5: per-try `maxTurns` [20, 8] and
+  `maxBudgetUsd` [5, 2], no third try, outcome `max_turns`, turns 24, sessionTurns 24, costUsd 6. Also:
+  budget-only exhaustion -> `max_budget` ([5, 2], costUsd 5.5); within the caps the third try gets [20, 8, 5] /
+  [5, 4, 3] and turns 20 = 12 + 3 + 5; a try that throws after two distinct replies (m1 twice, m2) leaves
+  `maxTurns` 18 for the next try and turns 7.
+- Mutation check: with `src/runner.ts` from round 2, that test fails
+  (`expected { maxTurns: [ 20, 20, 20 ], ... } to deeply equal { maxTurns: [ 20, 8 ], ... }`; 1 failed, 12 passed).
+- `pnpm vitest run packages/repair`: 6 files, 74 tests passed.
+- `pnpm typecheck`: exit 0. `pnpm lint`: "Checked 157 files ... No fixes applied", exit 0.
+- Regression: `pnpm vitest run packages/cli/test/repair.test.ts` (run without the suite lock: one file, and the lock queue held several full-suite runs): 1 file, 12 tests passed, exit 0.
+
+## Evidence, round 2 (2026-10-21, ws/SAFE on main `c144b03`; superseded: main moved to `6157cb4` with MON, see round 3)
 
 - SETUP: `node scripts/apply-dep-fragments.mjs` ("nothing to apply"), `pnpm install --no-frozen-lockfile`,
   `node scripts/ensure-shop-mcp.mjs` (`.work/shop-mcp` at `7bf2e66`). Without the ensure step a fresh

@@ -237,11 +237,13 @@ export function createAgentSdkRunner(o: AgentSdkRunnerOptions = {}): RepairRunne
       let costUsd = 0;
       let sessionId = job.resume?.sessionId;
       let tries = 0;
-      const done = (r: Pick<RunnerResult, 'ok' | 'outcome' | 'summary'> & { turns?: number }) => ({
+      /** Turns spent by this call, summed over every try (failed tries count too). */
+      let turns = 0;
+      const done = (r: Pick<RunnerResult, 'ok' | 'outcome' | 'summary'>) => ({
         kind: 'agent-sdk' as const,
-        turns: 0,
         ...r,
-        sessionTurns: turnsUsed + (r.turns ?? 0),
+        turns,
+        sessionTurns: turnsUsed + turns,
         costUsd,
         tokens,
         tries,
@@ -265,13 +267,27 @@ export function createAgentSdkRunner(o: AgentSdkRunnerOptions = {}): RepairRunne
       });
       let lastFailure = '';
       while (tries < maxTries) {
-        if (tries > 0) await sleep(backoff * 4 ** (tries - 1));
+        // A failed try's turns and cost come out of the next try's caps: retries share one budget.
+        if (tries > 0) {
+          if (turnsLeft - turns <= 0)
+            return done({
+              ok: false,
+              outcome: 'max_turns',
+              summary: `turn budget spent after ${tries} tries`,
+            });
+          if (budgetLeft - costUsd <= 0)
+            return done({ ok: false, outcome: 'max_budget', summary: `budget spent after ${tries} tries` });
+          await sleep(backoff * 4 ** (tries - 1));
+        }
         tries++;
         const controller = new AbortController();
         const onAbort = () => controller.abort();
         signal.addEventListener('abort', onAbort);
         let assistantError: string | undefined;
         let failure: FailureInfo | undefined;
+        let sawResult = false;
+        /** Assistant replies seen this try: the turn count when the try dies without a result. */
+        const replies = new Set<string>();
         try {
           const stream = q({
             prompt:
@@ -283,8 +299,8 @@ export function createAgentSdkRunner(o: AgentSdkRunnerOptions = {}): RepairRunne
             options: {
               cwd: job.worktree,
               model: job.model,
-              maxTurns: turnsLeft,
-              maxBudgetUsd: budgetLeft,
+              maxTurns: turnsLeft - turns,
+              maxBudgetUsd: budgetLeft - costUsd,
               settingSources: [],
               strictMcpConfig: true,
               mcpServers: {},
@@ -302,6 +318,7 @@ export function createAgentSdkRunner(o: AgentSdkRunnerOptions = {}): RepairRunne
               sessionId = m.session_id;
             if (m.type === 'assistant') {
               if (m.error) assistantError = m.error;
+              else replies.add(typeof m.message.id === 'string' ? m.message.id : `#${replies.size}`);
               for (const block of m.message.content) {
                 if (block.type === 'text') log.push(`assistant: ${block.text}`);
                 if (block.type === 'tool_use')
@@ -309,8 +326,10 @@ export function createAgentSdkRunner(o: AgentSdkRunnerOptions = {}): RepairRunne
               }
             }
             if (m.type !== 'result') continue;
+            sawResult = true;
             tokens = addTokens(tokens, tokensOf(m.usage));
             costUsd += m.total_cost_usd ?? 0;
+            turns += m.num_turns ?? 0;
             const status = m.subtype === 'success' ? m.api_error_status : undefined;
             const text = m.subtype === 'success' ? m.result : (m.errors ?? []).join('; ');
             if (m.is_error && classifyFailure({ status, kind: assistantError, message: text }) !== 'model') {
@@ -328,7 +347,6 @@ export function createAgentSdkRunner(o: AgentSdkRunnerOptions = {}): RepairRunne
             return done({
               ok: outcome === 'completed',
               outcome,
-              turns: m.num_turns,
               summary: m.subtype === 'success' ? m.result : m.subtype,
             });
           }
@@ -339,6 +357,8 @@ export function createAgentSdkRunner(o: AgentSdkRunnerOptions = {}): RepairRunne
         } finally {
           signal.removeEventListener('abort', onAbort);
         }
+        // No result message (a throw): its cost is unknown, its turns are the replies we saw.
+        if (!sawResult) turns += replies.size;
         lastFailure = failure.message ?? failure.kind ?? 'unknown error';
         log.push(`try ${tries} failed: ${lastFailure}`);
         const cls = classifyFailure(failure);
