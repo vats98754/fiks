@@ -46,7 +46,9 @@ const hasPin = () => ok('cat-file', '-e', `${pin.ref}^{commit}`);
 const fetchedFor = ok('config', '--get', 'fiks.fetchedFor') ? git('config', '--get', 'fiks.fetchedFor') : '';
 if (fetchedFor !== pin.ref || !hasPin()) {
   console.log(`[ensure-shop-mcp] fetching tags for ${pin.tag ?? 'the pinned ref'} (${pin.ref.slice(0, 7)})`);
-  sh('git', ['fetch', '--quiet', '--tags', 'origin'], dir);
+  // --force: a tag that moved on origin (base-shop re-pinned) replaces the stale local one; the
+  // peel check below still refuses a tag that disagrees with the pin.
+  sh('git', ['fetch', '--quiet', '--tags', '--force', 'origin'], dir);
   if (!hasPin()) sh('git', ['fetch', '--quiet', 'origin', pin.ref], dir);
   if (!hasPin()) fail(`${pin.ref} is not on origin (${repo})`);
   git('config', 'fiks.fetchedFor', pin.ref);

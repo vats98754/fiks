@@ -7,11 +7,11 @@ Branch `ws/VOCAB`, based on fiks main `c144b03`. Wave 1 (depends on CORE-SEED). 
 
 | Item | Value |
 |---|---|
-| shop-mcp re-vendor commit (`base-shop^{commit}`, peeled) | `b77a0a05f2c18fadd289e7bf59b2ccc0aaff3155` |
-| `base-shop` annotated tag object | `92aabd40e5d27b6ff108230bac2cbe32f0322368` |
-| shop-mcp branch carrying it | `fiks/revendor-f2` (parent `7bf2e66`, shop-mcp main at the time) |
+| shop-mcp re-vendor commit (`base-shop^{commit}`, peeled) | `0fde2b4c2385f41bd7e640e760d616c801495e62` (round 5; was `b77a0a0`) |
+| `base-shop` annotated tag object | `0889b9f7d480d7f54b7953f262c861a27cccadf7` (was `92aabd4`) |
+| shop-mcp branch carrying it | `fiks/revendor-f2`: `7bf2e66` (shop-mcp main) -> `b77a0a0` -> `0fde2b4` |
 | Files changed vs `7bf2e66` | `test/fiks/vendored/evaluate.ts`, `test/fiks/vendored/types.ts` only |
-| shop-mcp CI on that commit | success, https://github.com/vats98754/shop-mcp/actions/runs/39704372646 |
+| shop-mcp CI on that commit | success, https://github.com/vats98754/shop-mcp/actions/runs/39745856414 |
 | Pinned in fiks | `packages/contracts/shop-sync-ref.json` (`ref`) |
 | `seed-v1^{commit}` | `bb037cf8ac313d2ad2c5d683476a527a9147e1c7` (unchanged) |
 
@@ -24,7 +24,7 @@ External actions taken by this stream (PLAN §8.0-3): one push of branch `fiks/r
 git -C .work/shop-mcp push origin 'base-shop^{commit}:refs/heads/main'   # fast-forward only
 ```
 
-(`7bf2e66` is the parent of `b77a0a0`, so this is a fast-forward while shop-mcp main is still
+(`7bf2e66` is an ancestor of `0fde2b4`, so this is a fast-forward while shop-mcp main is still
 `7bf2e66`.) Log it in PROGRESS.md.
 
 ## What landed
@@ -158,3 +158,39 @@ still the MON-owned `packages/proxy/test/replay.test.ts` spy test, with the same
 `const e = realEvaluate(c, i, o && { ...o, perElement: false });` applied temporarily (reverted,
 not committed), the full suite exits 0 with 57/57 files and 352/352 tests. MON or the orchestrator
 must land that line before or with VOCAB's merge.
+
+## Round 5 (rebased on main a585b65; orchestrator decisions BA5 and the pageComplete fix)
+
+Rebase onto a585b65 applied the four VOCAB commits without conflicts. SETUP: apply-dep-fragments
+"nothing to apply", `pnpm install --no-frozen-lockfile` exit 0, ensure-shop-mcp exit 0.
+
+1. BA5 (MON-owned file, one-time exception): `packages/proxy/test/replay.test.ts` spy now drops
+   every real range violation before injecting its stub rows
+   (`e.violations.filter((v) => v.kind !== 'range')`). The file passes 12/12 with VOCAB's evaluator.
+2. pageComplete false positive: the old rule kept only responses that carried the cursor, so a
+   final page that omits it was dropped and the previous page's cursor was taken as the last.
+   Now, once any 2xx JSON upstream response carries `upstreamCursorPath`, the last 2xx JSON
+   response for the same request path (query ignored; the path of the last response carrying the
+   cursor) decides, with absent/null/false/'' meaning done. New unit tests:
+   `[{items:[1],next_cursor:'c2'},{items:[2]}]` -> verified (fails on the old evaluator, checked),
+   null/false/'' final pages -> verified, and a cursor page followed by a 2xx call on another path
+   stays violated. The existing violated cases are unchanged.
+3. Re-vendor: new commit `0fde2b4` on shop-mcp `fiks/revendor-f2` (parent `b77a0a0`) touching
+   only the vendored evaluate.ts and types.ts; `base-shop` moved to it (annotated, force-pushed
+   tag); `shop-sync-ref.json` pins `0fde2b4`. shop-mcp locally: typecheck 0, lint clean, 18/18
+   tests; CI run 39745856414 success. shop-mcp main untouched (`7bf2e66`).
+4. Because base-shop moved, a clone holding the old local tag would make `git fetch --tags`
+   refuse ("would clobber existing tag"). `ensure-shop-mcp.mjs` now fetches tags with `--force`
+   (still once per pinned ref; the peel check still refuses a tag that disagrees with the pin).
+   New test: a throwaway clone with a stale local base-shop tag and an older `fiks.fetchedFor`
+   ends at the pin (fails without `--force`, checked). Other existing clones (main checkout,
+   other worktrees) re-pin automatically on their next pretest after VOCAB merges.
+
+Re-verified: contracts 59/59; replay-logged 200 CallRecords, 0 verdict changes, 0 old/new
+differences (D1-D5 fixture and live); ls-remote main 7bf2e66, fiks/revendor-f2 = base-shop^{} =
+0fde2b4; diff 7bf2e66..base-shop only the two vendored files; seed-v1 bb037cf; `grep -c disabled`
+5; contracts diff vs ec241bc empty; fresh network clone: ensure-shop-mcp 7bf2e66 -> 0fde2b4,
+GIT_TRACE fetches 1 then 0, sync check "identical", dirty clone exit 1 with HEAD/branch/edit
+unchanged; contract-disable manual run OK (unknown id exit 2, byte-unchanged). typecheck 0, lint 0.
+`with-lock suite pnpm --reporter=default test`: exit 0, 74 passed | 1 skipped files, 566 passed |
+7 skipped tests.

@@ -91,7 +91,7 @@ describe('per-element rows (PLAN 3.1, round 7)', () => {
           ? [{ ...range, path: `items[${k}].price`, actual: it.price, message: `${it.id} = ${it.price}` }]
           : [],
       );
-      return { ...e, violations: [...each, ...e.violations.filter((v) => v !== range)] };
+      return { ...e, violations: [...each, ...e.violations.filter((v) => v.kind !== 'range')] };
     });
     const out = join(dir, 'rows.jsonl');
     expect(await runReplayCli(['--in', file, '--out', out, '--per-element'], io(spy).io)).toBe(0);

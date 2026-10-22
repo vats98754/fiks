@@ -42,6 +42,18 @@ describe('scripts/ensure-shop-mcp.mjs', () => {
     expect(git(clone, 'rev-parse', 'HEAD')).toBe(pin.ref);
   });
 
+  test('a stale local base-shop tag (moved on origin) is replaced when the pin changes', () => {
+    const stale = mkdtempSync(join(tmpdir(), 'fiks-ensure-stale-'));
+    execFileSync('git', ['clone', '--quiet', '--no-tags', source, stale], { stdio: 'pipe' });
+    git(stale, 'checkout', '--quiet', 'main');
+    git(stale, 'tag', '-f', 'base-shop', 'main');
+    git(stale, 'config', 'fiks.fetchedFor', 'an-older-pin');
+    const r = ensure(stale);
+    expect(r.status, r.stderr).toBe(0);
+    expect(git(stale, 'rev-parse', 'base-shop^{commit}')).toBe(pin.ref);
+    expect(git(stale, 'rev-parse', 'HEAD')).toBe(pin.ref);
+  });
+
   test('a dirty clone: exits non-zero and changes nothing', () => {
     git(clone, 'checkout', '--quiet', 'main');
     const head = git(clone, 'rev-parse', 'HEAD');

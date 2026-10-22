@@ -331,7 +331,8 @@ function checkInvariant(
       return out;
     }
     case 'pageComplete': {
-      const pages: unknown[] = [];
+      // Every 2xx JSON response, with its request path (query dropped: page/cursor params vary).
+      const responses: { path: string; body: unknown; carries: boolean }[] = [];
       for (const x of input.upstream ?? []) {
         if (x.response.status < 200 || x.response.status > 299) continue;
         let body: unknown;
@@ -340,10 +341,14 @@ function checkInvariant(
         } catch {
           continue;
         }
-        if (select(body, inv.upstreamCursorPath).some((s) => s.value !== undefined)) pages.push(body);
+        const carries = select(body, inv.upstreamCursorPath).some((s) => s.value !== undefined);
+        responses.push({ path: x.request.url.split('?')[0] ?? '', body, carries });
       }
-      const last = pages.at(-1);
-      if (last === undefined) return 'skip';
+      const lastCarrying = responses.findLast((r) => r.carries);
+      if (lastCarrying === undefined) return 'skip';
+      // The last response for that request path decides: a final page that omits the cursor is done.
+      const pages = responses.filter((r) => r.path === lastCarrying.path);
+      const last = pages.at(-1)?.body;
       const cursor = getOne(last, inv.upstreamCursorPath);
       if (cursor === null || cursor === undefined || cursor === false || cursor === '') return [];
       const n = pages.length;

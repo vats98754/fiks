@@ -182,6 +182,36 @@ describe('pageComplete', () => {
     expect(r.verdict).toBe('verified');
     expect(r.checked).toEqual(['t.tool/pages']);
   });
+  test('a final page that omits the cursor ends the list: verified', () => {
+    const r = run(
+      c,
+      { items: [1, 2] },
+      { upstream: upstream([{ items: [1], next_cursor: 'c2' }, { items: [2] }]) },
+    );
+    expect(r.verdict).toBe('verified');
+    expect(r.checked).toEqual(['t.tool/pages']);
+    for (const done of [null, false, '']) {
+      const end = run(c, {}, { upstream: upstream([{ next_cursor: 'c2' }, { next_cursor: done }]) });
+      expect(end.verdict).toBe('verified');
+    }
+  });
+  test('only responses for the paginated request path decide; other 2xx calls do not', () => {
+    const mixed: EvalInput['upstream'] = [
+      ...(upstream([{ items: [1], next_cursor: 'c2' }]) ?? []),
+      {
+        seq: 1,
+        startedAt: '',
+        durationMs: 0,
+        request: { method: 'GET', url: '/stock/1', headers: {}, body: null },
+        response: { status: 200, headers: {}, body: JSON.stringify({ qty: 3 }) },
+      },
+    ];
+    const r = run(c, {}, { upstream: mixed });
+    expect(r.verdict).toBe('violated');
+    expect(r.violations[0]?.message).toBe(
+      'list is incomplete, the tool stopped after 1 upstream page but upstream next_cursor = "c2"',
+    );
+  });
   test('the tool stopped while upstream still had a cursor: violated', () => {
     const r = run(c, { items: [] }, { upstream: upstream([{ items: [1], next_cursor: 'c2' }]) });
     expect(r.violations).toEqual([

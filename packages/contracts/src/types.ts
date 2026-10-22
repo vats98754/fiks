@@ -56,9 +56,10 @@ export type Invariant = PropertyFlags &
         tolerance?: number;
       }
     /**
-     * The tool read every upstream page: of this call's 2xx JSON upstream responses that carry
-     * `upstreamCursorPath` (e.g. `next_cursor`, `has_more`), the last one says there is no more
-     * (null, absent, false or ''). Skipped when no upstream response carries it.
+     * The tool read every upstream page: once any of this call's 2xx JSON upstream responses
+     * carries `upstreamCursorPath` (e.g. `next_cursor`, `has_more`), the last 2xx JSON response
+     * for the same request path (query ignored; the path of the last response carrying it) says
+     * there is no more (null, absent, false or ''). Skipped when no upstream response carries it.
      */
     | { id: string; kind: 'pageComplete'; upstreamCursorPath: Path }
   );
