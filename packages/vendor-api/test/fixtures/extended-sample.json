@@ -1,0 +1,274 @@
+{
+  "entities": [
+    {
+      "id": "px-0001",
+      "name": "Orbit Headphones 1",
+      "category": "headphones",
+      "price": 9,
+      "currency": "USD",
+      "stock": 0,
+      "authorBatch": "b01"
+    },
+    {
+      "id": "px-0002",
+      "name": "Pulse Laptop 2",
+      "category": "laptop",
+      "price": 14.99,
+      "currency": "USD",
+      "stock": 7,
+      "authorBatch": "b01"
+    },
+    {
+      "id": "px-0003",
+      "name": "Vertex Cable 3",
+      "category": "cable",
+      "price": 49,
+      "currency": "USD",
+      "stock": 14,
+      "authorBatch": "b01"
+    },
+    {
+      "id": "px-0004",
+      "name": "Lumen Webcam 4",
+      "category": "webcam",
+      "price": 129.5,
+      "currency": "USD",
+      "stock": 21,
+      "authorBatch": "b01"
+    },
+    {
+      "id": "px-0005",
+      "name": "Nova Monitor 5",
+      "category": "monitor",
+      "price": 399,
+      "currency": "USD",
+      "stock": 5,
+      "authorBatch": "b01"
+    },
+    {
+      "id": "px-0006",
+      "name": "Quill Dock 6",
+      "category": "dock",
+      "price": 2499,
+      "currency": "USD",
+      "stock": 12,
+      "authorBatch": "b01"
+    },
+    {
+      "id": "px-0007",
+      "name": "Ridge Headphones 7",
+      "category": "headphones",
+      "price": 74,
+      "currency": "USD",
+      "stock": 19,
+      "authorBatch": "b01"
+    },
+    {
+      "id": "px-0008",
+      "name": "Sable Laptop 8",
+      "category": "laptop",
+      "price": 18.25,
+      "currency": "USD",
+      "stock": 3,
+      "authorBatch": "b01"
+    },
+    {
+      "id": "px-0009",
+      "name": "Tidal Cable 9",
+      "category": "cable",
+      "price": 1099,
+      "currency": "USD",
+      "stock": 10,
+      "authorBatch": "b01"
+    },
+    {
+      "id": "px-0010",
+      "name": "Umber Webcam 10",
+      "category": "webcam",
+      "price": 5.5,
+      "currency": "USD",
+      "stock": 17,
+      "authorBatch": "b01"
+    },
+    {
+      "id": "px-0011",
+      "name": "Vale Monitor 11",
+      "category": "monitor",
+      "price": 9,
+      "currency": "USD",
+      "stock": 1,
+      "authorBatch": "b01"
+    },
+    {
+      "id": "px-0012",
+      "name": "Wisp Dock 12",
+      "category": "dock",
+      "price": 14.99,
+      "currency": "USD",
+      "stock": 8,
+      "authorBatch": "b01"
+    },
+    {
+      "id": "px-0013",
+      "name": "Orbit Headphones 13",
+      "category": "headphones",
+      "price": 49,
+      "currency": "USD",
+      "stock": 15,
+      "authorBatch": "b01"
+    },
+    {
+      "id": "px-0014",
+      "name": "Pulse Laptop 14",
+      "category": "laptop",
+      "price": 129.5,
+      "currency": "USD",
+      "stock": 22,
+      "authorBatch": "b01"
+    },
+    {
+      "id": "px-0015",
+      "name": "Vertex Cable 15",
+      "category": "cable",
+      "price": 399,
+      "currency": "USD",
+      "stock": 6,
+      "authorBatch": "b01"
+    },
+    {
+      "id": "px-0016",
+      "name": "Lumen Webcam 16",
+      "category": "webcam",
+      "price": 2499,
+      "currency": "USD",
+      "stock": 13,
+      "authorBatch": "b02"
+    },
+    {
+      "id": "px-0017",
+      "name": "Nova Monitor 17",
+      "category": "monitor",
+      "price": 74,
+      "currency": "USD",
+      "stock": 20,
+      "authorBatch": "b02"
+    },
+    {
+      "id": "px-0018",
+      "name": "Quill Dock 18",
+      "category": "dock",
+      "price": 18.25,
+      "currency": "USD",
+      "stock": 4,
+      "authorBatch": "b02"
+    },
+    {
+      "id": "px-0019",
+      "name": "Ridge Headphones 19",
+      "category": "headphones",
+      "price": 1099,
+      "currency": "USD",
+      "stock": 11,
+      "authorBatch": "b02"
+    },
+    {
+      "id": "px-0020",
+      "name": "Sable Laptop 20",
+      "category": "laptop",
+      "price": 5.5,
+      "currency": "USD",
+      "stock": 18,
+      "authorBatch": "b02"
+    },
+    {
+      "id": "px-0021",
+      "name": "Tidal Cable 21",
+      "category": "cable",
+      "price": 9,
+      "currency": "USD",
+      "stock": 2,
+      "authorBatch": "b02"
+    },
+    {
+      "id": "px-0022",
+      "name": "Umber Webcam 22",
+      "category": "webcam",
+      "price": 14.99,
+      "currency": "USD",
+      "stock": 9,
+      "authorBatch": "b02"
+    },
+    {
+      "id": "px-0023",
+      "name": "Vale Monitor 23",
+      "category": "monitor",
+      "price": 49,
+      "currency": "USD",
+      "stock": 16,
+      "authorBatch": "b02"
+    },
+    {
+      "id": "px-0024",
+      "name": "Wisp Dock 24",
+      "category": "dock",
+      "price": 129.5,
+      "currency": "USD",
+      "stock": 0,
+      "authorBatch": "b02"
+    },
+    {
+      "id": "px-0025",
+      "name": "Orbit Headphones 25",
+      "category": "headphones",
+      "price": 399,
+      "currency": "USD",
+      "stock": 7,
+      "authorBatch": "b02"
+    },
+    {
+      "id": "px-0026",
+      "name": "Pulse Laptop 26",
+      "category": "laptop",
+      "price": 2499,
+      "currency": "USD",
+      "stock": 14,
+      "authorBatch": "b02"
+    },
+    {
+      "id": "px-0027",
+      "name": "Vertex Cable 27",
+      "category": "cable",
+      "price": 74,
+      "currency": "USD",
+      "stock": 21,
+      "authorBatch": "b02"
+    },
+    {
+      "id": "px-0028",
+      "name": "Lumen Webcam 28",
+      "category": "webcam",
+      "price": 18.25,
+      "currency": "USD",
+      "stock": 5,
+      "authorBatch": "b02"
+    },
+    {
+      "id": "px-0029",
+      "name": "Nova Monitor 29",
+      "category": "monitor",
+      "price": 1099,
+      "currency": "USD",
+      "stock": 12,
+      "authorBatch": "b02"
+    },
+    {
+      "id": "px-0030",
+      "name": "Quill Dock 30",
+      "category": "dock",
+      "price": 5.5,
+      "currency": "USD",
+      "stock": 19,
+      "authorBatch": "b02"
+    }
+  ]
+}

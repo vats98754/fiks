@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@fiks/contracts": "workspace:*",
+    "@fiks/domains": "workspace:*",
+    "@fiks/interfaces": "workspace:*",
     "@fiks/proxy": "workspace:*",
     "@fiks/vendor-api": "workspace:*"
   }

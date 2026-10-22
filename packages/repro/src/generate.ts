@@ -1,17 +1,12 @@
-import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
+import type { ReproEmitter, ReproSpec } from '@fiks/interfaces';
 import { ALL_DRIFTS } from '@fiks/vendor-api';
-import { formatFiles } from './format.ts';
+import { formatInMemory } from './format.ts';
+import { reproHooks } from './hooks.ts';
 import type { Trace } from './trace-store.ts';
 
-export interface ReproSpec {
-  traceId: string;
-  /** The target properties: the test must fail naming each of them. */
-  propertyIds: string[];
-  /** Relative to the shop-mcp repo. */
-  testPath: string;
-  tracePath: string;
-}
+export type { ReproSpec } from '@fiks/interfaces';
 
 /**
  * Traces stored in shop-mcp must come from the real upstream behavior. An isolated drift
@@ -55,20 +50,48 @@ test('${esc(target.join(' + '))} holds for ${esc(trace.tool)} [fiks ${trace.id}]
 `;
 }
 
-/** Writes the trace and its repro test into a shop-mcp checkout. */
-export function generateRepro(trace: Trace, traceFile: string, repoDir: string): ReproSpec {
-  assertStorableProfile(trace);
+/**
+ * The shop Domain's reproEmitter: the trace and its repro test in shop-mcp's layout
+ * (`test/repro/<id>.json` + `<id>.test.ts`, importing `../fiks/check.ts`), formatted the way
+ * ec241bc's `generateRepro` left them (shop-mcp's Biome settings = fiks's, same version).
+ */
+export function shopReproEmitter(...[trace, spec]: Parameters<ReproEmitter>): ReturnType<ReproEmitter> {
+  assertStorableProfile(trace as Trace);
+  const fmt = (path: string, text: string) => formatInMemory(basename(path), text);
+  return {
+    files: [
+      { path: spec.tracePath, bytes: fmt(spec.tracePath, `${JSON.stringify(trace, null, 2)}\n`) },
+      { path: spec.testPath, bytes: fmt(spec.testPath, reproSource(trace as Trace)) },
+    ],
+    testPath: spec.testPath,
+  };
+}
+
+/**
+ * Writes the trace and its repro test into a checkout of the domain's tool repo, through the
+ * domain's `reproEmitter` (default domain: shop). `_traceFile` is kept for callers; the bytes
+ * come from `trace`, which is what the file holds.
+ */
+export function generateRepro(trace: Trace, _traceFile: string, repoDir: string, domain = 'shop'): ReproSpec {
   const target = targetOf(trace);
   const violated = new Set(trace.violated.map((v) => v.propertyId));
   if (target.length === 0) throw new Error(`trace ${trace.id} has no target property`);
   const unknown = target.filter((p) => !violated.has(p));
   if (unknown.length) throw new Error(`trace ${trace.id}: target ${unknown.join(', ')} was not violated`);
-  const dir = join(repoDir, 'test/repro');
-  mkdirSync(dir, { recursive: true });
-  const tracePath = `test/repro/${trace.id}.json`;
-  const testPath = `test/repro/${trace.id}.test.ts`;
-  copyFileSync(traceFile, join(repoDir, tracePath));
-  writeFileSync(join(repoDir, testPath), reproSource(trace));
-  formatFiles(repoDir, [tracePath, testPath]);
-  return { traceId: trace.id, propertyIds: targetOf(trace), testPath, tracePath };
+  const spec: ReproSpec = {
+    traceId: trace.id,
+    propertyIds: target,
+    testPath: `test/repro/${trace.id}.test.ts`,
+    tracePath: `test/repro/${trace.id}.json`,
+  };
+  const out = reproHooks(domain).reproEmitter(trace, spec);
+  for (const f of out.files) {
+    if (f.path.startsWith('/') || f.path.split('/').includes('..')) {
+      throw new Error(`reproEmitter: refusing to write outside the repo: ${f.path}`);
+    }
+    const abs = join(repoDir, f.path);
+    mkdirSync(dirname(abs), { recursive: true });
+    writeFileSync(abs, f.bytes);
+  }
+  return { ...spec, testPath: out.testPath };
 }

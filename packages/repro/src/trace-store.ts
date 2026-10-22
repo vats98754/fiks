@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Recording, Violation } from '@fiks/contracts';
+import type { RerecordProfile } from '@fiks/interfaces';
 import type { CallRecord } from '@fiks/proxy';
 
 /** A captured silent failure: the exact call, its upstream HTTP, and what it violated. */
@@ -10,6 +11,11 @@ export interface Trace extends Recording {
   contractId: string;
   violated: Violation[];
   server: { name: string; transport: 'stdio' | 'http'; gitSha?: string };
+  /**
+   * Injector-aware upstream profile (P7): domain, base vendor version, injector rule id and hash.
+   * Absent on traces captured from the versioned vendor alone (D1-D5); `upstream` then says it all.
+   */
+  profile?: RerecordProfile;
 }
 
 export function traceId(rec: CallRecord): string {
@@ -22,7 +28,13 @@ export function traceId(rec: CallRecord): string {
 
 export function traceFromCall(
   rec: CallRecord,
-  meta: { runId: string; upstream: Trace['upstream']; server: Trace['server']; target?: string[] },
+  meta: {
+    runId: string;
+    upstream: Trace['upstream'];
+    server: Trace['server'];
+    target?: string[];
+    profile?: RerecordProfile;
+  },
 ): Trace {
   return {
     id: traceId(rec),
@@ -39,6 +51,7 @@ export function traceFromCall(
     violated: rec.receipt.violations,
     ...(meta.target ? { target: meta.target } : {}),
     server: meta.server,
+    ...(meta.profile ? { profile: meta.profile } : {}),
   };
 }
 

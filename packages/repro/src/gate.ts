@@ -2,19 +2,10 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
-import type { ReproSpec } from './generate.ts';
+import type { FailedTest, FileResult, ReproSpec, SuiteRun } from '@fiks/interfaces';
+import { isWholeSuite, reproHooks, restrictToScope } from './hooks.ts';
 
-export interface FailedTest {
-  file: string;
-  test: string;
-  message: string;
-}
-
-/** Per-file assertion statuses, so a gate can see whether a given test file ran at all. */
-export interface FileResult {
-  file: string;
-  statuses: string[];
-}
+export type { FailedTest, FileResult, SuiteRun } from '@fiks/interfaces';
 
 export interface GateResult {
   gate: 'F' | 'P' | 'local' | 'ci';
@@ -30,15 +21,6 @@ export interface GateResult {
   };
 }
 
-export interface SuiteRun {
-  exitCode: number;
-  failed: FailedTest[];
-  files: FileResult[];
-  suiteErrors: string[];
-  logPath: string;
-  command: string;
-}
-
 interface VitestJson {
   testResults: {
     name: string;
@@ -48,13 +30,30 @@ interface VitestJson {
   }[];
 }
 
+export interface RunSuiteOptions {
+  /** Extra environment for the vitest process (e.g. NODE_OPTIONS with a preload). */
+  env?: NodeJS.ProcessEnv;
+  /** vitest file filters (default: none, the whole suite). */
+  filters?: string[];
+}
+
 /** Runs the whole shop-mcp vitest suite in `repoDir` and reports what ran and what failed. */
-export function runSuite(repoDir: string): SuiteRun {
+export function runSuite(repoDir: string, opts: RunSuiteOptions = {}): SuiteRun {
   const out = join(mkdtempSync(join(tmpdir(), 'fiks-gate-')), 'vitest.json');
   // A generous per-test timeout: a busy machine must not turn into a gate verdict.
-  const args = ['run', '--reporter=json', `--outputFile=${out}`, '--testTimeout=60000'];
+  const args = [
+    'run',
+    '--reporter=json',
+    `--outputFile=${out}`,
+    '--testTimeout=60000',
+    ...(opts.filters ?? []),
+  ];
   const command = `vitest ${args.join(' ')}`;
-  const r = spawnSync(join(repoDir, 'node_modules/.bin/vitest'), args, { cwd: repoDir, encoding: 'utf8' });
+  const r = spawnSync(join(repoDir, 'node_modules/.bin/vitest'), args, {
+    cwd: repoDir,
+    encoding: 'utf8',
+    ...(opts.env ? { env: { ...process.env, ...opts.env } } : {}),
+  });
   let report: VitestJson;
   try {
     report = JSON.parse(readFileSync(out, 'utf8')) as VitestJson;
@@ -117,13 +116,17 @@ export function classifyFailure(message: string, propertyIds: string[]): { ok: b
 }
 
 /**
- * F gate: on the unfixed code the full suite fails in exactly the generated repro test, for
- * the stated reason, with no setup errors, the same way on every run.
+ * F gate: on the unfixed code the domain's suite (shop: the full suite) fails in exactly the
+ * generated repro test, for the stated reason, with no setup errors, the same way on every run.
+ * Only failures inside the suite's scope count (the domain's `oneFailingInScope`).
  */
-export function failGate(repoDir: string, spec: ReproSpec, runs = 3): GateResult {
+export function failGate(repoDir: string, spec: ReproSpec, runs = 3, domain = 'shop'): GateResult {
+  const { suite } = reproHooks(domain);
+  const scope = suite.scope;
   let first: SuiteRun | undefined;
   for (let i = 0; i < runs; i++) {
-    const r = runSuite(repoDir);
+    const raw = suite.run(repoDir, scope);
+    const r = restrictToScope(raw, scope);
     first ??= r;
     const evidence = {
       command: r.command,
@@ -134,11 +137,14 @@ export function failGate(repoDir: string, spec: ReproSpec, runs = 3): GateResult
     };
     const fail = (reason: string): GateResult => ({ gate: 'F', ok: false, reason, evidence });
     if (r.suiteErrors.length) return fail(`setup error: ${r.suiteErrors.join('; ')}`);
-    if (r.exitCode === 0 || r.failed.length === 0) return fail('passed on unfixed code');
+    if ((isWholeSuite(scope) && r.exitCode === 0) || r.failed.length === 0)
+      return fail('passed on unfixed code');
     const others = r.failed.filter((f) => f.file !== spec.testPath);
     if (others.length)
       return fail(`other tests fail too: ${others.map((f) => `${f.file} > ${f.test}`).join('; ')}`);
     if (r.failed.length !== 1) return fail(`expected 1 failing test, got ${r.failed.length}`);
+    if (!suite.oneFailingInScope(raw, scope))
+      return fail('expected exactly one failing test inside the suite scope');
     const why = classifyFailure(r.failed[0]?.message ?? '', spec.propertyIds);
     if (!why.ok) return fail(why.reason);
     const same =
@@ -154,9 +160,10 @@ export function failGate(repoDir: string, spec: ReproSpec, runs = 3): GateResult
   };
 }
 
-/** P gate: the repro test ran and passed, and so did the whole suite. */
-export function passGate(repoDir: string, spec: ReproSpec): GateResult {
-  const r = runSuite(repoDir);
+/** P gate: the repro test ran and passed, and so did the domain's suite (shop: the whole suite). */
+export function passGate(repoDir: string, spec: ReproSpec, domain = 'shop'): GateResult {
+  const { suite } = reproHooks(domain);
+  const r = restrictToScope(suite.run(repoDir, suite.scope), suite.scope);
   const evidence = { command: r.command, exitCode: r.exitCode, failed: r.failed, logPath: r.logPath };
   const fail = (reason: string): GateResult => ({ gate: 'P', ok: false, reason, evidence });
   if (r.suiteErrors.length) return fail(`setup error: ${r.suiteErrors.join('; ')}`);
@@ -169,7 +176,7 @@ export function passGate(repoDir: string, spec: ReproSpec): GateResult {
       `repro test did not run and pass (${ran ? ran.statuses.join(',') || 'no tests' : 'missing'})`,
     );
   }
-  if (r.exitCode !== 0)
+  if (isWholeSuite(suite.scope) ? r.exitCode !== 0 : r.failed.length > 0)
     return fail(`suite fails: ${r.failed.map((f) => `${f.file} > ${f.test}`).join('; ')}`);
   return { gate: 'P', ok: true, reason: 'repro test ran and passed; full suite passes', evidence };
 }

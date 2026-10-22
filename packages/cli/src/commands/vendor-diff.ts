@@ -55,7 +55,16 @@ async function withVendor<T>(
   }
 }
 
-export async function vendorDiff() {
+/**
+ * v1 vs v2 of the shop vendor: the published spec and one behavioural probe per drift. Only the
+ * shop vendor is versioned; other domains change through injector rules (P7), not versions.
+ */
+export async function vendorDiff(domain = 'shop') {
+  if (domain !== 'shop') {
+    throw new Error(
+      `vendor-diff: domain ${domain} has no versioned vendor to compare (drifts there are injector rules)`,
+    );
+  }
   const specV1 = await withVendor('v1', undefined, (b) => json(`${b}/openapi.json`));
   const specV2 = await withVendor('v2', undefined, (b) => json(`${b}/openapi.json`));
   const behaviorDiffs = [];

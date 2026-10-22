@@ -1,74 +1,19 @@
 import { join } from 'node:path';
+import type { DomainScenario } from '@fiks/interfaces';
 import type { Receipt } from '@fiks/proxy';
 import { appendEvent, saveTrace, traceFromCall } from '@fiks/repro';
-import type { VendorVersion } from '@fiks/vendor-api';
-import { type HarnessOptions, startHarness } from '../harness.ts';
-import { FIKS_DIR, shopAt } from '../paths.ts';
-import { FIXTURE_CALLS } from './record-fixtures.ts';
+import { SCENARIOS } from '@fiks/vendor-api';
+import { type HarnessOptions, harnessDomain, startHarness } from '../harness.ts';
+import { FIKS_DIR, repoAt } from '../paths.ts';
 
-export interface ScenarioCall {
-  tool: string;
-  args: Record<string, unknown>;
+export type { Scenario, ScenarioCall } from '@fiks/vendor-api';
+export { SCENARIOS };
+
+/** The scenarios of `domain` (shop: SCENARIOS). */
+export function scenariosOf(domain = 'shop'): Record<string, DomainScenario> {
+  const d = harnessDomain(domain);
+  return d ? d.scenarios : SCENARIOS;
 }
-
-export interface Scenario {
-  id: string;
-  vendor: VendorVersion;
-  /** The drift this scenario isolates (v2 only). */
-  drift?: string;
-  calls: ScenarioCall[];
-  /** The contract properties this drift breaks: a trace's `target`. */
-  target: string[];
-}
-
-/**
- * Fixed call scripts. By default each D* scenario runs vendor v2 with only its drift active
- * (`profile: 'isolated'`, for detection checks). `profile: 'full'` runs the real v2 with every
- * drift; traces that go into shop-mcp are captured that way (see PLAN.md, trace profile rule).
- */
-export const SCENARIOS: Record<string, Scenario> = {
-  'v1-all': {
-    id: 'v1-all',
-    vendor: 'v1',
-    calls: FIXTURE_CALLS.map(({ tool, args }) => ({ tool, args })),
-    target: [],
-  },
-  D1: {
-    id: 'D1',
-    vendor: 'v2',
-    drift: 'D1',
-    calls: [{ tool: 'search_products', args: { query: 'laptop' } }],
-    target: ['shop.search_products/items.price.range'],
-  },
-  D2: {
-    id: 'D2',
-    vendor: 'v2',
-    drift: 'D2',
-    calls: [{ tool: 'get_product', args: { id: 'p-1001' } }],
-    target: ['shop.get_product/price.notNull'],
-  },
-  D3: {
-    id: 'D3',
-    vendor: 'v2',
-    drift: 'D3',
-    calls: [{ tool: 'create_order', args: { items: [{ product_id: 'p-1004', quantity: 2 }] } }],
-    target: ['shop.create_order/readAfterWrite'],
-  },
-  D4: {
-    id: 'D4',
-    vendor: 'v2',
-    drift: 'D4',
-    calls: [{ tool: 'search_products', args: { query: 'cable' } }],
-    target: ['shop.search_products/countMatchesTotal'],
-  },
-  D5: {
-    id: 'D5',
-    vendor: 'v2',
-    drift: 'D5',
-    calls: [{ tool: 'get_order', args: { order_id: 'o-5001' } }],
-    target: ['shop.get_order/created_at.freshness', 'shop.get_order/created_at.equalsUpstream'],
-  },
-};
 
 export interface ScenarioOptions extends Partial<HarnessOptions> {
   profile?: 'isolated' | 'full';
@@ -81,8 +26,12 @@ export interface ScenarioOptions extends Partial<HarnessOptions> {
 }
 
 export async function runScenario(id: string, opts: ScenarioOptions = {}) {
-  const s = SCENARIOS[id];
-  if (!s) throw new Error(`unknown scenario ${id}; known: ${Object.keys(SCENARIOS).join(', ')}`);
+  const domain = opts.domain ?? 'shop';
+  const all = scenariosOf(domain);
+  const s = all[id];
+  if (!s) throw new Error(`unknown scenario ${id}; known: ${Object.keys(all).join(', ')}`);
+  const serverName =
+    domain === 'shop' ? 'shop-mcp' : (harnessDomain(domain)?.repo.slug.split('/').pop() ?? domain);
   const runId = opts.runId ?? `run_${new Date().toISOString().replace(/[-:.]/g, '')}`;
   const traceDir = opts.traceDir === false ? undefined : (opts.traceDir ?? join(FIKS_DIR, 'traces'));
   const eventsPath = opts.eventsPath ?? join(FIKS_DIR, 'events.jsonl');
@@ -97,7 +46,7 @@ export async function runScenario(id: string, opts: ScenarioOptions = {}) {
     via: 'proxy',
     clock,
     ...opts,
-    shopDir: opts.shopDir ?? shopAt(opts.shopRef),
+    shopDir: opts.shopDir ?? repoAt(opts.shopRef, domain),
     onCall: async (rec) => {
       const extra = await opts.onCall?.(rec);
       if (!traceDir || rec.receipt.verdict !== 'violated') return extra;
@@ -106,7 +55,7 @@ export async function runScenario(id: string, opts: ScenarioOptions = {}) {
       const trace = traceFromCall(rec, {
         runId,
         upstream: { version: s.vendor, drifts: h.vendorDrifts, clock: clock.toISOString() },
-        server: { name: 'shop-mcp', transport },
+        server: { name: serverName, transport },
         ...(target.length ? { target } : {}),
       });
       const file = saveTrace(traceDir, trace);

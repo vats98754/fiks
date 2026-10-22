@@ -1,37 +1,50 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildProbeArgs, findContract, type Recording, SHOP_CONTRACTS } from '@fiks/contracts';
-import type { VendorVersion } from '@fiks/vendor-api';
-import { startHarness } from '../harness.ts';
-import { shopDir } from '../paths.ts';
+import {
+  buildProbeArgs,
+  type ContractFile,
+  findContract,
+  type Recording,
+  SHOP_CONTRACTS,
+} from '@fiks/contracts';
+import { FIXTURE_CALLS } from '@fiks/vendor-api';
+import { harnessDomain, startHarness } from '../harness.ts';
+import { repoDir } from '../paths.ts';
 
-/** The calls recorded as baseline fixtures. Every one must verify cleanly against v1. */
-export const FIXTURE_CALLS: { slug: string; tool: string; args: Record<string, unknown> }[] = [
-  { slug: 'search-laptop', tool: 'search_products', args: { query: 'laptop' } },
-  { slug: 'search-cable', tool: 'search_products', args: { query: 'cable' } },
-  { slug: 'search-monitor', tool: 'search_products', args: { query: 'monitor' } },
-  { slug: 'search-none', tool: 'search_products', args: { query: 'teapot' } },
-  { slug: 'product-p-1001', tool: 'get_product', args: { id: 'p-1001' } },
-  { slug: 'product-p-1004', tool: 'get_product', args: { id: 'p-1004' } },
-  { slug: 'product-p-1107', tool: 'get_product', args: { id: 'p-1107' } },
-  { slug: 'product-unknown', tool: 'get_product', args: { id: 'p-0000' } },
-  { slug: 'order-create', tool: 'create_order', args: { items: [{ product_id: 'p-1004', quantity: 2 }] } },
-  { slug: 'order-o-5001', tool: 'get_order', args: { order_id: 'o-5001' } },
-];
+/** The contracts of `domain` (shop: SHOP_CONTRACTS; others: their Domain's contractsPath). */
+export function contractsOf(domain = 'shop'): ContractFile {
+  const d = harnessDomain(domain);
+  if (!d || d.id === 'shop') return SHOP_CONTRACTS;
+  return JSON.parse(readFileSync(d.contractsPath, 'utf8')) as ContractFile;
+}
+
+export { FIXTURE_CALLS };
 
 export async function recordFixtures(opts: {
-  vendor: VendorVersion;
+  vendor: string;
   drifts?: string;
   out?: string;
   shopDir?: string;
+  domain?: string;
 }) {
-  const out = opts.out ?? join(opts.shopDir ?? shopDir(), 'test/fixtures', opts.vendor);
+  const domain = opts.domain ?? 'shop';
+  const d = harnessDomain(domain);
+  const calls = d ? d.fixtureCalls : FIXTURE_CALLS;
+  const contracts = contractsOf(domain);
+  const versionHeader = d?.versionHeader ?? 'vendor-api-version';
+  const out = opts.out ?? join(opts.shopDir ?? repoDir(domain), 'test/fixtures', opts.vendor);
   mkdirSync(out, { recursive: true });
   const clock = new Date();
-  const h = await startHarness({ vendor: opts.vendor, drifts: opts.drifts, clock, shopDir: opts.shopDir });
+  const h = await startHarness({
+    vendor: opts.vendor,
+    drifts: opts.drifts,
+    clock,
+    shopDir: opts.shopDir,
+    domain,
+  });
   const written: string[] = [];
   try {
-    for (const c of FIXTURE_CALLS) {
+    for (const c of calls) {
       const capturedAt = clock.toISOString();
       const { result, http } = await h.call(c.tool, c.args);
       const rec: Recording = {
@@ -41,10 +54,10 @@ export async function recordFixtures(opts: {
         args: c.args,
         result,
         http,
-        vendorVersionHeader: http[0]?.response.headers['vendor-api-version'],
-        upstream: { version: opts.vendor, drifts: h.vendor.state.drifts, clock: clock.toISOString() },
+        vendorVersionHeader: http[0]?.response.headers[versionHeader],
+        upstream: { version: opts.vendor, drifts: h.vendorDrifts, clock: clock.toISOString() },
       };
-      const post = findContract(SHOP_CONTRACTS, c.tool)?.postconditions?.[0];
+      const post = findContract(contracts, c.tool)?.postconditions?.[0];
       if (post && result.structuredContent && !result.isError) {
         const args = buildProbeArgs(post, result.structuredContent);
         const probe = await h.call(post.probeTool, args);

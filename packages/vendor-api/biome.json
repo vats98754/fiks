@@ -1,0 +1,25 @@
+{
+  "$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+  "root": false,
+  "extends": "//",
+  "overrides": [
+    {
+      "includes": ["src/truth.ts", "src/originEntity.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@fiks/contracts": "truth() and originEntity() must not depend on the contracts (PLAN 3.0, 3.1).",
+                  "@fiks/proxy": "truth() and originEntity() must not depend on the proxy or any monitor (PLAN 3.0)."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
