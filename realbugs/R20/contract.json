@@ -1,0 +1,30 @@
+{
+  "server": "figma-developer-mcp",
+  "version": 1,
+  "contracts": [
+    {
+      "id": "figma.download_figma_images",
+      "tool": "download_figma_images",
+      "invariants": []
+    }
+  ],
+  "realbug": {
+    "bugId": "R20",
+    "writtenFrom": "symptom only: upstream issue GLips/Figma-Context-MCP#364 (title, body), the fix PR's metadata (number, title, merge commit, branch name; no body, files or diff), the prefix README, .env.example, src/config.ts and the prefix server's --help and tools/list; see contract-log.md",
+    "properties": [
+      {
+        "id": "figma.download_figma_images/fileWritten",
+        "kind": "fileWrittenRequested",
+        "tool": "download_figma_images",
+        "requested": "args.nodes[*]",
+        "fileName": "fileName",
+        "dir": "args.localPath",
+        "dirBase": "imageDir",
+        "minSize": 1,
+        "reportedPaths": "content[*].text, every token that ends in .png, .svg or .gif",
+        "signal": "fileName or nodeId named in a text block that also says fail, error, skip, could not, unable or not (downloaded|saved|written)",
+        "rule": "After a non-error download_figma_images result, for every requested node n: let D = args.localPath if it is absolute, else <imageDir>/<args.localPath> (imageDir = the server's image directory, as its tool description announces it); then D/<n.fileName> (or, when n.filenameSuffix is set, a file in D whose name contains the suffix and ends with n.fileName's extension) is a regular file of size >= 1 byte. A node the response visibly reports as not downloaded (signal) is exempt. In addition, every file path the response reports (absolute, or relative to imageDir) is a regular file of size >= 1 byte. Violated otherwise. An isError result is unverifiable (an explicit error is a signal the agent sees)."
+      }
+    ]
+  }
+}
