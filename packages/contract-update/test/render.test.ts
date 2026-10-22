@@ -13,7 +13,7 @@ import {
   parseOutcome,
   renderProposal,
 } from '../src/index.ts';
-import { cleanCorpus, premiumSearch, searchVariants, storedTraces } from './helpers.ts';
+import { cleanCorpus, premiumSearch, searchVariants, shopOutputSchemas, storedTraces } from './helpers.ts';
 
 const widen = (max: number): ContractDelta => ({
   rationale: 'Vendor changelog 2026-10: premium laptops above $2,000 are now sold.',
@@ -40,6 +40,7 @@ const gate = (delta: ContractDelta) =>
     storedViolations: storedTraces(),
     cleanCorpus: cleanCorpus(),
     mutationVariants: searchVariants(),
+    declaredOutputSchemas: shopOutputSchemas(),
   });
 
 describe('renderProposal', () => {

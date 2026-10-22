@@ -1,13 +1,21 @@
 // Test inputs. Recorded data is copied verbatim (then biome-formatted) from the shop-mcp repo:
 //   fixtures/shop-v1/*.json  <- .work/shop-mcp/test/fixtures/v1/ (the clean v1 corpus)
 //   fixtures/traces/*.json   <- .work/shop-mcp/test/repro/tr_*.json (the stored D1-D5 traces)
+//   fixtures/shop-tools-list.json <- the `tools/list` result of shop-mcp at tag seed-v1
+//     (9313c40354ad249f96206c40f80dc8d6bbcc2540), run over stdio; the declared outputSchemas the
+//     live proxy checks. Tool outputSchemas are unchanged between seed-v1 and the fixed heads.
 // Benign triggers and mutation variants are SYNTHESIZED here from those recordings: the benign
 // author (5.3) and MUT (5.4) streams are not merged yet. Each variant applies one 5.4 operator to
 // the upstream body and mirrors the v1 server's pass-through of that field into the tool output.
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Recording } from '@fiks/contracts';
-import { fromRecording, type GateCase } from '../src/cases.ts';
+import {
+  type DeclaredOutputSchemas,
+  declaredOutputSchemas,
+  fromRecording,
+  type GateCase,
+} from '../src/cases.ts';
 
 const dir = join(import.meta.dirname, 'fixtures');
 
@@ -26,6 +34,13 @@ export const storedTraces = (): Recording[] =>
     .filter((f) => f.endsWith('.json'))
     .sort()
     .map((f) => load(`traces/${f}`));
+
+/** shop-mcp's declared outputSchemas, by tool name, from its recorded tools/list. */
+export const shopOutputSchemas = (): DeclaredOutputSchemas =>
+  declaredOutputSchemas(
+    (JSON.parse(readFileSync(join(dir, 'shop-tools-list.json'), 'utf8')) as { tools: { name: string }[] })
+      .tools,
+  );
 
 export const D1 = () => load('traces/D1-tr_b47c5b77c6.json');
 

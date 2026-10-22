@@ -15,7 +15,6 @@ export interface GateCase {
   probe?: EvalInput['probe'];
   /** ISO instant used as the evaluation `now` (the capture instant, never the system clock). */
   now: string;
-  declaredOutputSchema?: JsonSchema;
   /** For stored traces: the property ids the trace is about. */
   target?: string[];
   /** MUT operator id (e.g. `M5`) for mutation variants. */
@@ -73,12 +72,31 @@ export function toGateCase(x: GateInput): GateCase {
   return x;
 }
 
-export function evalInput(c: GateCase & { result: ToolResultLike }): EvalInput {
+/**
+ * The server's declared outputSchemas from `tools/list`, by tool name. `null` = the tool declares
+ * none. The live proxy checks `<contract>/outputSchema` against these (proxy.ts, `schemas`), so the
+ * gate applies the same schema to every case; a tool absent from the map makes the gate fail closed.
+ */
+export type DeclaredOutputSchemas = Record<string, JsonSchema | null>;
+
+/** Builds the map from a `tools/list` result (tools without an outputSchema map to `null`). */
+export function declaredOutputSchemas(
+  tools: { name: string; outputSchema?: JsonSchema }[],
+): DeclaredOutputSchemas {
+  const out: DeclaredOutputSchemas = {};
+  for (const t of tools) out[t.name] = t.outputSchema ?? null;
+  return out;
+}
+
+export function evalInput(
+  c: GateCase & { result: ToolResultLike },
+  declaredOutputSchema?: JsonSchema,
+): EvalInput {
   return {
     args: c.args,
     result: c.result,
     now: new Date(c.now),
-    declaredOutputSchema: c.declaredOutputSchema,
+    declaredOutputSchema,
     probe: c.probe,
     upstream: c.upstream,
   };

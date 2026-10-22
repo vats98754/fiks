@@ -76,9 +76,46 @@ only network use was the read-only `scripts/ensure-shop-mcp.mjs` clone into the 
 - `contractDiff` matches `diff -U3` hunk for hunk on a two-hunk change.
 - `pnpm typecheck` exit 0; `pnpm lint` exit 0 ("Checked 161 files ... No fixes applied").
 
+## Round 2 (verifier findings)
+
+Rebased onto main `c144b03` (no new commits; "Current branch ws/CU is up to date"); SETUP re-run
+("nothing to apply", install exit 0; lockfile edit again left uncommitted).
+
+1. **Vacuous passes now fail closed** (`gate.ts`). Besides empty lists, the gate adds an `input`
+   finding when the stored list is non-empty but no trace violates its target under the current
+   contract (`stored.used === 0`), when no clean corpus case verifies under the current contract
+   (new `summary.corpus.verified === 0`), and when no mutation variant was rejected before the
+   delta (`mutation.rejectedBefore === 0`). The verifier's repro (widen `get_product/price.range`
+   to 3,000, `storedViolations: [shop-v1/search-laptop.json]`) is now rejected with stored
+   `{total: 1, used: 0, stillViolate: 0}` and one `input` finding. One test per case; disabling
+   each new check makes exactly its test fail.
+2. **Declared outputSchemas** (`cases.ts`, `gate.ts`). New required `GateContext.
+   declaredOutputSchemas: Record<tool, JsonSchema | null>` (`null` = the tool declares none),
+   built from a tools/list result by `declaredOutputSchemas(tools)`; ORCH fills it from the
+   server's `tools/list`. The gate applies it to every case (trigger, stored, corpus, variants),
+   as the proxy does (`proxy.ts`, `declaredOutputSchema: schemas.get(name)`); `GateCase.
+   declaredOutputSchema` is removed so no per-case value can diverge. A missing map is one `input`
+   finding; a map without a case's tool is one `input` finding per tool. Fixture
+   `test/fixtures/shop-tools-list.json`: the verbatim `tools/list` result of shop-mcp tag
+   `seed-v1` (`9313c40`), run over stdio from a `git archive` export; tool outputSchemas are
+   unchanged between `seed-v1` and `7bf2e66`. Tests: M7 (price `"2499"`) on `get_product` verifies
+   without the schema but violates exactly `shop.get_product/outputSchema` with it, both under
+   the current contract and under the accepted `price.range` widening (gate counts 3 of 4 variants
+   rejected before and after; 2 of 3 without M7); a `setOutputSchema` override admitting a string
+   price is rejected (scope, plus the amended outputSchema no longer rejecting M7); a trigger that
+   also drops the required `in_stock` is rejected because it still violates the outputSchema
+   after the widening. Ignoring the map in `evalCase` makes these three tests fail.
+   With the schemas, the benign widening's corpus summary is `{total: 10, verified: 9,
+   regressions: 0}` (`product-unknown` is an `isError` result, unverifiable).
+
+Evidence: `pnpm vitest run packages/contract-update` -> 2 files, 28 tests passed (the four P12
+acceptance tests among them); `pnpm typecheck` exit 0; `pnpm lint` exit 0 ("Checked 162 files ...
+No fixes applied").
+
 ## For ORCH (`--arm fiks+cu`)
 
 Pass the frozen trace as `trigger`, the target repo's `test/repro/*.json` as `storedViolations`,
 the A0 S-dev CallRecords as `cleanCorpus`, MUT M1-M14 variants of the trigger as
-`mutationVariants`, and the contract file in force as `contracts`. On rejection feed `reasons`
+`mutationVariants`, the contract file in force as `contracts`, and
+`declaredOutputSchemas(<server tools/list>.tools)` as `declaredOutputSchemas`. On rejection feed `reasons`
 back to the agent; on acceptance write `renderProposal(...).markdown` and emit no `would_open_pr`.

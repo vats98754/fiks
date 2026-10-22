@@ -13,10 +13,13 @@
 //              rejected it before, except the amended properties; and an amended property that
 //              rejected some variant before still rejects at least one (it is amended, not
 //              neutralised).
-// Missing or unevaluable inputs fail closed.
+// Every case is checked against the server's declared outputSchema (`declaredOutputSchemas`, from
+// tools/list), as the live proxy does, so `<contract>/outputSchema` verdicts match production.
+// Missing or unevaluable inputs fail closed, and so does a check that would pass vacuously: no
+// stored trace that violates its target, no corpus case that verifies, no variant rejected before.
 import { type ContractFile, type EvalResult, evaluate, findContract, type Verdict } from '@fiks/contracts';
 import { applyDelta } from './apply.ts';
-import { evalInput, type GateCase, type GateInput, toGateCase } from './cases.ts';
+import { type DeclaredOutputSchemas, evalInput, type GateCase, type GateInput, toGateCase } from './cases.ts';
 import { type ContractDelta, parseDelta } from './outcome.ts';
 
 export type GateCheck = 'delta' | 'input' | 'scope' | 'trigger' | 'stored' | 'corpus' | 'mutation';
@@ -39,12 +42,19 @@ export interface GateContext {
   cleanCorpus: GateInput[];
   /** MUT variants (M1-M14) of the trigger. */
   mutationVariants: GateInput[];
+  /**
+   * The server's declared outputSchemas from tools/list, by tool name (`null` = declares none);
+   * see `declaredOutputSchemas()`. Applied to every case. Missing, or missing a case's tool, fails
+   * closed: without it the gate cannot see `<contract>/outputSchema` the way the proxy does.
+   */
+  declaredOutputSchemas: DeclaredOutputSchemas;
 }
 
 export interface GateSummary {
   trigger: { before: Verdict | null; after: Verdict | null };
   stored: { total: number; used: number; stillViolate: number };
-  corpus: { total: number; regressions: number };
+  /** `verified`: cases that verify under the current contract. */
+  corpus: { total: number; verified: number; regressions: number };
   mutation: { total: number; rejectedBefore: number; rejectedAfter: number };
 }
 
@@ -67,9 +77,14 @@ export interface GateResult {
 
 type Evaluated = { res: EvalResult; violated: Set<string> };
 
-function evalCase(file: ContractFile, c: GateCase): Evaluated | null {
+function evalCase(
+  file: ContractFile,
+  c: GateCase,
+  schemas: DeclaredOutputSchemas | undefined,
+): Evaluated | null {
   if (!c.result) return null;
-  const res = evaluate(findContract(file, c.tool), evalInput({ ...c, result: c.result }));
+  const declared = schemas && Object.hasOwn(schemas, c.tool) ? (schemas[c.tool] ?? undefined) : undefined;
+  const res = evaluate(findContract(file, c.tool), evalInput({ ...c, result: c.result }, declared));
   return { res, violated: new Set(res.violations.map((v) => v.propertyId)) };
 }
 
@@ -86,7 +101,7 @@ function emptySummary(ctx: Partial<GateContext>): GateSummary {
   return {
     trigger: { before: null, after: null },
     stored: { total: ctx.storedViolations?.length ?? 0, used: 0, stillViolate: 0 },
-    corpus: { total: ctx.cleanCorpus?.length ?? 0, regressions: 0 },
+    corpus: { total: ctx.cleanCorpus?.length ?? 0, verified: 0, regressions: 0 },
     mutation: { total: ctx.mutationVariants?.length ?? 0, rejectedBefore: 0, rejectedAfter: 0 },
   };
 }
@@ -139,10 +154,31 @@ export function acceptDelta(delta: unknown, ctx: GateContext): GateResult {
       message: `${check} case ${describe(c)} has no tool result, so it cannot be evaluated`,
     });
 
+  // Declared outputSchemas: one finding if the map is missing, one per tool it does not cover.
+  const schemas = ctx.declaredOutputSchemas;
+  const haveSchemas = schemas !== null && typeof schemas === 'object' && !Array.isArray(schemas);
+  if (!haveSchemas)
+    findings.push({
+      check: 'input',
+      message:
+        "no declared outputSchemas (the server's tools/list) given; the gate cannot check <contract>/outputSchema as the proxy does and fails closed",
+    });
+  const uncovered = new Set<string>();
+  const evalBoth = (c: GateCase): [Evaluated | null, Evaluated | null] => {
+    if (haveSchemas && !Object.hasOwn(schemas, c.tool) && !uncovered.has(c.tool)) {
+      uncovered.add(c.tool);
+      findings.push({
+        check: 'input',
+        message: `the declared outputSchemas have no entry for tool ${c.tool} (use null if it declares none); the gate fails closed`,
+      });
+    }
+    const s = haveSchemas ? schemas : undefined;
+    return [evalCase(old, c, s), evalCase(next, c, s)];
+  };
+
   // Trigger and scope.
   const trigger = toGateCase(ctx.trigger);
-  const tBefore = evalCase(old, trigger);
-  const tAfter = evalCase(next, trigger);
+  const [tBefore, tAfter] = evalBoth(trigger);
   if (!tBefore || !tAfter) unevaluable('trigger', trigger);
   else {
     summary.trigger = { before: tBefore.res.verdict, after: tAfter.res.verdict };
@@ -192,8 +228,7 @@ export function acceptDelta(delta: unknown, ctx: GateContext): GateResult {
   // Stored true-violation traces still violate.
   for (const input of ctx.storedViolations ?? []) {
     const c = toGateCase(input);
-    const before = evalCase(old, c);
-    const after = evalCase(next, c);
+    const [before, after] = evalBoth(c);
     if (!before || !after) {
       unevaluable('stored', c);
       continue;
@@ -218,16 +253,21 @@ export function acceptDelta(delta: unknown, ctx: GateContext): GateResult {
         message: `stored true violation ${describe(c)} no longer violates ${p} (was: ${messageFor(before, p)})`,
       });
   }
+  if (summary.stored.total > 0 && summary.stored.used === 0)
+    findings.push({
+      check: 'input',
+      message: `none of the ${summary.stored.total} stored true-violation traces violates its target under the current contract, so the stored check would pass vacuously; the gate fails closed`,
+    });
 
   // The clean v1 corpus verifies.
   for (const input of ctx.cleanCorpus ?? []) {
     const c = toGateCase(input);
-    const before = evalCase(old, c);
-    const after = evalCase(next, c);
+    const [before, after] = evalBoth(c);
     if (!before || !after) {
       unevaluable('corpus', c);
       continue;
     }
+    if (before.res.verdict === 'verified') summary.corpus.verified++;
     if (before.violated.size)
       notes.push(
         `corpus case ${describe(c)} already violates ${[...before.violated].join(', ')} under the current contract`,
@@ -242,14 +282,18 @@ export function acceptDelta(delta: unknown, ctx: GateContext): GateResult {
         message: `clean v1 case ${describe(c)} now violates ${p}: ${messageFor(after, p)}`,
       });
   }
+  if (summary.corpus.total > 0 && summary.corpus.verified === 0)
+    findings.push({
+      check: 'input',
+      message: `none of the ${summary.corpus.total} clean v1 corpus cases verifies under the current contract, so the corpus check would pass vacuously; the gate fails closed`,
+    });
 
   // Mutation variants are still rejected, except on the amended properties.
   const amendedBefore = new Map<string, number>();
   const amendedAfter = new Map<string, number>();
   for (const input of ctx.mutationVariants ?? []) {
     const c = toGateCase(input);
-    const before = evalCase(old, c);
-    const after = evalCase(next, c);
+    const [before, after] = evalBoth(c);
     if (!before || !after) {
       unevaluable('mutation', c);
       continue;
@@ -270,6 +314,11 @@ export function acceptDelta(delta: unknown, ctx: GateContext): GateResult {
       });
     }
   }
+  if (summary.mutation.total > 0 && summary.mutation.rejectedBefore === 0)
+    findings.push({
+      check: 'input',
+      message: `none of the ${summary.mutation.total} mutation variants of the trigger is rejected under the current contract, so the mutation check would pass vacuously; the gate fails closed`,
+    });
   for (const p of amended) {
     const n = amendedBefore.get(p) ?? 0;
     if (n > 0 && (amendedAfter.get(p) ?? 0) === 0)

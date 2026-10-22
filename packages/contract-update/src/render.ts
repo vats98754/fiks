@@ -127,7 +127,7 @@ export function renderProposal(
     '',
     `- Trigger: ${s.trigger.before} under the current contract, ${s.trigger.after} under the proposal.`,
     `- Stored true-violation traces: ${s.stored.stillViolate} of ${s.stored.used} still violate their target properties (${s.stored.total} given).`,
-    `- Clean v1 corpus: ${s.corpus.total} cases, ${s.corpus.regressions} new violations.`,
+    `- Clean v1 corpus: ${s.corpus.total} cases (${s.corpus.verified} verified before), ${s.corpus.regressions} new violations.`,
     `- Mutation variants of the trigger: ${s.mutation.rejectedBefore} of ${s.mutation.total} rejected before, ${s.mutation.rejectedAfter} after; none lost on a property the proposal does not amend.`,
     ...(result.notes.length ? ['', '### Notes', '', ...result.notes.map((n) => `- ${n}`)] : []),
     '',

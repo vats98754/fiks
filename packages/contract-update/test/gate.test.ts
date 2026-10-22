@@ -11,17 +11,20 @@ import {
 import {
   cleanCorpus,
   D1,
+  edit,
   load,
   premiumProduct,
   premiumSearch,
   productVariants,
   searchVariants,
+  shopOutputSchemas,
   storedTraces,
 } from './helpers.ts';
 
 const SEARCH_RANGE = 'shop.search_products/items.price.range';
 const PRODUCT_RANGE = 'shop.get_product/price.range';
 const PRODUCT_NOT_NULL = 'shop.get_product/price.notNull';
+const PRODUCT_SCHEMA = 'shop.get_product/outputSchema';
 
 function ctx(
   trigger: GateInput,
@@ -34,6 +37,7 @@ function ctx(
     storedViolations: storedTraces(),
     cleanCorpus: cleanCorpus(),
     mutationVariants,
+    declaredOutputSchemas: shopOutputSchemas(),
     ...over,
   };
 }
@@ -60,6 +64,7 @@ const widenProduct = (max: number, min = 20): ContractDelta => ({
   ],
 });
 
+/** Evaluates as the live proxy does: with the server's declared outputSchema for the tool. */
 const violatedIds = (rec: GateInput, file = SHOP_CONTRACTS) => {
   const c = toGateCase(rec);
   if (!c.result) throw new Error('no result');
@@ -67,6 +72,7 @@ const violatedIds = (rec: GateInput, file = SHOP_CONTRACTS) => {
     args: c.args,
     result: c.result,
     now: new Date(c.now),
+    declaredOutputSchema: shopOutputSchemas()[c.tool] ?? undefined,
     upstream: c.upstream,
     probe: c.probe,
   }).violations.map((v) => v.propertyId);
@@ -112,7 +118,8 @@ describe('acceptDelta: acceptance items (PLAN P12)', () => {
     expect(r.amended).toEqual([SEARCH_RANGE]);
     expect(r.summary.trigger).toEqual({ before: 'violated', after: 'verified' });
     expect(r.summary.stored).toEqual({ total: 5, used: 5, stillViolate: 5 });
-    expect(r.summary.corpus).toEqual({ total: 10, regressions: 0 });
+    // product-unknown is an isError result (unverifiable); the other nine verify.
+    expect(r.summary.corpus).toEqual({ total: 10, verified: 9, regressions: 0 });
     // D1 still violates the proposed contract, on the amended property.
     expect(r.proposed).toBeDefined();
     if (!r.proposed) return;
@@ -222,6 +229,44 @@ describe('acceptDelta: other checks', () => {
     expect(r2.findings).toContainEqual(expect.objectContaining({ check: 'input', caseId: noResult.id }));
   });
 
+  it('fails closed when no stored trace violates its target under the current contract', () => {
+    // A clean v1 recording as the only "stored violation": nothing to keep violating.
+    const r = acceptDelta(
+      widenProduct(3000),
+      ctx(premiumProduct(), productVariants(), { storedViolations: [load('shop-v1/search-laptop.json')] }),
+    );
+    expect(r.accepted).toBe(false);
+    expect(r.summary.stored).toEqual({ total: 1, used: 0, stillViolate: 0 });
+    expect(r.findings).toEqual([
+      expect.objectContaining({ check: 'input', message: expect.stringContaining('stored true-violation') }),
+    ]);
+  });
+
+  it('fails closed when no clean corpus case verifies under the current contract', () => {
+    // product-unknown is an isError result: evaluable, but unverifiable.
+    const r = acceptDelta(
+      widenProduct(3000),
+      ctx(premiumProduct(), productVariants(), { cleanCorpus: [load('shop-v1/product-unknown.json')] }),
+    );
+    expect(r.accepted).toBe(false);
+    expect(r.summary.corpus).toEqual({ total: 1, verified: 0, regressions: 0 });
+    expect(r.findings).toEqual([
+      expect.objectContaining({ check: 'input', message: expect.stringContaining('clean v1 corpus') }),
+    ]);
+  });
+
+  it('fails closed when no mutation variant was rejected before the delta', () => {
+    // M2 ($24.99) is inside the current $20-$2,000 range: the current contract rejects nothing.
+    const m2 = productVariants().filter((v) => v.mutant === 'M2');
+    expect(m2.map((v) => violatedIds(v))).toEqual([[]]);
+    const r = acceptDelta(widenProduct(3000), ctx(premiumProduct(), m2));
+    expect(r.accepted).toBe(false);
+    expect(r.summary.mutation).toEqual({ total: 1, rejectedBefore: 0, rejectedAfter: 0 });
+    expect(r.findings).toEqual([
+      expect.objectContaining({ check: 'input', message: expect.stringContaining('mutation variants') }),
+    ]);
+  });
+
   it('rejects malformed or no-op deltas before evaluating anything', () => {
     const c = ctx(premiumSearch(), searchVariants());
     const bad = [
@@ -303,5 +348,113 @@ describe('acceptDelta: other checks', () => {
     expect(r1).toEqual(r2);
     expect(JSON.stringify(SHOP_CONTRACTS)).toBe(before);
     expect(JSON.stringify(c)).toBe(snapshot);
+  });
+});
+
+describe('acceptDelta: declared outputSchemas (as the live proxy checks them)', () => {
+  it('rejects M7 (price as a string) on get_product on outputSchema before and after an accepted widening', () => {
+    const variants = productVariants();
+    const m7 = variants.find((v) => v.mutant === 'M7');
+    if (!m7?.result) throw new Error('no M7 variant');
+    // Without the declared schema (the gate before this fix) M7 verifies: price.range skips strings.
+    const bare = evaluate(findContract(SHOP_CONTRACTS, 'get_product'), {
+      args: m7.args,
+      result: m7.result,
+      now: new Date(m7.now),
+      upstream: m7.upstream,
+    });
+    expect(bare.verdict).toBe('verified');
+    // With it, as the proxy evaluates, M7 violates shop.get_product/outputSchema only.
+    expect(violatedIds(m7)).toEqual([PRODUCT_SCHEMA]);
+
+    const r = acceptDelta(widenProduct(3000), ctx(premiumProduct(), variants));
+    expect(r.reasons).toEqual([]);
+    expect(r.accepted).toBe(true);
+    // M1, M5 and M7 are rejected before and after (M2, $24.99, is in range); without the declared
+    // schema M7 would not count.
+    expect(r.summary.mutation).toEqual({ total: 4, rejectedBefore: 3, rejectedAfter: 3 });
+    const noM7 = acceptDelta(
+      widenProduct(3000),
+      ctx(
+        premiumProduct(),
+        variants.filter((v) => v.mutant !== 'M7'),
+      ),
+    );
+    expect(noM7.summary.mutation).toEqual({ total: 3, rejectedBefore: 2, rejectedAfter: 2 });
+    if (!r.proposed) throw new Error('no proposal');
+    expect(violatedIds(m7, r.proposed)).toEqual([PRODUCT_SCHEMA]);
+  });
+
+  it('sees a variant lost on outputSchema by a contract-level override', () => {
+    // An override that admits a string price (allowed: it amends the trigger's contract, but not a
+    // property the trigger violates) is caught by scope; with the declared schema the gate also
+    // sees M7 no longer rejected on outputSchema.
+    const loose = shopOutputSchemas().get_product as { properties: Record<string, unknown> };
+    const delta: ContractDelta = {
+      rationale: 'x',
+      ops: [
+        ...widenProduct(3000).ops,
+        {
+          op: 'setOutputSchema',
+          contractId: 'shop.get_product',
+          outputSchema: {
+            ...loose,
+            properties: { ...loose.properties, price: { type: ['number', 'string', 'null'] } },
+          },
+        },
+      ],
+    };
+    const r = acceptDelta(delta, ctx(premiumProduct(), productVariants()));
+    expect(r.accepted).toBe(false);
+    expect(r.findings).toContainEqual(expect.objectContaining({ check: 'scope', property: PRODUCT_SCHEMA }));
+    expect(r.findings).toContainEqual(
+      expect.objectContaining({
+        check: 'mutation',
+        property: PRODUCT_SCHEMA,
+        message: expect.stringContaining('disables the property'),
+      }),
+    );
+  });
+
+  it('rejects a delta whose trigger still violates the declared outputSchema', () => {
+    // The premium p-1004 trigger also drops `in_stock`, which shop-mcp declares required.
+    const trigger = edit(premiumProduct(), 'benign-premium-p-1004-no-stock', (_b, out) => {
+      delete out.in_stock;
+    });
+    expect(violatedIds(trigger).sort()).toEqual([PRODUCT_SCHEMA, PRODUCT_RANGE].sort());
+    const r = acceptDelta(widenProduct(3000), ctx(trigger, productVariants(trigger)));
+    expect(r.accepted).toBe(false);
+    expect(r.summary.trigger).toEqual({ before: 'violated', after: 'violated' });
+    expect(r.findings).toContainEqual(
+      expect.objectContaining({ check: 'trigger', message: expect.stringContaining(PRODUCT_SCHEMA) }),
+    );
+  });
+
+  it('fails closed without declared outputSchemas, or when they miss a tool', () => {
+    const missing = { ...ctx(premiumProduct(), productVariants()) } as Partial<GateContext>;
+    delete missing.declaredOutputSchemas;
+    const r = acceptDelta(widenProduct(3000), missing as GateContext);
+    expect(r.accepted).toBe(false);
+    expect(r.findings).toEqual([
+      expect.objectContaining({ check: 'input', message: expect.stringContaining('tools/list') }),
+    ]);
+
+    const { get_order: _drop, ...partial } = shopOutputSchemas();
+    const r2 = acceptDelta(
+      widenProduct(3000),
+      ctx(premiumProduct(), productVariants(), { declaredOutputSchemas: partial }),
+    );
+    expect(r2.accepted).toBe(false);
+    // One finding for the tool, not one per case (get_order appears in the corpus and in D5).
+    expect(r2.findings).toEqual([
+      expect.objectContaining({ check: 'input', message: expect.stringContaining('tool get_order') }),
+    ]);
+
+    // A tool that declares no outputSchema is covered by an explicit null.
+    const r3 = acceptDelta(
+      widenProduct(3000),
+      ctx(premiumProduct(), productVariants(), { declaredOutputSchemas: { ...partial, get_order: null } }),
+    );
+    expect(r3.accepted).toBe(true);
   });
 });
