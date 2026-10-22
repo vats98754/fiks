@@ -33,7 +33,9 @@ was pushed, no repo was created and no PR was opened.
   `runPreGate(worktree, image, checks, opts?)`.**
   - It mirrors the target's `.github/workflows/ci.yml` with a small parser (`run:` scalars or `|`/`>` blocks;
     `uses:` steps are reported as provided by the image).
-  - Each step runs as `bash -e -c` at the worktree root.
+  - Each step runs as `bash --noprofile --norc -eo pipefail -c` at the worktree root (GitHub's default run shell;
+    round 2, was `bash -e -c`).
+  - Round 2: `parseWorkflow` throws `UnmirroredWorkflowError` on any construct it does not mirror (see Round 2).
   - `pnpm install` gets `--offline`.
   - The first failing CI step skips the rest of CI, as Actions does. Extra checks always run.
   - `green` means every executed step passed.
@@ -174,6 +176,53 @@ reported 33 passed and 7 skipped. The 7 skipped are the e2e file, which runs onl
 
 Also run: the dry run of `agreement.ts --heads 7bf2e66,seed-v1` gave local green for both, with "would push … as
 sbx-agree/<sha12>". Nothing was pushed.
+
+## Round 2 (2026-10-21, ws/SBX rebased on main `c144b03`; main had not moved, so the rebase was a no-op)
+
+**Changes (`src/ci-local.ts`, commit `6fa5c28`).**
+
+- `run:` steps now execute as `bash --noprofile --norc -eo pipefail -c <script>` (`RUN_SHELL`), GitHub's default
+  Linux run shell. Before, `bash -e -c` had no pipefail, so `pnpm test | tee out.txt` was green locally and red on
+  Actions. Checked in Docker: `runPreGate(['false | tee /tmp/fiks-pipefail.txt'])` gives `green=false`, exit 1. On
+  the host (unit test), `false | tee /dev/null` exits 1 under `RUN_SHELL` and 0 under the old `bash -e -c`.
+- `parseWorkflow` now throws `UnmirroredWorkflowError` instead of silently ignoring what it does not mirror:
+  - step keys other than `name`, `run`, `uses`, `with`, `id` and `timeout-minutes` (so `if`, `env`,
+    `working-directory`, `shell`, `continue-on-error`, ...); `with:` on a `run:` step;
+  - job keys other than `name`, `runs-on`, `timeout-minutes`, `needs`, `permissions`, `concurrency`, `outputs` and
+    `steps` (so `strategy`/`matrix`, `env`, `defaults`, `if`, `container`, `services`, `continue-on-error`, a
+    reusable-workflow `uses`);
+  - workflow-level `env:` and `defaults:`;
+  - a `${{ }}` expression inside a `run:` script (not evaluated locally).
+- `with:` inputs of `uses:` steps are no longer scanned as if they were step keys. A step's `timeout-minutes:` is
+  mirrored as that step's timeout.
+- The shop-mcp workflow (and the identical `ref-seed-v1` one) still parses unchanged.
+
+**Acceptance re-run.**
+
+1. SETUP: `apply-dep-fragments.mjs` printed "nothing to apply"; `pnpm install --no-frozen-lockfile` exit 0;
+   `ensure-shop-mcp.mjs` exit 0 (shop-mcp at `7bf2e66`).
+2. `build.ts --repo .work/shop-mcp`, twice: both printed `lockfile sha256: 18e534c98dc0176c…` and
+   `digest: sha256:b87ba9aec64fb80ffafede9a7ebc55610c488f3a788fbb00be8419151919a9bc` (same as round 1).
+3. fiks-tools.
+   - **`build-tools.ts` (default `--ref main`) still FAILS** with `ERR_PNPM_OUTDATED_LOCKFILE` on main `c144b03`
+     (`specifiers in the lockfile ({}) don't match specs in package.json ({"@fiks/contracts":"workspace:*"})`).
+     The fix (regenerate and commit main's `pnpm-lock.yaml` with the CORE-SEED importers) is an orchestrator
+     action on main, outside SBX's paths; it had not landed when this round ran.
+   - Code-path check only (not the acceptance item): a scratch clone of main `c144b03` with only
+     `pnpm install --lockfile-only` committed (+18 lines, the `interfaces`/`domains` importers) built with
+     `--frozen-lockfile` and printed `digest: sha256:6d467bcff4a0155e8f8b812137dda076bcf7cac8bbe864f10825cf54fdef316b`,
+     label `fiks.tools.testOnly=false`. The scratch tag was removed afterwards.
+   - `--ref HEAD --apply-fragments` PASSES: a scratch clone of `ws/SBX` `6fa5c28` plus one committed, unapplied
+     fragment `deps-fragments/SBXTEST.json` (`{"stream":"SBXTEST","add":{"packages/cli":{"@fiks/sandbox":"workspace:*"}}}`,
+     `--check` exit 1) printed `digest: sha256:ba7a2f1bd6b64c30352fc55a6d5c8f087a1e0359ca2d0496d6e1ae89d9560aa9
+     (TEST-ONLY: …)`. In the image, `/opt/fiks/packages/cli/package.json` line 19 is `"@fiks/sandbox": "workspace:*"`,
+     `test -e /opt/fiks/.env` exits 1, and the labels include `fiks.tools.testOnly=true`.
+4–8. `FIKS_SANDBOX_E2E=1 with-lock suite pnpm vitest run packages/sandbox`: 3 files, 59 tests passed, exit 0.
+   Container probes (curl fails, exact env, writes outside the worktree fail, offline install, push shim) pass.
+   ciLocal on 7bf2e66 is green; D1/D2/D4/D5 host exit 0 and ciLocal green, D3 host exit 1 and ciLocal red (test
+   step), so verdicts agree 5/5. `execFiks(['scenario','v1-all','--json'])` matches the host call for call
+   (9 verified, `get_product p-0000` unverifiable on both sides).
+9. `pnpm typecheck` exit 0; `pnpm lint` exit 0 (152 files, no warnings).
 
 ## Open items
 
