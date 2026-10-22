@@ -1,6 +1,13 @@
 // The host side of the git push shim (PLAN P4): a `git` placed first on PATH for every process of a
 // run. Pushes are recorded in a JSONL log and refused; everything else goes to the real git. The same
 // script is baked into the sandbox images (docker/git-shim.sh). Acceptance = zero pushes in the log.
+// It blocks push, send-pack and http-push spelled directly, through -c/--config-env, or through an
+// alias from any config source (repo/global/system config, include.path, GIT_CONFIG_COUNT/KEY_n/VALUE_n,
+// GIT_CONFIG_PARAMETERS), following alias chains; a '!' shell alias that mentions push is blocked too.
+// Limits of any PATH shim: a process that runs the real git by absolute path (/usr/bin/git,
+// /opt/homebrew/bin/git) bypasses it, and so does `git` run from a hook or from a script a shell alias
+// starts, because git prepends its exec-path (which holds the real `git`) to PATH for those children.
+// The shim is the audit log; the enforcement in the sandbox is --network none (no remote is reachable).
 import { execFileSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { delimiter, dirname, join } from 'node:path';

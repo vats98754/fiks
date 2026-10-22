@@ -462,6 +462,51 @@ describe('git push shim (host)', () => {
     expect(execFileSync('git', ['--git-dir', remote, 'for-each-ref'], { encoding: 'utf8' })).toBe('');
   });
 
+  test('a push through an alias from git config or GIT_CONFIG_* is recorded and blocked', () => {
+    const before = shim.pushes().length;
+    const cases: { args: string[]; env?: Record<string, string> }[] = [
+      { args: ['p', 'origin', 'HEAD:refs/heads/b'] },
+      {
+        args: ['q', 'origin', 'HEAD:refs/heads/d'],
+        env: { GIT_CONFIG_COUNT: '1', GIT_CONFIG_KEY_0: 'alias.q', GIT_CONFIG_VALUE_0: 'push' },
+      },
+      // A chain (r -> p -> push), an alias carrying global options, -C, and a '!' shell alias.
+      { args: ['r', 'origin', 'HEAD:refs/heads/r'] },
+      { args: ['s', 'origin', 'HEAD:refs/heads/s'] },
+      { args: ['-C', repo, 'p', 'origin', 'HEAD:refs/heads/c'] },
+      { args: ['t'] },
+    ];
+    const aliases: [string, string][] = [
+      ['p', 'push'],
+      ['r', 'p'],
+      ['s', '-c x.y=z p'],
+      ['t', '!git push origin HEAD:refs/heads/t'],
+      ['st', 'status --short'],
+    ];
+    for (const [k, v] of aliases) execFileSync('git', ['-C', repo, 'config', `alias.${k}`, v]);
+    try {
+      for (const { args, env } of cases) {
+        const r = spawnSync('git', args, {
+          cwd: repo,
+          encoding: 'utf8',
+          env: { PATH: shim.path, HOME: tmp, ...env },
+        });
+        expect(r.status, args.join(' ')).toBe(1);
+        expect(r.stderr).toMatch(/git alias \S+.* is blocked in this run/);
+      }
+      const pushes = shim.pushes().slice(before);
+      expect(pushes.map((p) => p.argv)).toEqual(cases.map((c) => c.args));
+      expect(pushes[1]?.reason).toBe('alias q=push');
+      expect(pushes[2]?.reason).toBe('alias r via p=push');
+      expect(execFileSync('git', ['--git-dir', remote, 'for-each-ref'], { encoding: 'utf8' })).toBe('');
+      // An alias that does not push still runs, and is not logged.
+      expect(run(['st']).status).toBe(0);
+      expect(shim.pushes()).toHaveLength(before + cases.length);
+    } finally {
+      for (const [k] of aliases) execFileSync('git', ['-C', repo, 'config', '--unset', `alias.${k}`]);
+    }
+  });
+
   test('other git commands go to the real git', () => {
     const r = run(['rev-parse', '--is-inside-work-tree']);
     expect(r.status).toBe(0);
