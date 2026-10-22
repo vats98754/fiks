@@ -90,3 +90,19 @@ See the structured report for commands and outputs; key numbers:
 `replay-logged.ts bench/results`: 200 logged CallRecords (114 verified, 76 violated, 10
 unverifiable), 0 verdict changes, 0 checked/violation-id changes, 0 old/new differences; D1–D5
 scenario traces (fixture and live): 0 old/new differences.
+
+## Round 2 (rebased on main 6157cb4, head 7cb0969)
+
+All VOCAB acceptance items re-run on the rebased head and green. These cover SETUP, contracts
+56/56, replay-logged (0 changes), ls-remote (main 7bf2e66, fiks/revendor-f2 = base-shop^{commit}
+= b77a0a0), the fresh-clone sync check, ensure-shop-mcp (pin, dirty refusal, GIT_TRACE fetch
+counts 1 then 0), typecheck and lint.
+
+Cross-stream blocker (MON-owned file, not edited by VOCAB): `with-lock suite pnpm test` fails only
+`packages/proxy/test/replay.test.ts` "--per-element passes perElement: true ...". The fixture's spy
+calls the real evaluator with `perElement: true`, then replaces only the first range violation with
+its own per-element rows. With VOCAB's real per-element support, the items[2] violation is already
+present, so it appears twice. Proposed one-line fix in the spy:
+`realEvaluate(c, i, o && { ...o, perElement: false })`. When it was applied temporarily (then
+reverted), the file passed 12/12. MON's real-evaluator test (two rows at items[0] and items[2])
+already passes against VOCAB's evaluator.
