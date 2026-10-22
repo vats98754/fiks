@@ -1,0 +1,19 @@
+{
+  "name": "@fiks/exp",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fiks/interfaces": "workspace:*",
+    "@fiks/llm": "workspace:*",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@fiks/repair": "workspace:*"
+  }
+}

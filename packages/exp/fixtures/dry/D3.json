@@ -1,0 +1,11 @@
+{
+  "steps": [
+    {
+      "op": "edit",
+      "path": "src/tools/create_order.ts",
+      "oldString": "  args: { items: { product_id: string; quantity: number }[] },\n  vendor: VendorClient,\n) {\n  const res = await vendor.post('/orders', { items: args.items });\n  if (res.status !== 200) {\n    const msg = (res.body as { message?: string } | null)?.message ?? `HTTP ${res.status}`;\n    return fail(`Order rejected: ${msg}`);",
+      "newString": "  args: { items: { product_id: string; quantity: number }[] },\n  vendor: VendorClient,\n) {\n  const res = await vendor.post('/orders', { items: args.items }, { 'idempotency-key': crypto.randomUUID() });\n  if (res.status !== 200) {\n    const msg = (res.body as { message?: string } | null)?.message ?? `HTTP ${res.status}`;\n    return fail(`Order rejected: ${msg}`);"
+    }
+  ],
+  "summary": "Subject: dry stub (D3 oracle patch on seed-v1)\nScripted stub edit for pnpm exp --dry; no LLM."
+}

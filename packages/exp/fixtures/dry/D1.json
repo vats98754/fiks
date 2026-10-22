@@ -1,0 +1,11 @@
+{
+  "steps": [
+    {
+      "op": "edit",
+      "path": "src/tools/search_products.ts",
+      "oldString": "export async function handler(args: { query: string }, vendor: VendorClient) {\n  const res = await vendor.get(`/products?q=${encodeURIComponent(args.query)}`);\n  const body = res.body as { items: VendorProduct[]; total: number };\n  const items = body.items.map((p) => ({\n    id: p.id,\n    name: p.name,\n    category: p.category,\n    price: p.price,\n    currency: p.currency,\n  }));\n  return ok({ items, count: items.length, total: body.total });",
+      "newString": "export async function handler(args: { query: string }, vendor: VendorClient) {\n  const res = await vendor.get(`/products?q=${encodeURIComponent(args.query)}`);\n  const body = res.body as { items: VendorProduct[]; total: number };\n  // Vendor API 2026-10-01 and later send search prices in integer cents.\n  const version = res.headers.get('vendor-api-version') ?? '';\n  const toDollars = (price: number) => (version >= '2026-10-01' ? price / 100 : price);\n  const items = body.items.map((p) => ({\n    id: p.id,\n    name: p.name,\n    category: p.category,\n    price: toDollars(p.price),\n    currency: p.currency,\n  }));\n  return ok({ items, count: items.length, total: body.total });"
+    }
+  ],
+  "summary": "Subject: dry stub (D1 oracle patch on seed-v1)\nScripted stub edit for pnpm exp --dry; no LLM."
+}

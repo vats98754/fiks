@@ -1,0 +1,11 @@
+{
+  "steps": [
+    {
+      "op": "edit",
+      "path": "src/tools/get_product.ts",
+      "oldString": "    price: p.price ?? null,",
+      "newString": "    price: Math.min(Math.max(p.price ?? 20, 20), 2000),"
+    }
+  ],
+  "summary": "Subject: dry stub (D2 P1 clamp to the contract range)\nScripted stub edit for pnpm exp --dry; no LLM."
+}

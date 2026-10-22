@@ -1,0 +1,11 @@
+{
+  "steps": [
+    {
+      "op": "edit",
+      "path": "src/tools/list_comments.ts",
+      "oldString": "  const res = await vendor.get(`${issuePath(args.issue_key)}/comments`);\n  if (res.status === 404) return fail(`No issue ${args.issue_key}.`);\n  if (res.status !== 200) return fail(`Could not load comments: ${errorMessage(res)}`);\n  const body = res.body as { items?: VendorComment[]; total: number };\n  const items = (body.items ?? []).map((c) => ({\n    id: c.id,\n    author: c.author,\n    body: c.body,",
+      "newString": "  const res = await vendor.get(`${issuePath(args.issue_key)}/comments`);\n  if (res.status === 404) return fail(`No issue ${args.issue_key}.`);\n  if (res.status !== 200) return fail(`Could not load comments: ${errorMessage(res)}`);\n  // Since API 2026-10-01 the list is returned under `comments` (it was `items`).\n  const body = res.body as { items?: VendorComment[]; comments?: VendorComment[]; total: number };\n  const items = (body.comments ?? body.items ?? []).map((c) => ({\n    id: c.id,\n    author: c.author,\n    body: c.body,"
+    }
+  ],
+  "summary": "Subject: dry stub (TRK-DEV-1 ref A)\nScripted stub edit for pnpm exp --dry; no LLM."
+}

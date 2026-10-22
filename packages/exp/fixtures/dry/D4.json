@@ -1,0 +1,11 @@
+{
+  "steps": [
+    {
+      "op": "edit",
+      "path": "src/tools/search_products.ts",
+      "oldString": "}\n\nexport async function handler(args: { query: string }, vendor: VendorClient) {\n  const res = await vendor.get(`/products?q=${encodeURIComponent(args.query)}`);\n  const body = res.body as { items: VendorProduct[]; total: number };\n  const items = body.items.map((p) => ({\n    id: p.id,\n    name: p.name,",
+      "newString": "}\n\nexport async function handler(args: { query: string }, vendor: VendorClient) {\n  const q = encodeURIComponent(args.query);\n  type Page = { items: VendorProduct[]; total: number; next_cursor?: string | null };\n  const res = await vendor.get(`/products?q=${q}`);\n  const body = res.body as Page;\n  for (let cursor = body.next_cursor; cursor; ) {\n    const page = (await vendor.get(`/products?q=${q}&cursor=${encodeURIComponent(cursor)}`)).body as Page;\n    body.items = [...body.items, ...page.items];\n    cursor = page.next_cursor;\n  }\n  const items = body.items.map((p) => ({\n    id: p.id,\n    name: p.name,"
+    }
+  ],
+  "summary": "Subject: dry stub (D4 oracle patch on seed-v1)\nScripted stub edit for pnpm exp --dry; no LLM."
+}

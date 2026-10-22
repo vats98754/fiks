@@ -1,0 +1,11 @@
+{
+  "steps": [
+    {
+      "op": "edit",
+      "path": "src/tools/get_order.ts",
+      "oldString": "  status: string;\n  items: { product_id: string; quantity: number; unit_price: number }[];\n  total: number;\n  created_at: string;\n}\n\nexport async function handler(args: { order_id: string }, vendor: VendorClient) {\n  const res = await vendor.get(`/orders/${encodeURIComponent(args.order_id)}`);\n  if (res.status === 404) return fail(`No order with id ${args.order_id}.`);\n  const o = res.body as VendorOrder;\n  const createdAt = new Date(Date.parse(String(o.created_at)) || 0);\n  return ok({\n    order_id: o.id,\n    status: o.status,",
+      "newString": "  status: string;\n  items: { product_id: string; quantity: number; unit_price: number }[];\n  total: number;\n  created_at: string | number;\n}\n\nexport async function handler(args: { order_id: string }, vendor: VendorClient) {\n  const res = await vendor.get(`/orders/${encodeURIComponent(args.order_id)}`);\n  if (res.status === 404) return fail(`No order with id ${args.order_id}.`);\n  const o = res.body as VendorOrder;\n  const createdAt = new Date(typeof o.created_at === 'number' ? o.created_at : Date.parse(o.created_at));\n  return ok({\n    order_id: o.id,\n    status: o.status,"
+    }
+  ],
+  "summary": "Subject: dry stub (D5 oracle patch on seed-v1)\nScripted stub edit for pnpm exp --dry; no LLM."
+}

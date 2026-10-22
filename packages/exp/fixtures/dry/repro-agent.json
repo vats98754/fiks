@@ -1,0 +1,10 @@
+{
+  "steps": [
+    {
+      "op": "newTest",
+      "path": "test/repro-agent.test.ts",
+      "content": "import { readdirSync, readFileSync } from 'node:fs';\nimport { expect, test } from 'vitest';\nimport { replayRecording } from './fiks/run.ts';\n\n// Dry-run REPRO-AGENT stub: loads the alert's recording from .alerts/<id>.json through the\n// repository's replay helper (never inlined) and asserts the call no longer violates its contract.\nconst alerts = new URL('../.alerts/', import.meta.url);\nconst file = readdirSync(alerts).filter((f) => f.endsWith('.json')).sort()[0] ?? '';\n\ntest('the alerted call keeps its contract', async () => {\n  const rec = JSON.parse(readFileSync(new URL(file, alerts), 'utf8'));\n  const r = await replayRecording(rec);\n  expect(r.evaluation.violations.map((v) => v.propertyId)).toEqual([]);\n});\n"
+    }
+  ],
+  "summary": "Subject: dry stub (REPRO-AGENT test loading .alerts/<id>.json)\nScripted stub edit for pnpm exp --dry; no LLM."
+}
