@@ -260,3 +260,15 @@ Round-7 evidence (base `844c2d8`):
   (758)**, exit 0.
 - `pnpm typecheck` → exit 0. `pnpm lint` → "Checked 376 files … No fixes applied", exit 0 (after
   `biome check --write packages/attacks` reflowed two test lines).
+
+Rebase after the commit: main moved to `3579b59` (SAFE merged) while round 7 ran; `git rebase main`
+replayed the 8 SEC commits cleanly (no conflicts). Re-run on `3579b59`: SETUP → "nothing to apply",
+install exit 0; `pnpm vitest run packages/attacks` → **219 passed (219)**; `pnpm typecheck` exit 0;
+`pnpm lint` exit 0 ("Checked 394 files … No fixes applied"). `with-lock suite pnpm test` → **Test
+Files 1 failed | 82 passed | 1 skipped (84), Tests 1 failed | 819 passed | 8 skipped (828)**: the one
+failure is `packages/replay-proc/test/ensure-realbugs.test.ts` "creates the clone with tags at the
+pinned SHAs" → "Test timed out in 5000ms" (git clone under suite load; not a SEC-owned path). Run
+alone (`pnpm vitest run packages/replay-proc/test/ensure-realbugs.test.ts`) → 3 passed (3). With
+SAFE now on main, a one-off probe (scratch script, not a test import) compared SAFE `mayRun` with
+SEC `defaultMayRun` on 18 commands (allowed forms, `\n`/`\t`, `;`, `$(`, `..`, flags, extra
+whitespace, empty) → 0 disagreements.
