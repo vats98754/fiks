@@ -103,11 +103,17 @@ re-checks it at F2.
    which the seed README's `^\d{2}-.+\.ts$` pattern would not load. The loader therefore imports
    every `bootstrap/*.ts` (not `*.d.ts`) in sorted order; `NN-*.ts` files still load by number,
    before any `zz-*`. The README (CORE-SEED's file) still describes only `NN-*.ts`.
-2. **`scenario v1-all --domain shop --json`.** Nine of the ten calls are `verified`; the
-   `get_product {"id":"p-0000"}` fixture call returns a tool error and the proxy reports it as
-   `unverifiable` ("the tool returned an error"), with or without `--domain` and at ec241bc. The
-   test asserts exactly that and byte-equality (after normalisation) with the run without
-   `--domain`.
+2. **`scenario v1-all --domain shop --json` (DEVIATION, needs an orchestrator decision).** The
+   acceptance text says "every verdict is 'verified'"; that does not hold as written. Nine of the
+   ten calls are `verified`; the `get_product {"id":"p-0000"}` fixture call (a deliberate
+   unknown-id call) returns a tool error and the proxy reports it as `unverifiable` ("the tool
+   returned an error"), with or without `--domain` and at ec241bc. Changing it would break the
+   byte-identical legacy requirement (`legacy-behaviour.test.ts`), so the product is unchanged.
+   The test asserts exactly that: 9 `verified` + 1 `unverifiable` for p-0000, no `violated`,
+   and byte-equality (after normalisation) with the run without `--domain`. Proposed amended
+   text: "every verdict is 'verified' except the deliberate unknown-id call get_product p-0000,
+   which is 'unverifiable' as at ec241bc; no verdict is 'violated'; identical to the same command
+   without --domain".
 3. **Profile semantics for legacy recordings.** With `ruleId: null` the recording's own upstream
    (version, drifts, clock) decides, as `rerecord` did at ec241bc; `profile.base` is logged and
    used only with a rule. The D3/D4 test uses `{domain: 'shop', base: 'v2', ruleId: null}`: the
@@ -137,6 +143,29 @@ re-checks it at F2.
     ran the test twice: it also passed both times, so the test shows the locked path is
     consistent under concurrency, not that the lock is needed for this workload (git's own
     locking already serialises most of it). The lock stays as the P6 safeguard.
+
+11. **`--require-sandbox` exit code through pnpm (DEVIATION, needs an orchestrator decision).**
+    `tsx packages/cli/src/main.ts rerecord-head --require-sandbox ...` on the host exits 2 with
+    "sandbox required" (asserted in `sandbox.test.ts`). Run literally as `pnpm fiks ...` it exits
+    1: `pnpm run` (9.12.3) turns any non-zero child exit into 1 (checked with a bare script that
+    calls `process.exit(2)`). The root `fiks` script is not CORE's file and pnpm's behaviour is
+    not ours to change. ORCH, ARMS, HOLD and RBA must therefore invoke the CLI directly
+    (`tsx packages/cli/src/main.ts rerecord-head --require-sandbox ...`, or node with the tsx
+    loader) whenever they need to tell exit 2 apart from 1; this is documented in the header of
+    `packages/cli/src/commands/rerecord-head.ts`. Proposed amended text: "tsx
+    packages/cli/src/main.ts rerecord-head --require-sandbox ... on the host exits 2 with
+    'sandbox required' (via `pnpm fiks` the stderr message is the same, the exit code is 1)".
+12. **Planting tests use a private copy of the CLI (round 2 flake fix).** Round 1's `loader.test.ts`
+    and `domain-hooks.test.ts` wrote and deleted temporary modules in the real
+    `packages/cli/src/{commands,bootstrap}` under a lock that only those tests took. CLI
+    subprocesses of other test files (sandbox, legacy-*, rerecord-head, ...) list those folders
+    and then import each file, so a file deleted in between made them exit 1 with
+    `ERR_MODULE_NOT_FOUND` (seen once in the verifier's full suite: `sandbox.test.ts:72`). The
+    planting tests now copy `packages/cli/src` to `<ROOT>/.work/cli-<random>/src` (gitignored, same
+    depth as `packages/cli`, so ROOT and .env resolve the same; `package.json`, `node_modules` and
+    `test` are symlinked) and run that copy's `main.ts`; nothing writes into the real src any more,
+    and `withSrcLock` is gone. `loader.test.ts` also asserts that the real CLI does not see the
+    planted `zz-probe` while it exists in the copy.
 
 ## Acceptance evidence
 

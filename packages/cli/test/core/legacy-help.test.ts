@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { CliCommandModule } from '@fiks/interfaces';
 import { expect, test } from 'vitest';
-import { CLI_SRC, ec241bcUsage, runCli, usageByCommand, withSrcLock } from './support/cli.ts';
+import { CLI_SRC, ec241bcUsage, runCli, usageByCommand } from './support/cli.ts';
 
 const ADAPTERS = [
   'vendor-diff',
@@ -50,21 +50,19 @@ test('(b) `fiks` with no command prints the ec241bc USAGE byte-identically', () 
 }, 60_000);
 
 test('(c) `<command> --help` prints help() for commands without a default-export module', async () => {
-  await withSrcLock(async () => {
-    const overridden = new Set<string>();
-    for (const f of readdirSync(join(CLI_SRC, 'commands')).filter((x) => x.endsWith('.ts'))) {
-      const mod = (await import(pathToFileURL(join(CLI_SRC, 'commands', f)).href)) as {
-        default?: CliCommandModule;
-      };
-      if (mod.default && typeof mod.default.name === 'string') overridden.add(mod.default.name);
-    }
-    const usage = usageByCommand(ec241bcUsage());
-    const plain = ADAPTERS.filter((n) => !overridden.has(n));
-    expect(plain.length).toBeGreaterThan(0);
-    for (const name of plain) {
-      const r = runCli([name, '--help']);
-      expect(r.status, `${name}: ${r.stderr}`).toBe(0);
-      expect(r.stdout, name).toBe(`${usage.get(name)}\n`);
-    }
-  });
+  const overridden = new Set<string>();
+  for (const f of readdirSync(join(CLI_SRC, 'commands')).filter((x) => x.endsWith('.ts'))) {
+    const mod = (await import(pathToFileURL(join(CLI_SRC, 'commands', f)).href)) as {
+      default?: CliCommandModule;
+    };
+    if (mod.default && typeof mod.default.name === 'string') overridden.add(mod.default.name);
+  }
+  const usage = usageByCommand(ec241bcUsage());
+  const plain = ADAPTERS.filter((n) => !overridden.has(n));
+  expect(plain.length).toBeGreaterThan(0);
+  for (const name of plain) {
+    const r = runCli([name, '--help']);
+    expect(r.status, `${name}: ${r.stderr}`).toBe(0);
+    expect(r.stdout, name).toBe(`${usage.get(name)}\n`);
+  }
 }, 300_000);

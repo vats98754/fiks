@@ -1,7 +1,8 @@
-// Helpers for the CORE CLI tests: run `fiks` as a subprocess, serialise tests that plant
-// temporary command or bootstrap modules, and build an ec241bc tree to compare against.
+// Helpers for the CORE CLI tests: run `fiks` as a subprocess, give tests that plant temporary
+// command or bootstrap modules a private copy of the CLI, and build an ec241bc tree to compare against.
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
+  cpSync,
   existsSync,
   lstatSync,
   mkdirSync,
@@ -26,13 +27,17 @@ export interface CliRun {
   stderr: string;
 }
 
-/** `pnpm fiks <args>` (= tsx packages/cli/src/main.ts) from the repo root of `root`. */
+/**
+ * `pnpm fiks <args>` (= tsx packages/cli/src/main.ts) from the repo root of `root`; with `src`,
+ * the CLI in that source folder (a `privateCli()` copy) instead.
+ */
 export function runCli(
   args: string[],
-  opts: { root?: string; env?: NodeJS.ProcessEnv; cwd?: string } = {},
+  opts: { root?: string; src?: string; env?: NodeJS.ProcessEnv; cwd?: string } = {},
 ): CliRun {
   const root = opts.root ?? ROOT;
-  const r = spawnSync(TSX, [join(root, 'packages/cli/src/main.ts'), ...args], {
+  const main = join(opts.src ?? join(root, 'packages/cli/src'), 'main.ts');
+  const r = spawnSync(TSX, [main, ...args], {
     cwd: opts.cwd ?? root,
     encoding: 'utf8',
     env: { ...process.env, ...opts.env },
@@ -41,28 +46,24 @@ export function runCli(
   return { status: r.status, stdout: r.stdout, stderr: r.stderr };
 }
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
 /**
- * Serialises tests that add temporary files to packages/cli/src/{commands,bootstrap} (they change
- * what every CLI run in the meantime would load). A directory lock in the OS temp dir.
+ * A private copy of packages/cli for tests that plant temporary modules in src/{commands,bootstrap}.
+ * Planting into the real src would change what every CLI subprocess started in parallel by other
+ * test files loads (main.ts lists the folder, then imports each file: a file deleted in between
+ * makes that run exit 1 with ERR_MODULE_NOT_FOUND). The copy lives at <ROOT>/.work/cli-<random>/
+ * (gitignored, and at the same depth as packages/cli, so main.ts and paths.ts resolve the same ROOT
+ * and .env); src/ is copied, everything else (package.json, node_modules, test) is symlinked.
  */
-export async function withSrcLock<T>(fn: () => Promise<T> | T): Promise<T> {
-  const lock = join(tmpdir(), `fiks-cli-src-${Buffer.from(ROOT).toString('hex').slice(-16)}.lock`);
-  for (let i = 0; ; i++) {
-    try {
-      mkdirSync(lock);
-      break;
-    } catch {
-      if (i > 6000) throw new Error(`timed out waiting for ${lock}`);
-      await sleep(100);
-    }
+export function privateCli(): { src: string; cleanup(): void } {
+  const work = join(ROOT, '.work');
+  mkdirSync(work, { recursive: true });
+  const dir = mkdtempSync(join(work, 'cli-'));
+  const real = join(ROOT, 'packages/cli');
+  for (const name of readdirSync(real)) {
+    if (name === 'src') cpSync(join(real, 'src'), join(dir, 'src'), { recursive: true });
+    else symlinkSync(join(real, name), join(dir, name));
   }
-  try {
-    return await fn();
-  } finally {
-    rmSync(lock, { recursive: true, force: true });
-  }
+  return { src: join(dir, 'src'), cleanup: () => rmSync(dir, { recursive: true, force: true }) };
 }
 
 /** The ec241bc USAGE string, read from git at test time. */

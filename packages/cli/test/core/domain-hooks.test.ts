@@ -9,7 +9,7 @@ import { getDomain } from '@fiks/domains';
 import { createWorktree, generateRepro, loadTrace, shopReproEmitter } from '@fiks/repro';
 import { afterAll, beforeAll, expect, test } from 'vitest';
 import { shopDir } from '../../src/paths.ts';
-import { CLI_SRC, ec241bcTree, runCli, TSX, withSrcLock } from './support/cli.ts';
+import { ec241bcTree, privateCli, runCli, TSX } from './support/cli.ts';
 
 const D2 = new URL('./fixtures/D2-trace.json', import.meta.url).pathname;
 const tmp = mkdtempSync(join(tmpdir(), 'fiks-domain-hooks-'));
@@ -122,39 +122,41 @@ test('(b) fiks repro --domain stub runs the stub emitter and only its suite; fai
   g('add', '.');
   g('-c', 'user.name=t', '-c', 'user.email=t@example.com', 'commit', '-q', '-m', 'stub');
   g('tag', '-a', 'stub-v1', '-m', 'stub base');
-  const bootstrap = join(CLI_SRC, 'bootstrap/zz-stub-domain.ts');
-  await withSrcLock(async () => {
-    writeFileSync(bootstrap, STUB_BOOTSTRAP);
-    try {
-      const run = (scope?: string) => {
-        const spy = join(tmp, `spy-${scope ? 'all' : 'scoped'}.log`);
-        writeFileSync(spy, '');
-        const r = runCli(
-          ['repro', '--domain', 'stub', '--trace', D2, '--target', 'stub-v1', '--runs', '2', '--json'],
-          {
-            env: { FIKS_STUB_SPY: spy, FIKS_STUB_REPO: repo, ...(scope ? { FIKS_STUB_SCOPE: scope } : {}) },
-          },
-        );
-        return { r, spy: readFileSync(spy, 'utf8').trim().split('\n') };
-      };
-      const scoped = run();
-      expect(scoped.r.status, scoped.r.stderr).toBe(0);
-      const out = JSON.parse(scoped.r.stdout);
-      expect(out.gateF.ok).toBe(true);
-      expect(out.gateF.reason).toBe('fails for the stated reason on 2/2 runs');
-      expect(out.gateF.evidence.command).toBe('stub-suite test/stub/**');
-      expect(out.spec.testPath).toBe('test/stub/tr_079b90c89e.check.js');
-      expect(scoped.spy).toEqual(['emitter tr_079b90c89e', 'suite test/stub/**', 'suite test/stub/**']);
-      // Control: with the whole suite in scope the planted failure counts, and F fails.
-      const whole = run('**');
-      expect(whole.r.status).toBe(1);
-      expect(JSON.parse(whole.r.stdout).gateF.reason).toMatch(
-        /other tests fail too: test\/other\/planted.test.ts > planted/,
+  // The stub bootstrap goes into a private copy of the CLI, not the real packages/cli/src.
+  const cli = privateCli();
+  const bootstrap = join(cli.src, 'bootstrap/zz-stub-domain.ts');
+  writeFileSync(bootstrap, STUB_BOOTSTRAP);
+  try {
+    const run = (scope?: string) => {
+      const spy = join(tmp, `spy-${scope ? 'all' : 'scoped'}.log`);
+      writeFileSync(spy, '');
+      const r = runCli(
+        ['repro', '--domain', 'stub', '--trace', D2, '--target', 'stub-v1', '--runs', '2', '--json'],
+        {
+          src: cli.src,
+          env: { FIKS_STUB_SPY: spy, FIKS_STUB_REPO: repo, ...(scope ? { FIKS_STUB_SCOPE: scope } : {}) },
+        },
       );
-    } finally {
-      rmSync(bootstrap, { force: true });
-    }
-  });
+      return { r, spy: readFileSync(spy, 'utf8').trim().split('\n') };
+    };
+    const scoped = run();
+    expect(scoped.r.status, scoped.r.stderr).toBe(0);
+    const out = JSON.parse(scoped.r.stdout);
+    expect(out.gateF.ok).toBe(true);
+    expect(out.gateF.reason).toBe('fails for the stated reason on 2/2 runs');
+    expect(out.gateF.evidence.command).toBe('stub-suite test/stub/**');
+    expect(out.spec.testPath).toBe('test/stub/tr_079b90c89e.check.js');
+    expect(scoped.spy).toEqual(['emitter tr_079b90c89e', 'suite test/stub/**', 'suite test/stub/**']);
+    // Control: with the whole suite in scope the planted failure counts, and F fails.
+    const whole = run('**');
+    expect(whole.r.status).toBe(1);
+    expect(JSON.parse(whole.r.stdout).gateF.reason).toMatch(
+      /other tests fail too: test\/other\/planted.test.ts > planted/,
+    );
+  } finally {
+    rmSync(bootstrap, { force: true });
+    cli.cleanup();
+  }
 }, 180_000);
 
 test("(c) getDomain('shop').allowedEditPaths equals ['^src/.+\\\\.ts$']", () => {
