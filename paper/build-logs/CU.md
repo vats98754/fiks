@@ -235,11 +235,60 @@ Evidence: `pnpm --reporter=default vitest run packages/contract-update` -> 2 fil
 rejected, benign $2,500 widening accepted with D1 still violating, M5-on-another-property delta
 rejected); `pnpm typecheck` exit 0; `pnpm lint` exit 0 ("Checked 382 files ... No fixes applied").
 
+## Round 6 (verifier findings: CallRecord probes)
+
+Base: `git rebase main` -> already on `a585b65` (nothing to replay; the SETUP lockfile edit stays
+uncommitted). SETUP re-run: `node scripts/apply-dep-fragments.mjs` -> "nothing to apply";
+`pnpm install --no-frozen-lockfile` exit 0.
+
+**Finding 1 (cases.ts, `fromCallRecord`).** A CallRecord's read-after-write probe was dropped, so a
+clean v1 `create_order` CallRecord evaluated `violated` on `shop.create_order/readAfterWrite`
+("no get_order probe ran"), was counted as an already-violating corpus case (corpus.verified 9 ->
+8) and left out of the corpus check; every create_order mutation variant was "rejected" for the
+same reason. Fixed:
+- `callRecordProbe(r)` takes the probe where MON's `normalizeRecord` (packages/proxy/src/replay.ts)
+  does: `r.probe`, else the `probe` of the `events[]` entry with `type: 'call'`. A probe without a
+  tool or a result object is no probe. Its `http` becomes the probe's `upstream`, unless the record
+  (or its proxy event) says `upstreamObserved: false`, as in MON's `replayRecord`; the same flag
+  now drops the call's own upstream (`GateCase.upstream` is optional: absent = not observed).
+- `exchanges()` keeps `seq`/`startedAt`/`durationMs` when the source exchange has them (MON's
+  `asExchanges` does the same), so a probe from the proxy event equals the recording's.
+- `fromCallRecord(r, probe?)` uses `callRecordProbe(r)` unless a probe is passed explicitly.
+- `gate.ts`: a case whose contract declares postconditions and that has no probe is unevaluable:
+  one fail-closed `input` finding (`... has no read-after-write probe ..., but
+  shop.create_order/readAfterWrite needs it, so it cannot be evaluated; the gate fails closed`),
+  and the case is not counted or noted as a pre-existing violation. This applies to every check
+  (trigger, stored, corpus, mutation) and to recordings and GateCases too.
+
+Cross-check against MON (temporary script, deleted): `order-create.json` wrapped as a CallRecord
+with the probe in `events[0]` (`type: 'call'`) -> `MON probe: true CU probe: true same
+tool/args/result: true same upstream: true`.
+
+**Finding 2 (tests).** `accepts CallRecord inputs the same way as product-format recordings` now
+converts the whole corpus, create_order included, with the probe in the proxy event; its summary
+equals the recording run and `corpus = {total: 10, verified: 9, regressions: 0}`. New tests:
+`takes a CallRecord's read-after-write probe where MON does (record, then its proxy event)` (event
+probe and top-level probe equal the recording's; `violatedIds` of the create_order CallRecord is
+`[]`; `upstreamObserved: false` drops both upstreams) and `fails closed on a create_order
+CallRecord without its read-after-write probe` (exactly one `input` finding on that case, reason
+names `shop.create_order/readAfterWrite`, no "already violates" note, corpus `{10, 8, 0}`; a
+recording without its probe also fails closed; a probe without a result is no probe).
+Self-check: with `src/` stashed (round-5 code) the three tests fail; restored, they pass.
+
+BA6 (round 5) is unchanged and still holds: the premium-search [20, 300000] repro is accepted with
+the D1 trace withheld and rejected by the stored check with it.
+
+Evidence: `pnpm --reporter=default vitest run packages/contract-update` -> 2 files, 41 tests
+passed; `-t "PLAN P12"` -> the 4 acceptance tests pass; `-t "BA6|CallRecord"` -> 9 pass;
+`pnpm typecheck` exit 0; `pnpm lint` exit 0 ("Checked 382 files ... No fixes applied").
+
 ## For ORCH (`--arm fiks+cu`)
 
 Pass the frozen trace as `trigger`, the target repo's `test/repro/*.json` as `storedViolations`,
 the A0 S-dev CallRecords as `cleanCorpus`, MUT M1-M14 variants of the trigger as
 `mutationVariants` (each with the trigger's tool and arguments; anything else fails closed),
+CallRecords of a tool with read-after-write postconditions (create_order) with their probe on the
+record or in the `type: 'call'` proxy event, as MON reads it (without one the gate fails closed),
 the contract file in force as `contracts`, and
 `declaredOutputSchemas(<server tools/list>.tools)` as `declaredOutputSchemas`. On rejection feed `reasons`
 back to the agent; on acceptance write `renderProposal(...).markdown` and emit no `would_open_pr`.

@@ -1,4 +1,4 @@
-import { evaluate, findContract, SHOP_CONTRACTS } from '@fiks/contracts';
+import { evaluate, findContract, type HttpExchange, SHOP_CONTRACTS } from '@fiks/contracts';
 import type { CallRecord } from '@fiks/interfaces';
 import { describe, expect, it } from 'vitest';
 import {
@@ -77,6 +77,38 @@ const violatedIds = (rec: GateInput, file = SHOP_CONTRACTS) => {
     probe: c.probe,
   }).violations.map((v) => v.propertyId);
 };
+
+/**
+ * A gate input as the paper's CallRecord. The read-after-write probe goes where the proxy logs it:
+ * in the `type: 'call'` event of events[], with the tap's full exchanges (`probeIn: 'event'`,
+ * default), or nowhere (`'none'`).
+ */
+function asCallRecord(rec: GateInput, opts: { probeIn?: 'event' | 'none' } = {}): CallRecord {
+  const c = toGateCase(rec);
+  const pairs = (xs: HttpExchange[] | undefined) =>
+    (xs ?? []).map(({ request, response }) => ({ request, response }));
+  const probe =
+    c.probe && opts.probeIn !== 'none'
+      ? { tool: c.probe.tool, args: c.probe.args, result: c.probe.result, http: c.probe.upstream ?? [] }
+      : undefined;
+  return {
+    callId: c.id,
+    domain: 'shop',
+    stratum: 'dev',
+    catalog: 'original',
+    drift: null,
+    mutant: c.mutant ?? null,
+    tool: c.tool,
+    args: c.args,
+    upstream: pairs(c.upstream),
+    output: c.result ?? {},
+    events: probe ? [{ type: 'call', tool: c.tool, args: c.args, result: c.result, at: c.now, probe }] : [],
+    entityClass: {},
+    originUnit: {},
+    capturedAt: c.now,
+    controlOf: null,
+  };
+}
 
 describe('fixtures', () => {
   it('stored D1-D5 traces violate their targets and the v1 corpus is clean under the shop contracts', () => {
@@ -378,38 +410,76 @@ describe('acceptDelta: other checks', () => {
   });
 
   it('accepts CallRecord inputs the same way as product-format recordings', () => {
-    const asCallRecord = (rec: GateInput): CallRecord => {
-      const c = toGateCase(rec);
-      return {
-        callId: c.id,
-        domain: 'shop',
-        stratum: 'dev',
-        catalog: 'original',
-        drift: null,
-        mutant: c.mutant ?? null,
-        tool: c.tool,
-        args: c.args,
-        upstream: c.upstream.map(({ request, response }) => ({ request, response })),
-        output: c.result ?? {},
-        events: [],
-        entityClass: {},
-        originUnit: {},
-        capturedAt: c.now,
-        controlOf: null,
-      };
-    };
-    // create_order needs a probe, which CallRecords do not carry: keep that one a recording.
-    const corpus = cleanCorpus().map((r) => (r.tool === 'create_order' ? r : asCallRecord(r)));
-    const variants = searchVariants().map(asCallRecord);
+    // create_order's probe sits in the proxy event (events[] entry with type 'call'), where MON's
+    // normalizeRecord (packages/proxy/src/replay.ts) reads it.
+    const corpus = cleanCorpus().map((r) => asCallRecord(r));
+    expect(corpus.filter((r) => r.tool === 'create_order')).toHaveLength(1);
+    const variants = searchVariants().map((v) => asCallRecord(v));
     const a = acceptDelta(
       widenSearch(3000),
       ctx(asCallRecord(premiumSearch()), variants, { cleanCorpus: corpus }),
     );
     const b = acceptDelta(widenSearch(3000), ctx(premiumSearch(), searchVariants()));
     expect(a.accepted).toBe(true);
+    expect(a.notes).toEqual(b.notes);
     expect(a.summary).toEqual(b.summary);
+    expect(a.summary.corpus).toEqual({ total: 10, verified: 9, regressions: 0 });
     const silenced = acceptDelta(widenSearch(200_000), ctx(asCallRecord(premiumSearch()), variants));
     expect(silenced.accepted).toBe(false);
+  });
+
+  it("takes a CallRecord's read-after-write probe where MON does (record, then its proxy event)", () => {
+    const rec = load('shop-v1/order-create.json');
+    expect(rec.probe?.result).toBeDefined();
+    const want = toGateCase(rec).probe;
+    const inEvent = toGateCase(asCallRecord(rec));
+    expect(inEvent.probe).toEqual(want);
+    expect(violatedIds(asCallRecord(rec))).toEqual([]);
+    const onRecord = { ...asCallRecord(rec, { probeIn: 'none' }), probe: rec.probe } as CallRecord;
+    expect(toGateCase(onRecord).probe).toEqual(want);
+    // As in MON's replayRecord: no upstream for the call or its probe when it was not observed.
+    const unobserved = { ...asCallRecord(rec), upstreamObserved: false } as CallRecord;
+    expect(toGateCase(unobserved).upstream).toBeUndefined();
+    expect(toGateCase(unobserved).probe).toEqual({ ...want, upstream: undefined });
+  });
+
+  it('fails closed on a create_order CallRecord without its read-after-write probe', () => {
+    // Without the probe, evaluate() reports readAfterWrite violated ("no get_order probe ran"):
+    // the gate must not count that as a pre-existing violation and drop the case.
+    const corpus = cleanCorpus().map((r) =>
+      asCallRecord(r, { probeIn: r.tool === 'create_order' ? 'none' : 'event' }),
+    );
+    const bare = corpus.find((r) => r.tool === 'create_order');
+    if (!bare) throw new Error('no create_order in the corpus');
+    expect(toGateCase(bare).probe).toBeUndefined();
+    const r = acceptDelta(widenSearch(3000), ctx(premiumSearch(), searchVariants(), { cleanCorpus: corpus }));
+    expect(r.accepted).toBe(false);
+    expect(r.findings).toEqual([
+      expect.objectContaining({
+        check: 'input',
+        caseId: bare.callId,
+        message: expect.stringContaining('has no read-after-write probe'),
+      }),
+    ]);
+    expect(r.reasons[0]).toContain('shop.create_order/readAfterWrite');
+    expect(r.notes.join('\n')).not.toContain('already violates shop.create_order/readAfterWrite');
+    expect(r.summary.corpus).toEqual({ total: 10, verified: 8, regressions: 0 });
+    // The same holds for a recording that lost its probe, and for a probe without a result.
+    const noProbe = { ...load('shop-v1/order-create.json'), probe: undefined };
+    const r2 = acceptDelta(
+      widenSearch(3000),
+      ctx(premiumSearch(), searchVariants(), { cleanCorpus: [noProbe] }),
+    );
+    expect(r2.findings).toContainEqual(
+      expect.objectContaining({
+        check: 'input',
+        caseId: noProbe.id,
+        message: expect.stringContaining('probe'),
+      }),
+    );
+    const emptyProbe = asCallRecord(load('shop-v1/order-create.json'));
+    (emptyProbe.events[0] as { probe: { result?: unknown } }).probe.result = undefined;
+    expect(toGateCase(emptyProbe).probe).toBeUndefined();
   });
 
   it('is deterministic and does not mutate its inputs', () => {

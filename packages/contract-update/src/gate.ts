@@ -18,9 +18,10 @@
 //              the trigger's tool with the trigger's arguments.
 // Every case is checked against the server's declared outputSchema (`declaredOutputSchemas`, from
 // tools/list), as the live proxy does, so `<contract>/outputSchema` verdicts match production.
-// Missing or unevaluable inputs fail closed, and so does a check that would pass vacuously: no
-// stored trace that violates its target, no corpus case that verifies, no variant rejected before,
-// a "variant" that is not a variant of the trigger.
+// Missing or unevaluable inputs fail closed (a case without a tool result, or a case of a contract
+// with read-after-write postconditions that carries no probe), and so does a check that would pass
+// vacuously: no stored trace that violates its target, no corpus case that verifies, no variant
+// rejected before, a "variant" that is not a variant of the trigger.
 import { type ContractFile, type EvalResult, evaluate, findContract, type Verdict } from '@fiks/contracts';
 import { applyDelta } from './apply.ts';
 import { type DeclaredOutputSchemas, evalInput, type GateCase, type GateInput, toGateCase } from './cases.ts';
@@ -81,12 +82,32 @@ export interface GateResult {
 
 type Evaluated = { res: EvalResult; violated: Set<string> };
 
+/** The read-after-write postconditions `file` declares for the case's tool, as property ids. */
+function postconditionIds(file: ContractFile, tool: string): string[] {
+  const c = findContract(file, tool);
+  return (c?.postconditions ?? []).map((p) => `${c?.id}/${p.id}`);
+}
+
+/**
+ * Why the case cannot be evaluated under `file`, or null. A case of a contract with postconditions
+ * needs its read-after-write probe: without one, `evaluate` reports `readAfterWrite` violated ("no
+ * probe ran"), which the gate would misread as a pre-existing violation (a corpus case dropped, a
+ * variant "rejected"), so such a case fails closed instead.
+ */
+function unevaluableReason(file: ContractFile, c: GateCase): string | null {
+  if (!c.result) return 'has no tool result';
+  const post = postconditionIds(file, c.tool);
+  if (post.length && !c.probe)
+    return `has no read-after-write probe (neither \`probe\` nor a \`type: 'call'\` event in events[] carries one), but ${post.join(', ')} needs it`;
+  return null;
+}
+
 function evalCase(
   file: ContractFile,
   c: GateCase,
   schemas: DeclaredOutputSchemas | undefined,
 ): Evaluated | null {
-  if (!c.result) return null;
+  if (!c.result || unevaluableReason(file, c)) return null;
   const declared = schemas && Object.hasOwn(schemas, c.tool) ? (schemas[c.tool] ?? undefined) : undefined;
   const res = evaluate(findContract(file, c.tool), evalInput({ ...c, result: c.result }, declared));
   return { res, violated: new Set(res.violations.map((v) => v.propertyId)) };
@@ -188,7 +209,7 @@ export function acceptDelta(delta: unknown, ctx: GateContext): GateResult {
     findings.push({
       check: 'input',
       caseId: c.id,
-      message: `${check} case ${describe(c)} has no tool result, so it cannot be evaluated`,
+      message: `${check} case ${describe(c)} ${unevaluableReason(old, c) ?? unevaluableReason(next, c)}, so it cannot be evaluated; the gate fails closed`,
     });
 
   // Declared outputSchemas: one finding if the map is missing, one per tool it does not cover.
