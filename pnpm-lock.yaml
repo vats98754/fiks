@@ -127,6 +127,8 @@ importers:
         specifier: workspace:*
         version: link:../contracts
 
+  packages/mutate: {}
+
   packages/proxy:
     dependencies:
       '@fiks/contracts':
