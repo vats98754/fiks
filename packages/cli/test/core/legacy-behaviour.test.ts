@@ -58,7 +58,7 @@ test('scenario v1-all --domain shop --json: no violation, identical to the run w
   const calls = JSON.parse(shop.stdout).calls as { args: { id?: string }; receipt: { verdict: string } }[];
   expect(calls).toHaveLength(10);
   // Every checked call verifies. The unknown-id fixture (p-0000) returns a tool error, which the
-  // proxy reports as 'unverifiable' ("the tool returned an error"), as at ec241bc.
+  // proxy reports as 'unverifiable' ("the tool returned an error"), as at ec241bc (PLAN §0.B BA1).
   for (const c of calls)
     expect(c.receipt.verdict, JSON.stringify(c.args)).toBe(
       c.args.id === 'p-0000' ? 'unverifiable' : 'verified',

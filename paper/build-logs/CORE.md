@@ -103,17 +103,13 @@ re-checks it at F2.
    which the seed README's `^\d{2}-.+\.ts$` pattern would not load. The loader therefore imports
    every `bootstrap/*.ts` (not `*.d.ts`) in sorted order; `NN-*.ts` files still load by number,
    before any `zz-*`. The README (CORE-SEED's file) still describes only `NN-*.ts`.
-2. **`scenario v1-all --domain shop --json` (DEVIATION, needs an orchestrator decision).** The
-   acceptance text says "every verdict is 'verified'"; that does not hold as written. Nine of the
-   ten calls are `verified`; the `get_product {"id":"p-0000"}` fixture call (a deliberate
-   unknown-id call) returns a tool error and the proxy reports it as `unverifiable` ("the tool
-   returned an error"), with or without `--domain` and at ec241bc. Changing it would break the
-   byte-identical legacy requirement (`legacy-behaviour.test.ts`), so the product is unchanged.
-   The test asserts exactly that: 9 `verified` + 1 `unverifiable` for p-0000, no `violated`,
-   and byte-equality (after normalisation) with the run without `--domain`. Proposed amended
-   text: "every verdict is 'verified' except the deliberate unknown-id call get_product p-0000,
-   which is 'unverifiable' as at ec241bc; no verdict is 'violated'; identical to the same command
-   without --domain".
+2. **`scenario v1-all --domain shop --json` (resolved by PLAN §0.B BA1).** Nine of the ten calls
+   are `verified`; the `get_product {"id":"p-0000"}` fixture call (a deliberate unknown-id call)
+   returns a tool error and the proxy reports it as `unverifiable` ("the tool returned an error"),
+   with or without `--domain` and at ec241bc. The amended acceptance text (BA1) expects exactly
+   that, so the product is unchanged and stays byte-identical to ec241bc
+   (`legacy-behaviour.test.ts`). The test asserts 9 `verified` + `unverifiable` for p-0000, no
+   `violated`, and byte-equality (after normalisation) with the run without `--domain`.
 3. **Profile semantics for legacy recordings; single-drift variant (round 4).** With `ruleId: null`
    the recording's own upstream (version, drifts, clock) decides, as `rerecord` did at ec241bc;
    `profile.base` is logged and used only with a rule. `RerecordProfile` (CORE-SEED's
@@ -155,27 +151,17 @@ re-checks it at F2.
     consistent under concurrency, not that the lock is needed for this workload (git's own
     locking already serialises most of it). The lock stays as the P6 safeguard.
 
-11. **`--require-sandbox` exit code through pnpm (DEVIATION, needs an orchestrator decision;
-    cause corrected in round 3).** `tsx packages/cli/src/main.ts rerecord-head --require-sandbox
-    ...` on the host exits 2 with "sandbox required" (asserted in `sandbox.test.ts`). Run literally
-    as `pnpm fiks ...` from the fiks root it exits 1. Round 2 blamed `pnpm run` itself; that was
-    wrong. The cause is the repo-root `.npmrc` line `reporter=silent`: with the silent reporter,
-    pnpm 9.12.3 reports any non-zero child exit as 1. Checked in round 3 (pnpm 9.12.3): in an empty
-    directory a script calling `process.exit(2)` gives `pnpm run e` -> 2, `pnpm run --silent e`
-    -> 1, and with an `.npmrc` containing `reporter=silent` `pnpm run e` -> 1; in the fiks root
-    `pnpm fiks rerecord-head --require-sandbox ...` -> 1 and
-    `pnpm --reporter=default fiks rerecord-head --require-sandbox ...` -> 2, both with the
-    "sandbox required" message on stderr. The root `.npmrc` belongs to the orchestrator/INTEG, not
-    to CORE, so CORE code alone cannot make the item pass as written. Options for the orchestrator
-    or INTEG: (a) amend the acceptance text to `pnpm --reporter=default fiks rerecord-head
-    --require-sandbox ...` (or to the direct `tsx packages/cli/src/main.ts ...` form); (b) drop
-    `reporter=silent` from the root `.npmrc` (this changes the console output of every
-    `pnpm <script>` in the repo, and any acceptance item that relies on silent output would need
-    re-checking); (c) amend the text to "exits non-zero (1 through `pnpm fiks` under the root
-    .npmrc, 2 when invoked directly) with 'sandbox required'". Until one is recorded the item stays
-    failing. Callers that must tell exit 2 apart from 1 (ORCH, ARMS, HOLD, RBA) pass
-    `--reporter=default` or invoke the CLI directly; the header of
-    `packages/cli/src/commands/rerecord-head.ts` says so.
+11. **`--require-sandbox` exit code through pnpm (resolved by PLAN §0.B BA2).** The repo-root
+    `.npmrc` line `reporter=silent` makes pnpm 9.12.3 report any non-zero child exit as 1 (checked
+    in round 3: in an empty directory a script calling `process.exit(2)` gives `pnpm run e` -> 2,
+    `pnpm run --silent e` -> 1, and with an `.npmrc` containing `reporter=silent` `pnpm run e` -> 1).
+    The amended acceptance item (BA2) runs the command as `pnpm --reporter=default fiks
+    rerecord-head --require-sandbox ...` or `tsx packages/cli/src/main.ts rerecord-head ...`; both
+    exit 2 with "sandbox required" on stderr. `sandbox.test.ts` asserts the direct form (round 1)
+    and, since round 5, the literal `pnpm --reporter=default fiks ...` form. Callers that must tell
+    exit 2 apart from 1 (ORCH, ARMS, HOLD, RBA) pass `--reporter=default` or invoke the CLI
+    directly; the header of `packages/cli/src/commands/rerecord-head.ts` says so.
+
 12. **Planting tests use a private copy of the CLI (round 2 flake fix).** Round 1's `loader.test.ts`
     and `domain-hooks.test.ts` wrote and deleted temporary modules in the real
     `packages/cli/src/{commands,bootstrap}` under a lock that only those tests took. CLI
@@ -231,7 +217,7 @@ meanwhile, so CORE rebased onto `67ac4b0` and re-ran SETUP. There,
 0 failed, 1 skipped (`packages/proxy/test/replay.test.ts`, not CORE's), 377 total. Every CORE
 acceptance test file and CLI item was re-run on that base. `pnpm typecheck` and `pnpm lint` exit 0. Items 2 (p-0000 `unverifiable`) and 11 (`pnpm fiks`
 exit 1 under the root `.npmrc` `reporter=silent`) still fail as written and wait for an
-orchestrator decision; no decision is recorded in PLAN.md or WORKSTREAMS.json at `67ac4b0`.
+orchestrator decision; no decision is recorded in PLAN.md or WORKSTREAMS.json at `67ac4b0`. (Both resolved later by PLAN §0.B BA1 and BA2; see round 5.)
 
 ## Round 4 (rebased onto `c980341`, PREREG merged)
 
@@ -240,14 +226,14 @@ SETUP re-run (`pnpm install --no-frozen-lockfile`, exit 0; lockfile change not c
 - **Finding 3 (single-drift profile) fixed in the test**: see interpretation 3.
   `pnpm vitest run packages/cli/test/core/rerecord-head.test.ts`: 8 passed (D3, D4 x full v2,
   single-drift v2 x fix head, pre-fix parent), 132 s.
-- **Finding 1 (p-0000 `unverifiable`)**: unchanged product, still needs the orchestrator's
-  amended acceptance text (interpretation 2). Re-checked: `pnpm fiks scenario v1-all --domain shop
+- **Finding 1 (p-0000 `unverifiable`)**: unchanged product; at round 4 it still needed the
+  orchestrator's amended acceptance text (interpretation 2; since resolved by BA1). Re-checked: `pnpm fiks scenario v1-all --domain shop
   --json | jq -r '.calls[].receipt.verdict'` gives 9 `verified` and `unverifiable` for
   `get_product {"id":"p-0000"}`; equal to the run without `--domain` after normalising
   timestamps and run ids. No amendment is recorded in `paper/PLAN.md` or
   `paper/WORKSTREAMS.json` at `c980341`.
-- **Finding 2 (exit 2 through `pnpm fiks`)**: unchanged, needs an orchestrator/INTEG decision
-  (interpretation 11). Re-checked: `pnpm fiks rerecord-head --require-sandbox ...` -> 1,
+- **Finding 2 (exit 2 through `pnpm fiks`)**: unchanged; at round 4 it still needed an
+  orchestrator/INTEG decision (interpretation 11; since resolved by BA2). Re-checked: `pnpm fiks rerecord-head --require-sandbox ...` -> 1,
   `pnpm --reporter=default fiks ...` -> 2, `tsx packages/cli/src/main.ts ...` -> 2, each with
   "sandbox required" on stderr.
 - **Full suite (round 4)**: `with-lock suite pnpm test -- --reporter=json --outputFile=<tmp>/full1.json`

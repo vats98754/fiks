@@ -1,5 +1,6 @@
 // rerecord-head is container-runnable (PLAN P1/P23, round 6): `--require-sandbox` exits 2 on the
 // host; with FIKS_IN_SANDBOX=1 and a temp HOME it runs and never reads the checkout's .env.
+import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -32,6 +33,33 @@ test('--require-sandbox on the host exits 2 with "sandbox required"', () => {
   expect(r.status).toBe(2);
   expect(r.stderr).toMatch(/sandbox required/);
   expect(existsSync(join(tmp, 'x.jsonl'))).toBe(false);
+}, 60_000);
+
+// PLAN §0.B BA2: the acceptance form is `pnpm --reporter=default fiks ...` (the root .npmrc
+// `reporter=silent` makes pnpm report every non-zero child exit as 1).
+test('pnpm --reporter=default fiks rerecord-head --require-sandbox on the host exits 2', () => {
+  const r = spawnSync(
+    'pnpm',
+    [
+      '--reporter=default',
+      'fiks',
+      'rerecord-head',
+      '--require-sandbox',
+      '--worktree',
+      tmp,
+      '--profile',
+      PROFILE,
+      '--from',
+      'HEAD',
+      '--log',
+      join(tmp, 'y.jsonl'),
+    ],
+    { cwd: ROOT, encoding: 'utf8', env: { ...process.env, FIKS_IN_SANDBOX: '' } },
+  );
+  expect(r.error).toBeUndefined();
+  expect(r.status, r.stderr).toBe(2);
+  expect(`${r.stdout}${r.stderr}`).toMatch(/sandbox required/);
+  expect(existsSync(join(tmp, 'y.jsonl'))).toBe(false);
 }, 60_000);
 
 test('with FIKS_IN_SANDBOX=1 and a temp HOME it runs; an fs spy shows no read of the checkout .env', () => {
