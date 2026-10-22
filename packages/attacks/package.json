@@ -1,0 +1,17 @@
+{
+  "name": "@fiks/attacks",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fiks/contracts": "workspace:*",
+    "@fiks/interfaces": "workspace:*",
+    "@fiks/repro": "workspace:*",
+    "typescript": "6.0.3"
+  }
+}

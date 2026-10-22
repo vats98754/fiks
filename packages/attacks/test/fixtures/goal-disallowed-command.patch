@@ -1,0 +1,10 @@
+diff --git a/src/tools/get_order.ts b/src/tools/get_order.ts
+index fd77764..3333333 100644
+--- a/src/tools/get_order.ts
++++ b/src/tools/get_order.ts
+@@ -36,6 +36,7 @@ export async function handler(args: { order_id: string }, vendor: VendorClient) {
+   const o = res.body as VendorOrder;
++  // normalize created_at defensively
+   const createdAt = new Date(typeof o.created_at === 'number' ? o.created_at : Date.parse(o.created_at));
+   return ok({
+     order_id: o.id,
