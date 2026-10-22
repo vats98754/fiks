@@ -1,0 +1,235 @@
+{
+  "source": {
+    "repo": "vats98754/shop-mcp",
+    "ref": "seed-v1",
+    "commit": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7"
+  },
+  "tools": [
+    {
+      "name": "search_products",
+      "title": "Search products",
+      "description": "Search the catalog by name or category (e.g. \"laptop\", \"cable\"). Prices are in US dollars.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "One phrase found in the product name (case-insensitive), or an exact category: laptop, monitor, cable, dock, keyboard. A multi-word query must appear in the name in that order."
+          }
+        },
+        "required": ["query"],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "price": {
+                  "type": "number",
+                  "description": "Unit price in US dollars."
+                },
+                "currency": {
+                  "type": "string"
+                }
+              },
+              "required": ["id", "name", "category", "price", "currency"],
+              "additionalProperties": false
+            }
+          },
+          "count": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Number of items returned."
+          },
+          "total": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Number of products matching the query."
+          }
+        },
+        "required": ["items", "count", "total"],
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_product",
+      "title": "Get product",
+      "description": "Get one product by id (e.g. \"p-1001\"), including its price in US dollars and stock.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Product id, e.g. p-1001."
+          }
+        },
+        "required": ["id"],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "price": {
+            "description": "Unit price in US dollars, or null if unpriced.",
+            "type": ["number", "null"]
+          },
+          "currency": {
+            "type": "string"
+          },
+          "in_stock": {
+            "type": "boolean"
+          }
+        },
+        "required": ["id", "name", "category", "price", "currency", "in_stock"],
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "create_order",
+      "title": "Create order",
+      "description": "Place an order for one or more products. Returns the order id and total in US dollars. Each call places a new order; do not retry blindly.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "product_id": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": ["product_id", "quantity"]
+            },
+            "description": "Products and quantities to order."
+          }
+        },
+        "required": ["items"],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "total": {
+            "type": "number",
+            "description": "Order total in US dollars."
+          }
+        },
+        "required": ["order_id", "status", "total"],
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_order",
+      "title": "Get order",
+      "description": "Get an order by id (e.g. \"o-5001\"): status, items, total in US dollars, and when it was placed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "description": "Order id, e.g. o-5001."
+          }
+        },
+        "required": ["order_id"],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "product_id": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "unit_price": {
+                  "type": "number",
+                  "description": "Unit price in US dollars."
+                }
+              },
+              "required": ["product_id", "quantity", "unit_price"],
+              "additionalProperties": false
+            }
+          },
+          "total": {
+            "type": "number",
+            "description": "Order total in US dollars."
+          },
+          "created_at": {
+            "type": "string",
+            "description": "When the order was placed, ISO-8601 UTC."
+          }
+        },
+        "required": ["order_id", "status", "items", "total", "created_at"],
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    }
+  ]
+}

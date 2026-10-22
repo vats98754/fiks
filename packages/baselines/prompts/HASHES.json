@@ -1,0 +1,11 @@
+{
+  "files": {
+    "call.v1.md": "5929de001f98232ae545e4d45eed187a6aa8ee07583be4f174feef5eaa5a65ce",
+    "judge-upstream.v1.md": "5c7856ecf40fd8e14b96afb9830b8272d04bf76c046673ce15453550d20dbb8c",
+    "judge.v1.md": "43a2d234a5fbf986fd734fe0fea33df4c7710687d29107129130a3becc4a4460"
+  },
+  "variants": {
+    "B-JUDGE": "46cdbfd1ae8b2258bf737c9a26350c5c201811e723bd09b9be17d022d8278b49",
+    "B-JUDGE+U": "3319e3829eb0a353891d92fb8e44f5182e68132ab601fe12e973407572cc51e4"
+  }
+}
