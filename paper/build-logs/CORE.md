@@ -177,3 +177,9 @@ the last section of this file.
 `with-lock suite pnpm test -- --reporter=json --outputFile=<tmp>/full1.json`: exit 0,
 212 passed, 0 failed, 212 total (baseline at `c144b03` in this worktree: 158/158).
 `pnpm typecheck` and `pnpm lint` exit 0.
+
+## Full suite (round 2, after the private-CLI-copy fix)
+
+Three consecutive runs of `with-lock suite pnpm test -- --reporter=json --outputFile=<tmp>/fullN.json`
+at `7529764`: each exit 0, 212 passed, 0 failed, 212 total. No `.work/cli-*` copy is left behind
+and the worktree is clean afterwards. `pnpm typecheck` and `pnpm lint` exit 0.
