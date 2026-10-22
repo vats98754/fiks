@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paper/prereg/frame-spec.schema.json",
+  "title": "FrameSpec (H1 frame F, frozen at F4b)",
+  "description": "Matches the FrameSpec interface in packages/interfaces/src/records.ts (PLAN Appendix, 3.1, 5.7). Written by 'pnpm fiks frame-k --records <dir>' (DET) to paper/prereg/frame-spec.json before F4b. Every field is required and no other field is allowed. Semantic checks (N_E = eligible entities, K = cells, m rule, attribution of every eligible input) are in paper/prereg/lib/frame-spec.ts.",
+  "type": "object",
+  "required": [
+    "domain",
+    "nF",
+    "eligibleInputs",
+    "entities",
+    "NE",
+    "attribution",
+    "families",
+    "cells",
+    "K",
+    "entailedProps",
+    "neRule",
+    "crit",
+    "power",
+    "hash"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "domain": {
+      "description": "Domain ids covered by the frame (shop, tracker).",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "nF": { "description": "n_F: frame inputs after dedupe.", "type": "integer", "minimum": 0 },
+    "eligibleInputs": {
+      "description": "Ids (EnumRow dedupe keys) of the FP-eligible inputs.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "entities": {
+      "description": "Every extended-catalog entity in the frame, eligible or not.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/entity" }
+    },
+    "NE": { "description": "N_E: the number of FP-eligible entities.", "type": "integer", "minimum": 0 },
+    "attribution": {
+      "description": "inputId -> concrete property path (e.g. items[2].price) -> originUnit (Domain.originEntity).",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": { "type": "string", "minLength": 1 }
+      }
+    },
+    "families": {
+      "description": "property id -> family (last non-index segment of the property path; PLAN 4 D12).",
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "cells": { "type": "array", "items": { "$ref": "#/$defs/cell" } },
+    "K": { "description": "Number of (property x entity class) cells.", "type": "integer", "minimum": 0 },
+    "entailedProps": {
+      "description": "Truth-entailed properties (sanity check only, never counted).",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "neRule": { "$ref": "#/$defs/neRule" },
+    "crit": {
+      "description": "Critical value crit(N_E, 0.02, alpha) of the one-sided exact binomial test; -1 when no X can reject (N_E < 217).",
+      "type": "integer",
+      "minimum": -1
+    },
+    "power": {
+      "type": "object",
+      "required": ["pi01", "pi005"],
+      "additionalProperties": false,
+      "properties": {
+        "pi01": { "description": "Power at pi = 0.01.", "type": "number", "minimum": 0, "maximum": 1 },
+        "pi005": { "description": "Power at pi = 0.005.", "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "hash": {
+      "description": "sha256 of the pre-F4b frame CallRecord set ('pnpm fiks record --frame --monitor none'); the F4b ledger entry's frameRecordsSha256 equals it.",
+      "type": "string",
+      "pattern": "^(sha256:)?[0-9a-f]{64}$"
+    }
+  },
+  "$defs": {
+    "entity": {
+      "type": "object",
+      "required": ["id", "domain", "authorBatch", "eligible"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "domain": { "type": "string", "minLength": 1 },
+        "authorBatch": { "type": "string", "minLength": 1 },
+        "eligible": { "type": "boolean" }
+      }
+    },
+    "cell": {
+      "type": "object",
+      "required": ["contract", "property", "class", "nInputs"],
+      "additionalProperties": false,
+      "properties": {
+        "contract": { "type": "string", "minLength": 1 },
+        "property": { "type": "string", "minLength": 1 },
+        "class": { "type": "string", "minLength": 1 },
+        "nInputs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "neRule": {
+      "description": "Outcome of the N_E rule (PLAN 3.1): catalog top-up batches added, the underpowered flag, and m (3 if N_E < 217, else 4).",
+      "type": "object",
+      "required": ["topUpBatches", "underpowered", "m"],
+      "additionalProperties": false,
+      "properties": {
+        "topUpBatches": { "type": "integer", "minimum": 0 },
+        "underpowered": { "type": "boolean" },
+        "m": { "enum": [3, 4] }
+      }
+    }
+  }
+}

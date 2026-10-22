@@ -1,0 +1,66 @@
+{
+  "description": "Paths hashed into paper/prereg/REGISTRY.json at F5 (PLAN 5.2: blob hashes incl. HOLD, ARMS FIDELITY.md, judge candidate prompts). Globs are repo-relative ('**' any depth, '*' one segment). A group with required: true must match at least one file when 'build-registry.ts --final' writes the registry for the prereg-v1 tag; before then an empty group is reported as pending.",
+  "exclude": ["paper/prereg/REGISTRY.json", "**/node_modules/**", "**/.DS_Store"],
+  "groups": [
+    {
+      "id": "prereg",
+      "why": "The registration itself, its checkers and templates",
+      "required": true,
+      "globs": ["paper/prereg/**"]
+    },
+    {
+      "id": "plan",
+      "why": "The plan the registration is drawn from, and the build DAG",
+      "required": true,
+      "globs": ["paper/PLAN.md", "paper/WORKSTREAMS.json", "paper/ORCHESTRATION.md"]
+    },
+    {
+      "id": "analysis",
+      "why": "Analysis scripts, frozen at F3 (PLAN 9.1)",
+      "required": true,
+      "globs": ["paper/scripts/**"]
+    },
+    {
+      "id": "fiks-frozen",
+      "why": "fiks repair prompt and repro generator, frozen with 0 further iterations (PLAN 5.2 item 5); detector and vocabulary",
+      "required": true,
+      "globs": [
+        "packages/repair/src/prompt.ts",
+        "packages/repro/src/generate.ts",
+        "packages/contracts/src/**",
+        "packages/contracts/contracts/shop-mcp.contracts.json",
+        "packages/proxy/src/**"
+      ]
+    },
+    {
+      "id": "heldout",
+      "why": "HOLD: grader, semantic equality, generators, pool and accept() (sealed test-split content lives in vats98754/driftbench-blind, frozen at F6)",
+      "required": true,
+      "globs": ["packages/heldout/**"]
+    },
+    {
+      "id": "arms",
+      "why": "ARMS: comparator arms, fiks-iv and FIDELITY.md (COMP parameter attributions)",
+      "required": true,
+      "globs": ["packages/arms/FIDELITY.md", "packages/arms/src/**"]
+    },
+    {
+      "id": "judges",
+      "why": "Judge candidate prompts (B-JUDGE, B-JUDGE+U; BASE)",
+      "required": true,
+      "globs": ["packages/baselines/prompts/**"]
+    },
+    {
+      "id": "frame",
+      "why": "Frame enumeration, attribution and frame-k (DET)",
+      "required": false,
+      "globs": ["packages/frame/src/**"]
+    },
+    {
+      "id": "injector",
+      "why": "Third-party injector (drifts are rules for it)",
+      "required": false,
+      "globs": ["packages/injector/src/**"]
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "$schema": "./freeze-ledger.schema.json",
+  "schemaVersion": 1,
+  "description": "Freeze ledger (PLAN.md 5.2). Empty: no freeze is recorded yet. To record freeze X: create the annotated tag, then fill X.record (peeled commit = git rev-parse <tag>^{commit}, tree = <tag>^{tree}, external refs as <ref>^{commit}) and X.details, commit, and run 'pnpm tsx paper/prereg/check-ledger.ts'.",
+  "freezes": [
+    {
+      "id": "F1",
+      "tag": "freeze-operators",
+      "content": "Response- and patch-mutation operator catalog (PLAN 5.4)",
+      "mustPrecede": ["F2"],
+      "record": null,
+      "details": {}
+    },
+    {
+      "id": "F2",
+      "tag": "freeze-vocab",
+      "content": "Vocabulary + evaluator (+ enum, crossField, pageComplete, and disabled handling with the reenable option) + fpCapability table; scripts/contract-disable.mjs; each Domain's frozenClock constant; shop-mcp re-vendor commit and base-shop; public docs of both domains (OpenAPI + prose) and every authoring brief (catalog, contract-author, drift, evasive, benign, fixer, rater), with sha256, and the no-bound check result. Must precede A0.",
+      "mustPrecede": ["F4"],
+      "record": null,
+      "details": {
+        "docs": {
+          "shop": [
+            { "path": "packages/vendor-api/openapi.json", "sha256": null },
+            { "path": "packages/vendor-api/docs/shop.md", "sha256": null }
+          ],
+          "tracker": [
+            { "path": "packages/vendor-tracker/docs/openapi.json", "sha256": null },
+            { "path": "packages/vendor-tracker/docs/tracker.md", "sha256": null }
+          ]
+        },
+        "briefs": [
+          { "kind": "catalog", "path": null, "sha256": null },
+          { "kind": "contract-author", "path": null, "sha256": null },
+          { "kind": "drift", "path": null, "sha256": null },
+          { "kind": "evasive", "path": null, "sha256": null },
+          { "kind": "benign", "path": null, "sha256": null },
+          { "kind": "fixer", "path": null, "sha256": null },
+          { "kind": "rater", "path": null, "sha256": null }
+        ],
+        "noBoundCheck": {
+          "command": "pnpm fiks author --check-no-bounds",
+          "exitCode": null,
+          "result": null,
+          "outputSha256": null
+        },
+        "shopDocsAuthorshipNote": "The shop prose docs (packages/vendor-api/docs/shop.md) are written by the CORE builder, who has read the shop contracts (PLAN 5.2 item 2; authorship and contract exposure recorded in paper/build-logs/CORE.md). The mitigation is the mechanical no-bound check (BLIND check-no-bounds), whose result is recorded in noBoundCheck. packages/vendor-api/openapi.json predates this plan. The tracker docs are written by DOM2 before any tracker contract exists, including DOM2's dev-only stub contract for TRK-DEV-1.",
+        "frozenClock": { "shop": null, "tracker": null }
+      }
+    },
+    {
+      "id": "F3",
+      "tag": "freeze-analysis",
+      "content": "paper/scripts/**, incl. a passing simulate_null.py",
+      "mustPrecede": ["F5"],
+      "record": null,
+      "details": {}
+    },
+    {
+      "id": "F4",
+      "tag": "contracts-frozen-v1",
+      "content": "Extended catalogs (both domains, with authorBatch); tracker contracts, shop-blind, LLM-authored (3 seeds/domain); seed-tracker-v1; A0 S-dev record (paper/prereg/A0-RECORD.md)",
+      "mustPrecede": ["F4b"],
+      "record": null,
+      "details": {}
+    },
+    {
+      "id": "F4b",
+      "tag": "frame-frozen",
+      "content": "Frame instance F, n_F, N_E, attribution, family map, cell list and K; result of the N_E rule; crit and power at N_E; m; hash of the pre-F4b frame CallRecords. No verdict on F computed.",
+      "mustPrecede": ["F5"],
+      "record": null,
+      "details": {
+        "frameSpecPath": "paper/prereg/frame-spec.json",
+        "frameSpecSha256": null,
+        "frameRecordsSha256": null,
+        "NE": null,
+        "crit": null,
+        "m": null
+      }
+    },
+    {
+      "id": "F5",
+      "tag": "prereg-v1",
+      "content": "PREREG.md (PLAN 3, 3.0 oracle, 5.7 rules, 9); REGISTRY.json (blob hashes incl. HOLD, ARMS FIDELITY.md, judge candidate prompts). Must precede any blind drift.",
+      "mustPrecede": ["F6", "F8"],
+      "record": null,
+      "details": {}
+    },
+    {
+      "id": "F6",
+      "tag": "blind-sealed",
+      "content": "vats98754/driftbench-blind commit hash (private), as an external ref",
+      "mustPrecede": ["F7"],
+      "record": null,
+      "details": {}
+    },
+    {
+      "id": "F7",
+      "tag": "enum-frozen",
+      "content": "Per-drift enumerations + split file. Must precede any verdict on the test split.",
+      "mustPrecede": ["F9"],
+      "record": null,
+      "details": {}
+    },
+    {
+      "id": "F8",
+      "tag": "prereg-v1.1",
+      "content": "K1 addendum (paper/prereg/K1-ADDENDUM.md: cut-order position, a, models, workers, judge variant, sigma_d and MDEs/IUT power) from dev data and throughput only. Must precede R2.",
+      "mustPrecede": ["F9"],
+      "record": null,
+      "details": {}
+    },
+    {
+      "id": "F9",
+      "tag": "eligible",
+      "content": "Detected test drifts (drift-attributable, + top-up), frozen per-drift trace hashes and their IV sidecar hashes. Must precede the pool, R3, R4.",
+      "mustPrecede": ["F10"],
+      "record": null,
+      "details": { "traces": [] }
+    },
+    {
+      "id": "F10",
+      "tag": "pool-frozen",
+      "content": "Primary patch pool hash; per-drift requestChanging flag (from ref A only). Must precede R3, R4.",
+      "mustPrecede": [],
+      "record": null,
+      "details": { "poolSha256": null, "requestChanging": {} }
+    }
+  ]
+}
