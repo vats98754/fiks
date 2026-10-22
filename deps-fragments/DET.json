@@ -1,0 +1,11 @@
+{
+  "stream": "DET",
+  "add": {
+    "packages/cli": {
+      "@fiks/baselines": "workspace:*",
+      "@fiks/frame": "workspace:*",
+      "@fiks/injector": "workspace:*",
+      "@fiks/mutate": "workspace:*"
+    }
+  }
+}

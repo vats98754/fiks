@@ -1,0 +1,46 @@
+{
+  "$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+  "root": false,
+  "extends": "//",
+  "overrides": [
+    {
+      "includes": ["src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@fiks/proxy": "packages/frame/src computes no verdict: it may not import the proxy or any monitor (PLAN 3.1).",
+                  "@fiks/contracts": {
+                    "importNames": ["evaluate", "checkInvariant", "select", "getOne"],
+                    "message": "packages/frame/src uses only resolvePath (src/paths.ts), fpCapability and propertyFamily from the contracts package (PLAN 3.1)."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/label*.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@fiks/contracts": "truth() labels never depend on the contracts (PLAN 3.0).",
+                  "@fiks/proxy": "truth() labels never depend on the proxy or any monitor (PLAN 3.0)."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
