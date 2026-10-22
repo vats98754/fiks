@@ -56,6 +56,31 @@ importers:
         specifier: 8.3.2
         version: 8.3.2(@types/node@22.20.5)(esbuild@0.28.2)(tsx@4.23.15)
 
+  packages/baselines:
+    dependencies:
+      '@fiks/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@fiks/interfaces':
+        specifier: workspace:*
+        version: link:../interfaces
+      '@modelcontextprotocol/sdk':
+        specifier: 1.32.0
+        version: 1.32.0(zod@4.6.5)
+      ajv:
+        specifier: 8.20.0
+        version: 8.20.0
+      ajv-formats:
+        specifier: 3.0.1
+        version: 3.0.1(ajv@8.20.0)
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
+    devDependencies:
+      '@fiks/vendor-api':
+        specifier: workspace:*
+        version: link:../vendor-api
+
   packages/bench:
     dependencies:
       '@anthropic-ai/claude-agent-sdk':
