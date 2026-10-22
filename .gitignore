@@ -8,3 +8,6 @@ dist/
 *.tsbuildinfo
 apps/dashboard/public/data/
 .claude/launch.json
+
+# python venv for paper analysis
+paper/.venv/

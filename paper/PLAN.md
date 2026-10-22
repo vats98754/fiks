@@ -27,6 +27,19 @@ Notation. `[key]` = `paper/research/bibliography.json` key (VERIFIED or correcte
 
 ## 0. Resolution ledgers
 
+### §0.B Build-phase amendments (orchestrator, 2026-10-22, before F5)
+These are made during the build, before any pre-registration freeze, and recorded here per §9.5. None changes a hypothesis, endpoint, test or DGP.
+
+| ID | Change | Reason |
+|---|---|---|
+| BA1 | CORE acceptance: `scenario v1-all` expects `p-0000` to be `unverifiable` | The tool returns an error for `p-0000`, exactly as at ec241bc; the old text contradicted the byte-identical legacy item. |
+| BA2 | CORE acceptance: the `rerecord-head` exit-code item runs with `pnpm --reporter=default` or `tsx` | The root `.npmrc` `reporter=silent` maps every non-zero exit to 1. |
+| BA3 | §7.1 merge discipline: the merger's re-check on the rebased head (typecheck, lint, every non-LIVE acceptance item, full suite under the suite lock) **is** the required re-verification. Verifiers no longer fail a stream solely because main moved during verification. | Main moved during almost every verification, so streams cycled without progress; the rule's intent (no merge on an unchecked base) is kept by the merger. |
+| BA4 | §9.1 (ii) and AN acceptance: sign-flip size gate is one-sided (≤ α + 3 MC SE), realised size reported | Tied lattice makes the non-randomised test conservative; matches (iii)/(iv). |
+| BA5 | VOCAB may edit `packages/proxy/test/replay.test.ts` once, only to fix the perElement spy | VOCAB's correct per-element evaluator broke MON's spy assumption; the fix belongs with the change. |
+| BA6 | CU: P12 is binding as written (mutation variants still rejected except on the amended property). CU's stricter variant is rejected. | A builder may not change a pre-registered gate rule. |
+| BA7 | Root `.gitignore` adds `paper/.venv/` | Biome panics on the venv; AN's acceptance creates it. |
+
 ### 0.0000 Final-round ledger (fixer round 4, 2026-10-21)
 
 The earlier ledgers (§0.000–§0.3) stay resolved as listed. Where one of their rows is superseded here (the `rb-<id>` repo name in §0.000 Q3; "5 logged runs" in §0.0 S2), this ledger and the cited sections govern.
@@ -854,6 +867,7 @@ All land before F5. The frozen commit is recorded in every `meta.json`, and runn
 
 - **Scale.** 30 streams, 574 builder-hours★ [estimate] (`python3 paper/scripts/check_workstreams.py paper/WORKSTREAMS.json` prints "est_hours total: 574"; round 6 summed to 558, round 5 to 531, round 4 to 496, round 3 to 461; the round-6 additions are listed in §0.000, the round-5 ones in §0.00). Each stream works in its own worktree, needs a verifier PASS before merge, and streams merge one at a time. `paper/scripts/check_workstreams.py` passes on the file. It checks: parse; disjoint ownership globs by exact glob intersection; reserved run-output paths unowned; acyclic DAG; waves respect dependencies; and, since round 5, no acceptance diff against a fixed sha, every `[LIVE]` item behind `live-lock.ts`, and every run component in REQUIRED_OWNED owned by some stream's deliverables. Round 6 adds: no owned `.work/` glob and no `realbugs/<id>/repo` clone path; no "oracle src diff" from the shop-mcp fix commits; no `*.test-d.ts` run without `--typecheck`; REQUIRED_OWNED gains `capturedAt`, `drift-attributable`, `ivProperties`, `contract-disable.mjs`, `ensure-realbugs.mjs`, `ensure-tracker-mcp.mjs`, `fiks-tools`, `--require-sandbox` and `rerecord-containment`. The script fails on the round-5 file with 19 errors★ (`python3 paper/scripts/check_workstreams.py <round-5 copy> | grep -c '^FAIL'` → 19). Round 7 adds: no re-vendor push to shop-mcp main; no `pnpm exp <run>` in any acceptance before INTEG (use `pnpm tsx packages/exp/src/main.ts`); a stream whose acceptance uses shop-mcp refs runs `node scripts/ensure-shop-mcp.mjs` in SETUP (or a `pnpm test` item); REQUIRED_OWNED gains `--per-element`, `perElement`, the contract-author `--protocol`, `D4-plantedfp`, `build-tools.ts`, `Run R11` and `tracker-sync-ref.json`. Each new rule was checked to fail on a mutated copy. The script passes on this file.
 - **Merge discipline (round 7; an orchestration rule, binding on the orchestrator and every builder).**
+  - (BA3) The merger's re-check on the rebased head is the re-verification; a verifier does not fail a stream only because main moved.
   - Streams merge into fiks main one at a time, each after its verifier PASS.
   - **After every merge, every open stream rebases onto the new fiks main before its next verification.** It then re-runs SETUP (fragments, install, `ensure-*` scripts). A verifier PASS obtained on a base older than the latest merge does not count, and the merge is refused until the stream re-verifies.
   - External side effects that other streams' tests can see take effect only at the owning stream's merge:
@@ -1011,7 +1025,7 @@ All scripts live in `paper/scripts/`, frozen at F3; Python 3.12 in `paper/.venv`
 
 `simulate_null.py` runs 2,000 null datasets per check:
 - **(i) H1 exact entity test.** Analytic exact size ≤ α, and simulated rejection under i.i.d. entities within ±3 MC SE of that size. Informational: size under beta-binomial batch DGPs (ICC 0.02, 0.05).
-- **(ii) Sign-flip permutation tests (H2, H3a, H4a).** Rejection within α ± 3 MC SE under symmetric nulls with drift heterogeneity, at α = 0.05 and 0.0125.
+- **(ii) Sign-flip permutation tests (H2, H3a, H4a).** Rejection ≤ α + 3 MC SE under symmetric nulls with drift heterogeneity, at α = 0.05 and 0.0125; the realised size is reported. (Amended BA4: per-drift differences lie on a 1/(m·a) lattice with ties, so the non-randomised sign-flip is conservative and a two-sided band would fail a valid test. The tests and DGPs are unchanged.)
 - **(iii) Shifted sign-flip NI (H3b, H4b).** Size ≤ α + 3 MC SE under the symmetric and the pre-registered skewed DGPs. Otherwise PREREG switches to the studentized bootstrap-t over drifts, the only pre-declared alternative.
 - **(iv) IUT components.** Under the named least-favourable DGPs, rejection must be ≤ α + 3 MC SE:
   - LF-harm: harm difference 0, correct-PR difference +0.30;
