@@ -1,0 +1,31 @@
+{
+  "server": "memory",
+  "version": 1,
+  "contracts": [
+    {
+      "id": "memory.create_entities",
+      "tool": "create_entities",
+      "invariants": []
+    }
+  ],
+  "realbug": {
+    "bugId": "R10",
+    "writtenFrom": "symptom only: upstream issue modelcontextprotocol/servers#4887 (title, body) and the prefix server's tools/list; see contract-log.md",
+    "properties": [
+      {
+        "id": "memory.create_entities/readAfterWrite",
+        "kind": "readAfterWriteRequested",
+        "tool": "create_entities",
+        "probeTool": "open_nodes",
+        "probeArgs": { "names": "args.entities[*].name" },
+        "requested": "args.entities[*]",
+        "key": "name",
+        "probeItems": "entities[*]",
+        "readBackContains": ["observations"],
+        "claimedPath": "entities[*].name",
+        "signal": "mention",
+        "rule": "For every requested entity e: the open_nodes read-back holds an entity named e.name whose observations include every observation in e.observations; or, when it does not, the create_entities response did not list e.name among the created entities AND names e.name somewhere else in the response (structuredContent outside `entities`, or any text content block). Violated otherwise. An isError create_entities result is unverifiable (an explicit error is a signal); an isError or empty probe counts as 'not read back'."
+      }
+    ]
+  }
+}
