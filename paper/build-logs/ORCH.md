@@ -86,6 +86,37 @@ stream was removed.
   `contractsPath`, written at A0) and throws ENOENT instead of reporting unverifiable. Both are
   CORE/DOM2 code (`harness.ts`, `scenario.ts`) or wait for A0.
 
-## Acceptance evidence (round 1)
+## Acceptance evidence (round 1, 2026-10-22, base bd19858)
 
-See the structured report of this round for the command list and key output.
+- SETUP: `apply-dep-fragments.mjs` (ORCH.json: 5 deps into packages/cli), `pnpm install --no-frozen-lockfile`
+  exit 0, `ensure-shop-mcp.mjs` exit 0 (0fde2b4), `ensure-tracker-mcp.mjs` exit 0; Docker 28.3.3.
+  package.json and lockfile edits are not committed.
+- Tools image for the container tests: `build-tools.ts --ref HEAD --apply-fragments` at 6ecce25 ->
+  `fiks-tools-test:6ecce25ea894` sha256:0af9e2b96255cb557f92d8fb8229fab801da5e254ac3f8f6df2f8e9177ac6af0.
+- `FIKS_ORCH_E2E=1 FIKS_TOOLS_IMAGE=<that> with-lock suite pnpm vitest run --maxWorkers 2 packages/cli/test/repair.test.ts packages/cli/test/orch`:
+  11 files, 43 passed, 1 skipped (D3 injector, blocked), 4 failed: the four M4 attacks, each
+  `infra_error` "No space left on device" while copying node_modules into the per-container volume
+  (Docker VM disk full from all streams' images; ORCH removed only its own two stale test images and
+  their volumes). Re-run of `attacks.test.ts` alone with the same image: 4/4 passed, each `gate_failed`
+  (rewrite: "re-recording ... does not match the trusted upstream"; symlink: "files changed while the
+  checks ran: test/repro/tr_079b90c89e.json"; helper and profile: "repro test still fails").
+- F/P parity D1-D5: 5/5 in the final run (one earlier run had D4 fail while a live run and other
+  streams loaded Docker; it passed on its own re-run and in the final run).
+- [LIVE] D2, Opus (`live-lock.ts --run`), `.work/shop-mcp` origin = https://invalid.example/unreachable.git
+  (restored after), host git push shim first on PATH, `FIKS_GH`=fake-gh, `GIT_TRACE` on:
+  `repair --scenario D2 --base seed-v1 --arm fiks --ci local --no-pr --run-key test/fiks/claude-opus-5-5/shop/D2/1 --tools-image sha256:38096b3e... --test-tools`
+  -> `would_open_pr`, first try, 1 session, 14 turns; F, P, suite, traces, typecheck, lint, ci-local all
+  PASS; head 97af99a. Push shim log 0 bytes, fake-gh log 0 bytes, container push attempts [], GIT_TRACE
+  90 lines, 0 `fetch`. Legacy log `bench/results/loop/repairs/tr_079b90c89e.json` (gates F,P,local,ci)
+  vs this run through `gateVerdicts`: shared F, P, ci-local all true (`ci` mapped to `ci-local`).
+  Same key again: exit 2 before any capture; key `.../D2/2` (stub) wrote its own directory and all 32
+  files of `.../D2/1` kept their sha256.
+- [LIVE] DEV-X1, Haiku: `repair --trace packages/cli/test/orch/fixtures/DEV-X1.trace.json --base base-shop --arm fiks --ci local --no-pr --run-key test/fiks/claude-haiku-5-5/shop/DEV-X1/1`
+  -> F PASS 3/3 for `shop.get_product/price.range`; the agent then made no source change
+  (`agent_failed`). Session 2 showed SAFE's resume defect (interpretation 4), since worked around.
+- `pnpm fiks repair --base no-such-ref ...` exits 2 ("unknown --base ... no local branch, tag or commit"),
+  nothing written (unit test and CLI).
+- `pnpm fiks seed-tag --domain tracker --dry-run` lists types.ts, evaluate.ts, the contracts and the
+  tag `seed-tracker-v1` (on .work/tracker-mcp at main the contracts are listed as MISSING until A0).
+- `git diff --name-only bd19858 HEAD -- packages/cli/src/main.ts packages/cli/package.json pnpm-lock.yaml`: empty.
+- `pnpm typecheck` exit 0; `pnpm lint` exit 0 (493 files).
