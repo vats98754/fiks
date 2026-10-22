@@ -1,6 +1,7 @@
 // One attempt of one comparator arm (PLAN 6.2): checkout at the base, evidence, agent sessions
 // through SAFE's runner (or its stub), the arm's checks in the per-attempt container, and the
 // records (AttemptRecord, CandidateRecord, ReproTestRecord, RerecordLog, events).
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type {
@@ -244,13 +245,33 @@ interface RepairOutcome {
   stop: string;
 }
 
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Test files the agent itself added in earlier sessions or F rounds (new relative to the base and
+ * inside NEW_TEST_PATHS). SAFE's create-only rule lets a session edit only files it created, so a
+ * later session (or a resumed one) may otherwise not revise its own test; existing repo tests stay
+ * read-only.
+ */
+export function agentTestFiles(worktree: string, base: string): string[] {
+  const git = (args: string[]) =>
+    execFileSync('git', args, { cwd: worktree, encoding: 'utf8' }).split('\n').filter(Boolean);
+  const added = [
+    ...git(['diff', '--name-only', '--diff-filter=A', base]),
+    ...git(['ls-files', '--others', '--exclude-standard']),
+  ];
+  const ok = NEW_TEST_PATHS.map((r) => new RegExp(r));
+  return [...new Set(added)].filter((f) => ok.some((r) => r.test(f))).sort();
+}
+
 function job(c: Ctx, prompt: string, repro: boolean): RunnerJob {
+  const own = agentTestFiles(c.checkout.dir, c.checkout.baseCommit).map((f) => `^${escapeRe(f)}$`);
   return armJob({
     worktree: c.checkout.dir,
     prompt,
     model: c.opts.model,
     traceFormat: c.opts.traceFormat,
-    allowedEditPaths: repro ? [] : c.opts.domain.allowedEditPaths,
+    allowedEditPaths: [...(repro ? [] : c.opts.domain.allowedEditPaths), ...own],
     allowedNewFilePaths: NEW_TEST_PATHS,
     backend: c.sandbox.agentBackend(),
     // The agent's own pnpm runs are gate invocations too (P11 candidate capture).
@@ -320,6 +341,7 @@ const NO_CHANGE = 'Your session ended without changing any file in the repositor
 /** L1, L1-noIV, L1p: pre-PR gates (suite, traces, typecheck/lint, IV) then local CI, <= 4 sessions. */
 async function runGated(c: Ctx): Promise<RepairOutcome> {
   let previousFailure: string | undefined;
+  let lastFailure = '';
   let headSha: string | null = null;
   let ciFinal: CiFinal = 'none';
   let issueValidation: IssueValidation = 'n/a';
@@ -334,7 +356,13 @@ async function runGated(c: Ctx): Promise<RepairOutcome> {
       previousFailure = NO_CHANGE;
       continue;
     }
+    const prevHead: string | null = headSha;
     headSha = commitCandidate(c.checkout.dir, 'candidate');
+    if (headSha === prevHead) {
+      // Nothing new since the last checked candidate: its verdict stands.
+      previousFailure = `${NO_CHANGE}\n${lastFailure}`;
+      continue;
+    }
     c.out.event('candidate', { headSha }, n);
     c.out.candidate(diff, 'gate');
     const suite = await c.phase('gates', () => c.checks.suiteGate());
@@ -367,6 +395,7 @@ async function runGated(c: Ctx): Promise<RepairOutcome> {
         .filter(Boolean)
         .join('\n');
     }
+    lastFailure = previousFailure;
   }
   return { prExposed: false, ciFinal, issueValidation, headSha, stop: 'sessions_exhausted' };
 }
@@ -409,16 +438,21 @@ async function runPostPr(c: Ctx): Promise<RepairOutcome> {
   let revisions = 0;
   let ciFinal: CiFinal = 'none';
   let issueValidation: IssueValidation = 'n/a';
+  let lastCiLog = '';
+  let needCi = true;
   for (;;) {
-    c.out.candidate(diffOf(c), 'ci');
-    const ci = await c.phase('ci', () =>
-      c.checks.ci({ iv: c.spec.ciPolicy.iv, plain: c.spec.ciPolicy.scope === 'server-tests' }),
-    );
-    c.out.write(`gates/revision-${revisions}-ci.log`, ci.log);
-    ciFinal = ci.green ? 'green' : 'red';
-    if (c.spec.ciPolicy.iv) issueValidation = ci.iv?.pass ? 'pass' : 'fail';
-    c.out.event('ci', { green: ci.green, placement: 'post-pr', revision: revisions, headSha }, n);
-    if (ci.green) return { prExposed: true, ciFinal, issueValidation, headSha, stop: 'ci_green' };
+    if (needCi) {
+      c.out.candidate(diffOf(c), 'ci');
+      const ci = await c.phase('ci', () =>
+        c.checks.ci({ iv: c.spec.ciPolicy.iv, plain: c.spec.ciPolicy.scope === 'server-tests' }),
+      );
+      c.out.write(`gates/revision-${revisions}-ci.log`, ci.log);
+      ciFinal = ci.green ? 'green' : 'red';
+      lastCiLog = ci.log;
+      if (c.spec.ciPolicy.iv) issueValidation = ci.iv?.pass ? 'pass' : 'fail';
+      c.out.event('ci', { green: ci.green, placement: 'post-pr', revision: revisions, headSha }, n);
+    }
+    if (ciFinal === 'green') return { prExposed: true, ciFinal, issueValidation, headSha, stop: 'ci_green' };
     if (revisions >= BUDGET.maxRevisions)
       return { prExposed: true, ciFinal, issueValidation, headSha, stop: 'revisions_exhausted' };
     if (n >= BUDGET.maxSessions)
@@ -428,12 +462,14 @@ async function runPostPr(c: Ctx): Promise<RepairOutcome> {
     revisions++;
     n++;
     c.out.event('revision', { revision: revisions }, n);
-    const r = await repairSession(c, n, { redCiLog: ci.log });
+    const r = await repairSession(c, n, { redCiLog: lastCiLog });
     if (c.acc.infra)
       return { prExposed: true, ciFinal, issueValidation, headSha, stop: `infra_error: ${r.summary}` };
     const diff = diffOf(c);
     const next = commitCandidate(c.checkout.dir, 'candidate');
-    if (next !== headSha) {
+    // A revision that pushes nothing new leaves the last CI verdict standing.
+    needCi = next !== headSha;
+    if (needCi) {
       headSha = next;
       c.out.candidate(diff, 'revision');
     }
@@ -534,7 +570,10 @@ async function runRepro(c: Ctx): Promise<{ records: ReproTestRecord[]; stop: str
     r = await play(
       c,
       runner,
-      { ...base, resume: { sessionId: r.sessionId, message, turnsUsed, costUsd: c.acc.costUsd } },
+      {
+        ...job(c, prompt, true),
+        resume: { sessionId: r.sessionId, message, turnsUsed, costUsd: c.acc.costUsd },
+      },
       1,
     );
   }

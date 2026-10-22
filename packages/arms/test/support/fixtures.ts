@@ -148,6 +148,8 @@ export async function runCall(
   clock: Date,
   onRecord?: (rec: Parameters<NonNullable<Parameters<typeof startHarness>[0]['onCall']>>[0]) => void,
 ): Promise<CallOutcome> {
+  await loadDomains();
+  if (rule) registerArmsTestInjector();
   const prev = process.env.VENDOR_EXTENDED_CATALOG;
   if (spec.extendedFile) process.env.VENDOR_EXTENDED_CATALOG = spec.extendedFile;
   try {

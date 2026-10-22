@@ -8957,8 +8957,7 @@
    "observability"
   ],
   "verification": [
-   "VERIFIED",
-   "WRONG_METADATA"
+   "VERIFIED"
   ],
   "needs_reverification": false,
   "research_md_claim_ids": [],
@@ -8968,18 +8967,18 @@
   ],
   "central_claim": "Sep 14-21 2026: Engine reads the contents of successful tool results, filing issues where a call returned less data than claimed or a value arrived truncated; Oct 5-12: Engine watches CI on its PRs and pushes up to three revisions / 90 minutes, and issue validation replays each source run against a fix preview deployment; Oct 12-19: fix PRs open ready for review instead of drafts.",
   "cite_claim": "As of September 2026 a commercial observability platform explicitly targets tool-result defects that never surface as an error, and opens fix PRs whose CI it then iterates on.",
-  "location": "Changelog weeks of Sep 7-14 2026 (Engine reads contents of successful tool results) and Oct 5-12 2026 (watches CI on its PRs, <=3 revisions/90 min; replays source runs against fix preview)",
+  "location": "Changelog weeks of Sep 14-21 2026 (Engine reads the contents of successful tool results) and Oct 5-12 2026 (Engine watches CI on its PRs, up to three revisions or 90 minutes per chain; issue validation replays each source run against its fix preview deployment)",
   "quote": "Engine now reads the contents of successful tool results rather than only their status ... Defects that never surface as an error are no longer passed over.",
   "cite_claims": [
    {
     "cite_claim": "As of September 2026 a commercial observability platform explicitly targets tool-result defects that never surface as an error, and opens fix PRs whose CI it then iterates on.",
-    "location": "Changelog weeks of Sep 7-14 2026 (Engine reads contents of successful tool results) and Oct 5-12 2026 (watches CI on its PRs, <=3 revisions/90 min; replays source runs against fix preview)",
+    "location": "Changelog weeks of Sep 14-21 2026 (Engine reads the contents of successful tool results) and Oct 5-12 2026 (Engine watches CI on its PRs, up to three revisions or 90 minutes per chain; issue validation replays each source run against its fix preview deployment)",
     "quote": "Engine now reads the contents of successful tool results rather than only their status ... Defects that never surface as an error are no longer passed over.",
     "area": "observability",
-    "verdict": "WRONG_METADATA",
-    "verdict_file": "observability-1.json",
-    "verifier_evidence": "Week Sep 7-14 2026: Engine \"now reads the contents of successful tool results rather than only their status\" (less data than claimed, truncated). Oct 5-12: \"watches CI on the pull requests it opens\", \"up to three revisions or 90 minutes per chain\"; \"replays each source run against its fix preview deployment.\"",
-    "verifier_correction": "Claim supported; location should be weeks Sep 7-14 2026 (tool-result reading) and Oct 5-12 2026 (CI watching and fix-preview replay), not Sep 14-21 / Oct 12-19. Only first 100k of 231k chars of page read."
+    "verdict": "VERIFIED",
+    "verdict_file": "arms-langsmith-recheck.json",
+    "verifier_evidence": "ARMS re-fetch 2026-10-22 of the whole page (arms-langsmith-recheck.json): 'September 14-21, 2026': \"Engine now reads the contents of successful tool results rather than only their status\"; 'October 5-12, 2026': \"up to three revisions or 90 minutes per chain\" and \"Issue validation now replays each source run against its fix preview deployment\".",
+    "verifier_correction": "WRONG_METADATA (observability-1.json) resolved by the ARMS re-fetch: location corrected to Sep 14-21 2026 (tool-result reading; the observability-1 correction 'Sep 7-14' came from reading only the first 100k characters) and Oct 5-12 2026 (CI revisions, fix-preview replay)."
    },
    {
     "cite_claim": "As of October 2026, LangSmith Engine replays source runs against a fix preview deployment and charts recurrence around the merged fix PR, i.e., it now has replay-based validation and post-merge confirmation.",
@@ -8992,7 +8991,7 @@
     "verifier_correction": ""
    }
   ],
-  "bibtex": "@misc{langsmith-changelog-2026,\n  title = {{LangSmith Cloud changelog (Engine entries, Sep-Oct 2026)}},\n  author = {LangChain},\n  year = {2026},\n  howpublished = {LangChain docs},\n  url = {https://docs.langchain.com/langsmith/changelog},\n  note = {Accessed 2026-10-21}\n}"
+  "bibtex": "@misc{langsmith-changelog-2026,\n  title = {{LangSmith Cloud changelog (Engine entries, Sep-Oct 2026)}},\n  author = {LangChain},\n  year = {2026},\n  howpublished = {LangChain docs},\n  url = {https://docs.langchain.com/langsmith/changelog},\n  note = {Accessed 2026-10-22}\n}"
  },
  {
   "key": "langsmith-engine-docs",

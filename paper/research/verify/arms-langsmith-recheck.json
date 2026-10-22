@@ -1,0 +1,39 @@
+{
+ "key": "langsmith-changelog-2026",
+ "stream": "ARMS",
+ "purpose": "Resolve WRONG_METADATA (observability-1.json) and record the two Engine strings ARMS's FIDELITY.md quotes for the COMP arm parameters.",
+ "url": "https://docs.langchain.com/langsmith/changelog",
+ "accessed": "2026-10-22",
+ "method": "curl -sL https://docs.langchain.com/langsmith/changelog (HTTP 200, 1588756 bytes, sha256 of the HTML ae06ea5fcdaf9a254fed0245914fb86b7a7cb469ddbf9f5ab296e2caf9826f17); HTML tags stripped, headings and entries read in document order over the whole page (not only the first 100k characters). Cross-checked with a second fetch through the WebFetch tool, which reported the same headings.",
+ "headings_in_order": [
+  "October 12-19, 2026",
+  "October 5-12, 2026",
+  "September 28-October 5, 2026",
+  "September 21-28, 2026",
+  "September 14-21, 2026",
+  "September 7-14, 2026"
+ ],
+ "passages": [
+  {
+   "id": "engine-ci-revisions",
+   "heading": "October 5-12, 2026",
+   "quote": "Engine now watches CI on the pull requests it opens for your issues and, when checks fail on its own commits, automatically pushes a revision that reproduces the failing checks and fixes them, up to three revisions or 90 minutes per chain.",
+   "contains": "up to three revisions or 90 minutes per chain"
+  },
+  {
+   "id": "engine-iv-replay",
+   "heading": "October 5-12, 2026",
+   "quote": "Issue validation now replays each source run against its fix preview deployment, so a validation no longer fails when the original run used non-chat input, checkpoint state, or agent-type configuration that trace-only chat reconstruction could not reproduce.",
+   "contains": "replays each source run against its fix preview deployment"
+  },
+  {
+   "id": "engine-tool-results",
+   "heading": "September 14-21, 2026",
+   "quote": "Engine now reads the contents of successful tool results rather than only their status, so it files issues where a call returned less data than its own result claims or where a value arrived truncated. Defects that never surface as an error are no longer passed over.",
+   "contains": "reads the contents of successful tool results"
+  }
+ ],
+ "finding": "Both COMP strings are verbatim under 'October 5-12, 2026'. The tool-result passage is under 'September 14-21, 2026', not 'September 7-14, 2026' as the observability-1 verifier's correction said (that verifier read only the first 100k of 231k characters); the 'September 7-14, 2026' section holds only issue-validation reconstruct/retry entries.",
+ "resolution": "location set to the weeks of September 14-21, 2026 (tool-result reading) and October 5-12, 2026 (CI revisions and fix-preview replay); verification WRONG_METADATA resolved to VERIFIED. Deviation from the WORKSTREAMS deliverable text ('Sep 7-14'): the recorded re-fetch places the tool-result passage in Sep 14-21.",
+ "verdict": "VERIFIED"
+}
