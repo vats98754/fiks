@@ -615,6 +615,8 @@ export interface ArmResult {
   tokens: TokenUsage;
   /** Final head (fix + fiks re-recordings committed), when every gate passed. */
   headSha: string | null;
+  /** The commit holding fiks's repro test on top of the base (the head every gate starts from). */
+  reproCommit: string | null;
   fixFiles: string[];
   rerecorded: string[];
   /** The `would_open_pr` event, when one was recorded. */
@@ -1277,6 +1279,7 @@ export async function runArm(opts: ArmOptions): Promise<ArmResult> {
     costUsd: 0,
     tokens: zeroTokens(),
     headSha: null,
+    reproCommit: null,
     fixFiles: [],
     rerecorded: [],
     pushAttempts: 0,
@@ -1460,6 +1463,7 @@ export async function runArm(opts: ArmOptions): Promise<ArmResult> {
       `Trace ${trace.id}. F gate: ${gateF.reason}.`,
     );
     const reproCommit = gitq(wtDir, 'rev-parse', 'HEAD');
+    result.reproCommit = reproCommit;
 
     // FIKS+CU inputs that do not depend on the agent: corpus, stored traces, mutation variants.
     let cu:
@@ -1697,12 +1701,19 @@ export async function runArm(opts: ArmOptions): Promise<ArmResult> {
       prBody({
         trace,
         spec,
-        gates: result.gates.map((x) => ({
-          gate: x.gate === 'ci-local' ? 'ci' : x.gate === 'F' || x.gate === 'P' ? x.gate : 'local',
-          ok: x.ok,
-          reason: `${x.gate}: ${x.reason}`,
-          evidence: { command: x.gate, exitCode: x.ok ? 0 : 1, failed: [], logPath: '' },
-        })) as GateResult[],
+        gates: [
+          gateF,
+          ...result.gates
+            .filter((x) => x.gate !== 'F')
+            .map(
+              (x): GateResult => ({
+                gate: x.gate === 'ci-local' ? 'ci' : x.gate === 'P' ? 'P' : 'local',
+                ok: x.ok,
+                reason: `${x.gate}: ${x.reason}`,
+                evidence: { command: x.gate, exitCode: x.ok ? 0 : 1, failed: [], logPath: '' },
+              }),
+            ),
+        ],
         diff,
         diffStat: gitq(wtDir, 'diff', '--stat', `${reproCommit}..${headSha}`, '--', '.'),
         agentSummary: body,
@@ -1909,6 +1920,11 @@ async function rerecordBefore(
       problem: `rerecord-head (${check}) failed: exit ${r.code}: ${(r.stderr || r.stdout).trim().split('\n').slice(-5).join(' | ').slice(0, 600)}`,
     };
   appendFileSync(g.rerecordLog, `${JSON.stringify(parsed.log)}\n`);
+  g.ev('rerecord_head', {
+    session: g.n,
+    check,
+    files: parsed.log.files.map((f) => `${f.mode} ${f.outcome} ${f.path}`),
+  });
   const failed = parsed.log.files.filter((f) => f.outcome === 'failed');
   if (failed.length)
     return {

@@ -1,0 +1,157 @@
+{
+  "callId": "clean-v1-shop-search-laptop",
+  "domain": "shop",
+  "stratum": "dev",
+  "catalog": "original",
+  "drift": null,
+  "mutant": null,
+  "tool": "search_products",
+  "args": {
+    "query": "laptop"
+  },
+  "upstream": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/products?q=laptop",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-01-01"
+        },
+        "body": "{\"items\":[{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":12,\"price\":1199},{\"id\":\"p-1002\",\"name\":\"Volt 13 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":30,\"price\":899},{\"id\":\"p-1003\",\"name\":\"Titan 16 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":4,\"price\":1499},{\"id\":\"p-1004\",\"name\":\"Nimbus 15 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":18,\"price\":749.5}],\"total\":4,\"next_cursor\":null}"
+      }
+    }
+  ],
+  "output": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"items\":[{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"price\":1199,\"currency\":\"USD\"},{\"id\":\"p-1002\",\"name\":\"Volt 13 Laptop\",\"category\":\"laptop\",\"price\":899,\"currency\":\"USD\"},{\"id\":\"p-1003\",\"name\":\"Titan 16 Laptop\",\"category\":\"laptop\",\"price\":1499,\"currency\":\"USD\"},{\"id\":\"p-1004\",\"name\":\"Nimbus 15 Laptop\",\"category\":\"laptop\",\"price\":749.5,\"currency\":\"USD\"}],\"count\":4,\"total\":4}"
+      }
+    ],
+    "structuredContent": {
+      "items": [
+        {
+          "id": "p-1001",
+          "name": "Aero 14 Laptop",
+          "category": "laptop",
+          "price": 1199,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1002",
+          "name": "Volt 13 Laptop",
+          "category": "laptop",
+          "price": 899,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1003",
+          "name": "Titan 16 Laptop",
+          "category": "laptop",
+          "price": 1499,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1004",
+          "name": "Nimbus 15 Laptop",
+          "category": "laptop",
+          "price": 749.5,
+          "currency": "USD"
+        }
+      ],
+      "count": 4,
+      "total": 4
+    }
+  },
+  "events": [
+    {
+      "type": "call",
+      "upstreamObserved": true,
+      "receipt": {
+        "verdict": "verified",
+        "checked": [
+          "shop.search_products/outputSchema",
+          "shop.search_products/items.price.range",
+          "shop.search_products/countMatchesTotal",
+          "shop.search_products/total.equalsUpstream",
+          "shop.search_products/items.id.unique",
+          "shop.search_products/items.nonEmpty"
+        ]
+      }
+    }
+  ],
+  "entityClass": {
+    "": "laptop",
+    "count": "laptop",
+    "items": "laptop",
+    "items[0]": "laptop",
+    "items[0].category": "laptop",
+    "items[0].currency": "laptop",
+    "items[0].id": "laptop",
+    "items[0].name": "laptop",
+    "items[0].price": "laptop",
+    "items[1]": "laptop",
+    "items[1].category": "laptop",
+    "items[1].currency": "laptop",
+    "items[1].id": "laptop",
+    "items[1].name": "laptop",
+    "items[1].price": "laptop",
+    "items[2]": "laptop",
+    "items[2].category": "laptop",
+    "items[2].currency": "laptop",
+    "items[2].id": "laptop",
+    "items[2].name": "laptop",
+    "items[2].price": "laptop",
+    "items[3]": "laptop",
+    "items[3].category": "laptop",
+    "items[3].currency": "laptop",
+    "items[3].id": "laptop",
+    "items[3].name": "laptop",
+    "items[3].price": "laptop",
+    "total": "laptop"
+  },
+  "originUnit": {
+    "": "query:laptop",
+    "count": "query:laptop",
+    "items": "query:laptop",
+    "items[0]": "p-1001",
+    "items[0].category": "p-1001",
+    "items[0].currency": "p-1001",
+    "items[0].id": "p-1001",
+    "items[0].name": "p-1001",
+    "items[0].price": "p-1001",
+    "items[1]": "p-1002",
+    "items[1].category": "p-1002",
+    "items[1].currency": "p-1002",
+    "items[1].id": "p-1002",
+    "items[1].name": "p-1002",
+    "items[1].price": "p-1002",
+    "items[2]": "p-1003",
+    "items[2].category": "p-1003",
+    "items[2].currency": "p-1003",
+    "items[2].id": "p-1003",
+    "items[2].name": "p-1003",
+    "items[2].price": "p-1003",
+    "items[3]": "p-1004",
+    "items[3].category": "p-1004",
+    "items[3].currency": "p-1004",
+    "items[3].id": "p-1004",
+    "items[3].name": "p-1004",
+    "items[3].price": "p-1004",
+    "total": "query:laptop"
+  },
+  "capturedAt": "2026-10-01T12:00:00.000Z",
+  "controlOf": null
+}

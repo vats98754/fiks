@@ -1,0 +1,79 @@
+{
+  "callId": "clean-v1-shop-search-none",
+  "domain": "shop",
+  "stratum": "dev",
+  "catalog": "original",
+  "drift": null,
+  "mutant": null,
+  "tool": "search_products",
+  "args": {
+    "query": "teapot"
+  },
+  "upstream": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/products?q=teapot",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-01-01"
+        },
+        "body": "{\"items\":[],\"total\":0,\"next_cursor\":null}"
+      }
+    }
+  ],
+  "output": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"items\":[],\"count\":0,\"total\":0}"
+      }
+    ],
+    "structuredContent": {
+      "items": [],
+      "count": 0,
+      "total": 0
+    }
+  },
+  "events": [
+    {
+      "type": "call",
+      "upstreamObserved": true,
+      "receipt": {
+        "verdict": "verified",
+        "checked": [
+          "shop.search_products/outputSchema",
+          "shop.search_products/items.price.range",
+          "shop.search_products/countMatchesTotal",
+          "shop.search_products/total.equalsUpstream",
+          "shop.search_products/items.id.unique"
+        ]
+      }
+    }
+  ],
+  "entityClass": {
+    "": "all",
+    "count": "all",
+    "items": "all",
+    "total": "all"
+  },
+  "originUnit": {
+    "": "query:teapot",
+    "count": "query:teapot",
+    "items": "query:teapot",
+    "total": "query:teapot"
+  },
+  "capturedAt": "2026-10-01T12:00:00.000Z",
+  "controlOf": null
+}

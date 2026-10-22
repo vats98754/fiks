@@ -1,0 +1,98 @@
+{
+  "callId": "clean-v1-shop-order-o-5001",
+  "domain": "shop",
+  "stratum": "dev",
+  "catalog": "original",
+  "drift": null,
+  "mutant": null,
+  "tool": "get_order",
+  "args": {
+    "order_id": "o-5001"
+  },
+  "upstream": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/orders/o-5001",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-01-01"
+        },
+        "body": "{\"id\":\"o-5001\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1005\",\"quantity\":2,\"unit_price\":329}],\"total\":658,\"created_at\":\"2026-09-29T12:00:00.000Z\"}"
+      }
+    }
+  ],
+  "output": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"order_id\":\"o-5001\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1005\",\"quantity\":2,\"unit_price\":329}],\"total\":658,\"created_at\":\"2026-09-29T12:00:00.000Z\"}"
+      }
+    ],
+    "structuredContent": {
+      "order_id": "o-5001",
+      "status": "confirmed",
+      "items": [
+        {
+          "product_id": "p-1005",
+          "quantity": 2,
+          "unit_price": 329
+        }
+      ],
+      "total": 658,
+      "created_at": "2026-09-29T12:00:00.000Z"
+    }
+  },
+  "events": [
+    {
+      "type": "call",
+      "upstreamObserved": true,
+      "receipt": {
+        "verdict": "verified",
+        "checked": [
+          "shop.get_order/outputSchema",
+          "shop.get_order/created_at.freshness",
+          "shop.get_order/created_at.equalsUpstream",
+          "shop.get_order/total.range"
+        ]
+      }
+    }
+  ],
+  "entityClass": {
+    "": "monitor",
+    "created_at": "monitor",
+    "items": "monitor",
+    "items[0]": "monitor",
+    "items[0].product_id": "monitor",
+    "items[0].quantity": "monitor",
+    "items[0].unit_price": "monitor",
+    "order_id": "monitor",
+    "status": "monitor",
+    "total": "monitor"
+  },
+  "originUnit": {
+    "": "p-1005",
+    "created_at": "p-1005",
+    "items": "p-1005",
+    "items[0]": "p-1005",
+    "items[0].product_id": "p-1005",
+    "items[0].quantity": "p-1005",
+    "items[0].unit_price": "p-1005",
+    "order_id": "p-1005",
+    "status": "p-1005",
+    "total": "p-1005"
+  },
+  "capturedAt": "2026-10-01T12:00:00.000Z",
+  "controlOf": null
+}

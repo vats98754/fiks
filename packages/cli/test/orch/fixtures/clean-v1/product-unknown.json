@@ -1,0 +1,75 @@
+{
+  "callId": "clean-v1-shop-product-unknown",
+  "domain": "shop",
+  "stratum": "dev",
+  "catalog": "original",
+  "drift": null,
+  "mutant": null,
+  "tool": "get_product",
+  "args": {
+    "id": "p-0000"
+  },
+  "upstream": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/products/p-0000",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-01-01"
+        },
+        "body": "{\"error\":\"not_found\",\"message\":\"Unknown product.\"}"
+      }
+    }
+  ],
+  "output": {
+    "content": [
+      {
+        "type": "text",
+        "text": "No product with id p-0000."
+      }
+    ],
+    "isError": true
+  },
+  "events": [
+    {
+      "type": "call",
+      "upstreamObserved": true,
+      "receipt": {
+        "verdict": "unverifiable",
+        "checked": []
+      }
+    }
+  ],
+  "entityClass": {
+    "": "unknown",
+    "id": "unknown",
+    "name": "unknown",
+    "category": "unknown",
+    "price": "unknown",
+    "currency": "unknown",
+    "in_stock": "unknown"
+  },
+  "originUnit": {
+    "": "p-0000",
+    "id": "p-0000",
+    "name": "p-0000",
+    "category": "p-0000",
+    "price": "p-0000",
+    "currency": "p-0000",
+    "in_stock": "p-0000"
+  },
+  "capturedAt": "2026-10-01T12:00:00.000Z",
+  "controlOf": null
+}

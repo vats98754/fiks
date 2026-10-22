@@ -1,0 +1,86 @@
+{
+  "callId": "clean-v1-shop-product-p-1001",
+  "domain": "shop",
+  "stratum": "dev",
+  "catalog": "original",
+  "drift": null,
+  "mutant": null,
+  "tool": "get_product",
+  "args": {
+    "id": "p-1001"
+  },
+  "upstream": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/products/p-1001",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-01-01"
+        },
+        "body": "{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"currency\":\"USD\",\"stock\":12,\"price\":1199}"
+      }
+    }
+  ],
+  "output": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"id\":\"p-1001\",\"name\":\"Aero 14 Laptop\",\"category\":\"laptop\",\"price\":1199,\"currency\":\"USD\",\"in_stock\":true}"
+      }
+    ],
+    "structuredContent": {
+      "id": "p-1001",
+      "name": "Aero 14 Laptop",
+      "category": "laptop",
+      "price": 1199,
+      "currency": "USD",
+      "in_stock": true
+    }
+  },
+  "events": [
+    {
+      "type": "call",
+      "upstreamObserved": true,
+      "receipt": {
+        "verdict": "verified",
+        "checked": [
+          "shop.get_product/outputSchema",
+          "shop.get_product/price.notNull",
+          "shop.get_product/price.range"
+        ]
+      }
+    }
+  ],
+  "entityClass": {
+    "": "laptop",
+    "category": "laptop",
+    "currency": "laptop",
+    "id": "laptop",
+    "in_stock": "laptop",
+    "name": "laptop",
+    "price": "laptop"
+  },
+  "originUnit": {
+    "": "p-1001",
+    "category": "p-1001",
+    "currency": "p-1001",
+    "id": "p-1001",
+    "in_stock": "p-1001",
+    "name": "p-1001",
+    "price": "p-1001"
+  },
+  "capturedAt": "2026-10-01T12:00:00.000Z",
+  "controlOf": null
+}

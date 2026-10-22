@@ -1,0 +1,138 @@
+{
+  "callId": "clean-v1-shop-order-create",
+  "domain": "shop",
+  "stratum": "dev",
+  "catalog": "original",
+  "drift": null,
+  "mutant": null,
+  "tool": "create_order",
+  "args": {
+    "items": [
+      {
+        "product_id": "p-1004",
+        "quantity": 2
+      }
+    ]
+  },
+  "upstream": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/orders",
+        "headers": {
+          "content-type": "application/json",
+          "idempotency-key": "00000000-0000-4000-8000-000000000000",
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": "{\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2}]}"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-01-01"
+        },
+        "body": "{\"id\":\"o-5002\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2,\"unit_price\":749.5}],\"total\":1499,\"created_at\":\"2026-10-01T12:00:00.000Z\"}"
+      }
+    }
+  ],
+  "output": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"order_id\":\"o-5002\",\"status\":\"confirmed\",\"total\":1499}"
+      }
+    ],
+    "structuredContent": {
+      "order_id": "o-5002",
+      "status": "confirmed",
+      "total": 1499
+    }
+  },
+  "events": [
+    {
+      "type": "call",
+      "upstreamObserved": true,
+      "probe": {
+        "tool": "get_order",
+        "args": {
+          "order_id": "o-5002"
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"order_id\":\"o-5002\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2,\"unit_price\":749.5}],\"total\":1499,\"created_at\":\"2026-10-01T12:00:00.000Z\"}"
+            }
+          ],
+          "structuredContent": {
+            "order_id": "o-5002",
+            "status": "confirmed",
+            "items": [
+              {
+                "product_id": "p-1004",
+                "quantity": 2,
+                "unit_price": 749.5
+              }
+            ],
+            "total": 1499,
+            "created_at": "2026-10-01T12:00:00.000Z"
+          }
+        },
+        "http": [
+          {
+            "seq": 9,
+            "startedAt": "2026-10-01T12:00:00.000Z",
+            "durationMs": 0,
+            "request": {
+              "method": "GET",
+              "url": "/orders/o-5002",
+              "headers": {
+                "accept": "*/*",
+                "accept-language": "*",
+                "sec-fetch-mode": "cors",
+                "user-agent": "node",
+                "accept-encoding": "gzip, deflate"
+              },
+              "body": null
+            },
+            "response": {
+              "status": 200,
+              "headers": {
+                "content-type": "application/json",
+                "vendor-api-version": "2026-01-01"
+              },
+              "body": "{\"id\":\"o-5002\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2,\"unit_price\":749.5}],\"total\":1499,\"created_at\":\"2026-10-01T12:00:00.000Z\"}"
+            }
+          }
+        ]
+      },
+      "receipt": {
+        "verdict": "verified",
+        "checked": [
+          "shop.create_order/outputSchema",
+          "shop.create_order/total.range",
+          "shop.create_order/readAfterWrite"
+        ]
+      }
+    }
+  ],
+  "entityClass": {
+    "": "laptop",
+    "order_id": "laptop",
+    "status": "laptop",
+    "total": "laptop"
+  },
+  "originUnit": {
+    "": "p-1004",
+    "order_id": "p-1004",
+    "status": "p-1004",
+    "total": "p-1004"
+  },
+  "capturedAt": "2026-10-01T12:00:00.000Z",
+  "controlOf": null
+}

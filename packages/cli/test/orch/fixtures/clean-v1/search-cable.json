@@ -1,0 +1,214 @@
+{
+  "callId": "clean-v1-shop-search-cable",
+  "domain": "shop",
+  "stratum": "dev",
+  "catalog": "original",
+  "drift": null,
+  "mutant": null,
+  "tool": "search_products",
+  "args": {
+    "query": "cable"
+  },
+  "upstream": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/products?q=cable",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-01-01"
+        },
+        "body": "{\"items\":[{\"id\":\"p-1101\",\"name\":\"Thunderbolt 5 Cable 1m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":100,\"price\":69},{\"id\":\"p-1102\",\"name\":\"Thunderbolt 5 Cable 2m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":80,\"price\":89},{\"id\":\"p-1103\",\"name\":\"USB4 Cable 1m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":120,\"price\":60},{\"id\":\"p-1104\",\"name\":\"USB4 Cable 2m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":90,\"price\":64},{\"id\":\"p-1105\",\"name\":\"Active Optical HDMI Cable 10m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":35,\"price\":99},{\"id\":\"p-1106\",\"name\":\"DisplayPort 2.1 Cable 3m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":60,\"price\":72},{\"id\":\"p-1107\",\"name\":\"Braided Power Cable 2m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":75,\"price\":61.5}],\"total\":7,\"next_cursor\":null}"
+      }
+    }
+  ],
+  "output": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"items\":[{\"id\":\"p-1101\",\"name\":\"Thunderbolt 5 Cable 1m\",\"category\":\"cable\",\"price\":69,\"currency\":\"USD\"},{\"id\":\"p-1102\",\"name\":\"Thunderbolt 5 Cable 2m\",\"category\":\"cable\",\"price\":89,\"currency\":\"USD\"},{\"id\":\"p-1103\",\"name\":\"USB4 Cable 1m\",\"category\":\"cable\",\"price\":60,\"currency\":\"USD\"},{\"id\":\"p-1104\",\"name\":\"USB4 Cable 2m\",\"category\":\"cable\",\"price\":64,\"currency\":\"USD\"},{\"id\":\"p-1105\",\"name\":\"Active Optical HDMI Cable 10m\",\"category\":\"cable\",\"price\":99,\"currency\":\"USD\"},{\"id\":\"p-1106\",\"name\":\"DisplayPort 2.1 Cable 3m\",\"category\":\"cable\",\"price\":72,\"currency\":\"USD\"},{\"id\":\"p-1107\",\"name\":\"Braided Power Cable 2m\",\"category\":\"cable\",\"price\":61.5,\"currency\":\"USD\"}],\"count\":7,\"total\":7}"
+      }
+    ],
+    "structuredContent": {
+      "items": [
+        {
+          "id": "p-1101",
+          "name": "Thunderbolt 5 Cable 1m",
+          "category": "cable",
+          "price": 69,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1102",
+          "name": "Thunderbolt 5 Cable 2m",
+          "category": "cable",
+          "price": 89,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1103",
+          "name": "USB4 Cable 1m",
+          "category": "cable",
+          "price": 60,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1104",
+          "name": "USB4 Cable 2m",
+          "category": "cable",
+          "price": 64,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1105",
+          "name": "Active Optical HDMI Cable 10m",
+          "category": "cable",
+          "price": 99,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1106",
+          "name": "DisplayPort 2.1 Cable 3m",
+          "category": "cable",
+          "price": 72,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1107",
+          "name": "Braided Power Cable 2m",
+          "category": "cable",
+          "price": 61.5,
+          "currency": "USD"
+        }
+      ],
+      "count": 7,
+      "total": 7
+    }
+  },
+  "events": [
+    {
+      "type": "call",
+      "upstreamObserved": true,
+      "receipt": {
+        "verdict": "verified",
+        "checked": [
+          "shop.search_products/outputSchema",
+          "shop.search_products/items.price.range",
+          "shop.search_products/countMatchesTotal",
+          "shop.search_products/total.equalsUpstream",
+          "shop.search_products/items.id.unique",
+          "shop.search_products/items.nonEmpty"
+        ]
+      }
+    }
+  ],
+  "entityClass": {
+    "": "cable",
+    "count": "cable",
+    "items": "cable",
+    "items[0]": "cable",
+    "items[0].category": "cable",
+    "items[0].currency": "cable",
+    "items[0].id": "cable",
+    "items[0].name": "cable",
+    "items[0].price": "cable",
+    "items[1]": "cable",
+    "items[1].category": "cable",
+    "items[1].currency": "cable",
+    "items[1].id": "cable",
+    "items[1].name": "cable",
+    "items[1].price": "cable",
+    "items[2]": "cable",
+    "items[2].category": "cable",
+    "items[2].currency": "cable",
+    "items[2].id": "cable",
+    "items[2].name": "cable",
+    "items[2].price": "cable",
+    "items[3]": "cable",
+    "items[3].category": "cable",
+    "items[3].currency": "cable",
+    "items[3].id": "cable",
+    "items[3].name": "cable",
+    "items[3].price": "cable",
+    "items[4]": "cable",
+    "items[4].category": "cable",
+    "items[4].currency": "cable",
+    "items[4].id": "cable",
+    "items[4].name": "cable",
+    "items[4].price": "cable",
+    "items[5]": "cable",
+    "items[5].category": "cable",
+    "items[5].currency": "cable",
+    "items[5].id": "cable",
+    "items[5].name": "cable",
+    "items[5].price": "cable",
+    "items[6]": "cable",
+    "items[6].category": "cable",
+    "items[6].currency": "cable",
+    "items[6].id": "cable",
+    "items[6].name": "cable",
+    "items[6].price": "cable",
+    "total": "cable"
+  },
+  "originUnit": {
+    "": "query:cable",
+    "count": "query:cable",
+    "items": "query:cable",
+    "items[0]": "p-1101",
+    "items[0].category": "p-1101",
+    "items[0].currency": "p-1101",
+    "items[0].id": "p-1101",
+    "items[0].name": "p-1101",
+    "items[0].price": "p-1101",
+    "items[1]": "p-1102",
+    "items[1].category": "p-1102",
+    "items[1].currency": "p-1102",
+    "items[1].id": "p-1102",
+    "items[1].name": "p-1102",
+    "items[1].price": "p-1102",
+    "items[2]": "p-1103",
+    "items[2].category": "p-1103",
+    "items[2].currency": "p-1103",
+    "items[2].id": "p-1103",
+    "items[2].name": "p-1103",
+    "items[2].price": "p-1103",
+    "items[3]": "p-1104",
+    "items[3].category": "p-1104",
+    "items[3].currency": "p-1104",
+    "items[3].id": "p-1104",
+    "items[3].name": "p-1104",
+    "items[3].price": "p-1104",
+    "items[4]": "p-1105",
+    "items[4].category": "p-1105",
+    "items[4].currency": "p-1105",
+    "items[4].id": "p-1105",
+    "items[4].name": "p-1105",
+    "items[4].price": "p-1105",
+    "items[5]": "p-1106",
+    "items[5].category": "p-1106",
+    "items[5].currency": "p-1106",
+    "items[5].id": "p-1106",
+    "items[5].name": "p-1106",
+    "items[5].price": "p-1106",
+    "items[6]": "p-1107",
+    "items[6].category": "p-1107",
+    "items[6].currency": "p-1107",
+    "items[6].id": "p-1107",
+    "items[6].name": "p-1107",
+    "items[6].price": "p-1107",
+    "total": "query:cable"
+  },
+  "capturedAt": "2026-10-01T12:00:00.000Z",
+  "controlOf": null
+}

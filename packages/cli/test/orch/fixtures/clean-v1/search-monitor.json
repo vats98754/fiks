@@ -1,0 +1,119 @@
+{
+  "callId": "clean-v1-shop-search-monitor",
+  "domain": "shop",
+  "stratum": "dev",
+  "catalog": "original",
+  "drift": null,
+  "mutant": null,
+  "tool": "search_products",
+  "args": {
+    "query": "monitor"
+  },
+  "upstream": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/products?q=monitor",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-01-01"
+        },
+        "body": "{\"items\":[{\"id\":\"p-1005\",\"name\":\"Clarity 27 Monitor\",\"category\":\"monitor\",\"currency\":\"USD\",\"stock\":25,\"price\":329},{\"id\":\"p-1006\",\"name\":\"Clarity 32 Monitor\",\"category\":\"monitor\",\"currency\":\"USD\",\"stock\":9,\"price\":459}],\"total\":2,\"next_cursor\":null}"
+      }
+    }
+  ],
+  "output": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"items\":[{\"id\":\"p-1005\",\"name\":\"Clarity 27 Monitor\",\"category\":\"monitor\",\"price\":329,\"currency\":\"USD\"},{\"id\":\"p-1006\",\"name\":\"Clarity 32 Monitor\",\"category\":\"monitor\",\"price\":459,\"currency\":\"USD\"}],\"count\":2,\"total\":2}"
+      }
+    ],
+    "structuredContent": {
+      "items": [
+        {
+          "id": "p-1005",
+          "name": "Clarity 27 Monitor",
+          "category": "monitor",
+          "price": 329,
+          "currency": "USD"
+        },
+        {
+          "id": "p-1006",
+          "name": "Clarity 32 Monitor",
+          "category": "monitor",
+          "price": 459,
+          "currency": "USD"
+        }
+      ],
+      "count": 2,
+      "total": 2
+    }
+  },
+  "events": [
+    {
+      "type": "call",
+      "upstreamObserved": true,
+      "receipt": {
+        "verdict": "verified",
+        "checked": [
+          "shop.search_products/outputSchema",
+          "shop.search_products/items.price.range",
+          "shop.search_products/countMatchesTotal",
+          "shop.search_products/total.equalsUpstream",
+          "shop.search_products/items.id.unique",
+          "shop.search_products/items.nonEmpty"
+        ]
+      }
+    }
+  ],
+  "entityClass": {
+    "": "monitor",
+    "count": "monitor",
+    "items": "monitor",
+    "items[0]": "monitor",
+    "items[0].category": "monitor",
+    "items[0].currency": "monitor",
+    "items[0].id": "monitor",
+    "items[0].name": "monitor",
+    "items[0].price": "monitor",
+    "items[1]": "monitor",
+    "items[1].category": "monitor",
+    "items[1].currency": "monitor",
+    "items[1].id": "monitor",
+    "items[1].name": "monitor",
+    "items[1].price": "monitor",
+    "total": "monitor"
+  },
+  "originUnit": {
+    "": "query:monitor",
+    "count": "query:monitor",
+    "items": "query:monitor",
+    "items[0]": "p-1005",
+    "items[0].category": "p-1005",
+    "items[0].currency": "p-1005",
+    "items[0].id": "p-1005",
+    "items[0].name": "p-1005",
+    "items[0].price": "p-1005",
+    "items[1]": "p-1006",
+    "items[1].category": "p-1006",
+    "items[1].currency": "p-1006",
+    "items[1].id": "p-1006",
+    "items[1].name": "p-1006",
+    "items[1].price": "p-1006",
+    "total": "query:monitor"
+  },
+  "capturedAt": "2026-10-01T12:00:00.000Z",
+  "controlOf": null
+}

@@ -1,0 +1,11 @@
+{
+  "id": "BEN-DEV-1",
+  "domain": "shop",
+  "match": {
+    "method": "GET",
+    "pathPattern": "^/products$"
+  },
+  "transform": "./BEN-DEV-1.transform.ts",
+  "clockFrozen": true,
+  "hash": "624148deb76b9698466ba5e7b96f2f186203cb8bdab0e206221a27fb810f40f5"
+}

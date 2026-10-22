@@ -1,0 +1,86 @@
+{
+  "callId": "clean-v1-shop-product-p-1107",
+  "domain": "shop",
+  "stratum": "dev",
+  "catalog": "original",
+  "drift": null,
+  "mutant": null,
+  "tool": "get_product",
+  "args": {
+    "id": "p-1107"
+  },
+  "upstream": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/products/p-1107",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-01-01"
+        },
+        "body": "{\"id\":\"p-1107\",\"name\":\"Braided Power Cable 2m\",\"category\":\"cable\",\"currency\":\"USD\",\"stock\":75,\"price\":61.5}"
+      }
+    }
+  ],
+  "output": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"id\":\"p-1107\",\"name\":\"Braided Power Cable 2m\",\"category\":\"cable\",\"price\":61.5,\"currency\":\"USD\",\"in_stock\":true}"
+      }
+    ],
+    "structuredContent": {
+      "id": "p-1107",
+      "name": "Braided Power Cable 2m",
+      "category": "cable",
+      "price": 61.5,
+      "currency": "USD",
+      "in_stock": true
+    }
+  },
+  "events": [
+    {
+      "type": "call",
+      "upstreamObserved": true,
+      "receipt": {
+        "verdict": "verified",
+        "checked": [
+          "shop.get_product/outputSchema",
+          "shop.get_product/price.notNull",
+          "shop.get_product/price.range"
+        ]
+      }
+    }
+  ],
+  "entityClass": {
+    "": "cable",
+    "category": "cable",
+    "currency": "cable",
+    "id": "cable",
+    "in_stock": "cable",
+    "name": "cable",
+    "price": "cable"
+  },
+  "originUnit": {
+    "": "p-1107",
+    "category": "p-1107",
+    "currency": "p-1107",
+    "id": "p-1107",
+    "in_stock": "p-1107",
+    "name": "p-1107",
+    "price": "p-1107"
+  },
+  "capturedAt": "2026-10-01T12:00:00.000Z",
+  "controlOf": null
+}
