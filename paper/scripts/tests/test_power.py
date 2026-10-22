@@ -145,6 +145,32 @@ def test_all_check_fails_on_erratum(tmp_path):
     assert "0.822" in out.stdout and "not in the manifest" in out.stdout
 
 
+def test_all_check_on_a_mutated_plan_copy_never_writes_the_committed_outputs(tmp_path):
+    committed = [REPO / "paper/results/power.json", REPO / "paper/macros/power.tex"]
+    before = [f.read_bytes() for f in committed]
+    p = _plan_copy(tmp_path, "| 1,500 (planned) | 18★ | 0.0123★ | 0.821★ |", "| 1,500 (planned) | 18★ | 0.0123★ | 0.822★ |")
+    out = run("power.py", "all", "--check", str(p))  # no --no-write, no --out
+    assert out.returncode == 1
+    assert "committed power.json / power.tex not written" in out.stderr
+    assert [f.read_bytes() for f in committed] == before
+    # an explicit --out is honoured on a non-canonical PLAN, and only that file is written
+    out = run("power.py", "all", "--check", str(p), "--out", str(tmp_path / "p.json"))
+    assert out.returncode == 1
+    assert json.loads((tmp_path / "p.json").read_text())["check"]["ok"] is False
+    assert not (tmp_path / "p.tex").exists()
+    assert [f.read_bytes() for f in committed] == before
+
+
+def test_all_check_with_a_non_canonical_manifest_never_writes_the_committed_outputs(tmp_path):
+    committed = [REPO / "paper/results/power.json", REPO / "paper/macros/power.tex"]
+    before = [f.read_bytes() for f in committed]
+    mp = tmp_path / "m.json"
+    mp.write_text((SCRIPTS / "power_manifest.json").read_text())
+    out = run("power.py", "all", "--check", str(REPO / "paper/PLAN.md"), "--manifest", str(mp))
+    assert out.returncode == 0, out.stdout + out.stderr
+    assert [f.read_bytes() for f in committed] == before
+
+
 def test_all_check_fails_on_untracked_tagged_number(tmp_path):
     p = _plan_copy(tmp_path, "Reference values for other σ_d:", "Reference values for other σ_d (also 0.777★):")
     out = run("power.py", "all", "--check", str(p), "--no-write")

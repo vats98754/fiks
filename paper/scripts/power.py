@@ -12,8 +12,10 @@ Subcommands
   harm       harm power Phi(effect sqrt(n) / sd - z_{1-alpha/2}).
   frame      the N_E rule (PLAN 3.1) on a FrameSpec: top-up flag, crit, power, underpowered, m.
   all        --check PLAN.md: every entry of power_manifest.json (= PLAN 9.6 manifest) against
-             its printed value at its printed precision; writes paper/results/power.json
-             (`check`) and paper/macros/power.tex (\\pw{<manifest id>}).
+             its printed value at its printed precision. On the canonical inputs
+             (paper/PLAN.md and paper/scripts/power_manifest.json) it writes
+             paper/results/power.json (`check`) and paper/macros/power.tex (\\pw{<manifest id>});
+             on any other PLAN or manifest it writes only to an explicit --out / --macros.
 
 Every subcommand takes --json to print its result as JSON.
 """
@@ -451,14 +453,40 @@ def render_power_tex(check: dict) -> str:
     return macros.render_keyed(MACRO_GEN, "pw", vals)
 
 
+def _same_file(a: str | Path, b: Path) -> bool:
+    return Path(a).resolve() == b.resolve()
+
+
+def output_targets(a) -> tuple[str | None, str | None]:
+    """Where `all --check` writes (power.json, power.tex); None = not written.
+
+    An explicit --out / --macros is always honoured. The committed defaults are written only when
+    the check ran on the canonical PLAN and manifest, so checking a mutated copy never touches them.
+    """
+    if a.no_write:
+        return None, None
+    canonical = _same_file(a.check, REPO_ROOT / "paper/PLAN.md") and _same_file(a.manifest, MANIFEST)
+    out = a.out if a.out is not None else (str(POWER_JSON) if canonical else None)
+    tex = a.macros if a.macros is not None else (str(POWER_TEX) if canonical else None)
+    return out, tex
+
+
 def cmd_all(a) -> dict:
     require(a.check is not None, "all needs --check <PLAN.md>")
     out = check_manifest(a.check, a.manifest)
-    if not a.no_write:
-        prev = read_json(a.out) if Path(a.out).is_file() else {}
+    json_path, tex_path = output_targets(a)
+    if json_path is not None:
+        prev = read_json(json_path) if Path(json_path).is_file() else {}
         prev["check"] = out
-        write_json(a.out, prev)
-        write_text(a.macros, render_power_tex(out))
+        write_json(json_path, prev)
+    if tex_path is not None:
+        write_text(tex_path, render_power_tex(out))
+    if not a.no_write and (json_path is None or tex_path is None):
+        print(
+            "note: non-canonical PLAN or manifest; committed power.json / power.tex not written "
+            "(pass --out / --macros to write elsewhere)",
+            file=sys.stderr,
+        )
     return out
 
 
@@ -522,8 +550,8 @@ def build_parser() -> argparse.ArgumentParser:
     s = add("all")
     s.add_argument("--check", metavar="PLAN_MD")
     s.add_argument("--manifest", default=str(MANIFEST))
-    s.add_argument("--out", default=str(POWER_JSON))
-    s.add_argument("--macros", default=str(POWER_TEX))
+    s.add_argument("--out", help="power.json path (default: paper/results/power.json, canonical inputs only)")
+    s.add_argument("--macros", help="power.tex path (default: paper/macros/power.tex, canonical inputs only)")
     s.add_argument("--no-write", action="store_true", help="write neither power.json nor power.tex")
     return p
 
