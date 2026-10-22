@@ -126,3 +126,35 @@ MON-owned `packages/proxy/test/replay.test.ts` spy test (same cause as round 2; 
 it). With the one-line spy fix `realEvaluate(c, i, o && { ...o, perElement: false })` applied
 temporarily (reverted, not committed), the full suite gives exit 0, 49/49 files, 280/280 tests.
 MON or the orchestrator must land that fix before or with VOCAB's merge.
+
+## Round 4 (rebased on main 67ac4b0: RBX and MUT merged)
+
+`git rebase main` (main 67ac4b0, which includes 593953d RBX, 0b17b1b, 0bbadff, e7de939 MUT,
+56b8908, 67ac4b0) applied the three VOCAB commits without conflicts. SETUP re-run:
+apply-dep-fragments printed "nothing to apply", `pnpm install --no-frozen-lockfile` exited 0
+("Lockfile is up to date"), and ensure-shop-mcp exited 0 with `.work/shop-mcp` HEAD = b77a0a0 =
+shop-sync-ref.json ref. `git status` is clean afterwards.
+
+Re-verified on the rebased tree:
+- `pnpm vitest run packages/contracts`: 5 files, 56/56 tests.
+- replay-logged: 200 CallRecords (114 verified, 76 violated, 10 unverifiable), 0 verdict changes,
+  0 old/new differences (D1-D5 fixture and live traces), and v1-all violated 0/10.
+- ls-remote: main 7bf2e66, fiks/revendor-f2 b77a0a0 = base-shop^{commit}. The diff
+  7bf2e66..base-shop lists only the vendored evaluate.ts and types.ts. seed-v1 is bb037cf,
+  `grep -c disabled` gives 5, the contracts diff vs ec241bc is empty, and shop-mcp CI on b77a0a0
+  succeeded (run 39704372646).
+- Fresh-clone sync check: "vendored contracts are identical".
+- ensure-shop-mcp: pins a main-HEAD clone (7bf2e66 -> b77a0a0). GIT_TRACE `git fetch` count is
+  1, then 0. On a dirty clone at main it exits 1 and leaves HEAD and the edit unchanged.
+- contract-disable on a two-property temp contract: the diff adds only `disabled` and
+  `disabledReason`, and the log line carries both sha256 values. An unknown id exits 2 and leaves
+  the file byte-unchanged.
+- typecheck exits 0. Lint exits 0 (246 files).
+
+`with-lock suite pnpm test`: exit 1, 1 failed | 351 passed (352), 56/57 files. The one failure is
+still the MON-owned `packages/proxy/test/replay.test.ts` spy test, with the same duplicate
+`['items[2].price', 2]` row. The fix has not landed on main 67ac4b0: line 84 still reads
+`realEvaluate(c, i, o)`. With the one-line fix
+`const e = realEvaluate(c, i, o && { ...o, perElement: false });` applied temporarily (reverted,
+not committed), the full suite exits 0 with 57/57 files and 352/352 tests. MON or the orchestrator
+must land that line before or with VOCAB's merge.
