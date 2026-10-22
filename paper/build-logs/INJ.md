@@ -6,6 +6,14 @@ pushes, no repos, no installs. `node scripts/ensure-shop-mcp.mjs` made a read-on
 every project's config, and `packages/cli/vitest.config.ts` needs that clone, so
 `pnpm vitest run packages/injector` cannot start without it.
 
+Round 2: `git rebase main` was a no-op (main is still `c144b03`); SETUP re-run. The only changes
+are the lint-rule fix and its tests (the `biome.json` and `test/isolation.test.ts` entries below).
+The verifier's repro (`../../../contracts/…` in `src/transforms/zz.ts`, `../contracts/…` in
+`packages/injector/zz.ts`, a dynamic import of the contracts package in `src/zz2.ts`, plus an
+`import type` variant in `src/transforms/zz3.ts`) now gives `Found 4 errors.` from
+`pnpm biome lint packages/injector`, one `noRestrictedImports` per file. Round 1 flagged only
+`zz2.ts`.
+
 The builder read `packages/vendor-api`, `packages/interfaces`, the CLI's scenario and fixture
 call lists, and shop-mcp `seed-v1`'s vendor client (`src/vendor.ts`, the `vendor.get/post` lines of
 `src/tools/*.ts`), plus the D1–D5 oracle patches, which show the D1 fix keys on the version header.
@@ -44,10 +52,24 @@ It did not read `packages/contracts`, any `*.contracts.json` or `packages/proxy`
   - `--complete` also requires the grader part that HOLD fills.
 - `src/validate-rule.ts`: the CLI (`[--complete] [--write-hash] <rule-or-manifest.json>...`).
   Exit 0 means valid, 1 means a problem, 2 means a usage error.
-- `biome.json` (nested, `root: false`, `extends: "//"`): `style/noRestrictedImports` rejects
-  `@fiks/contract*`, `@fiks/prox*` and relative imports into `packages/contract*` or
-  `packages/prox*`. The rule is scoped to `packages/injector`. The globs are spelled so that the
-  acceptance `grep -R` finds nothing in the package.
+- `biome.json` (nested, `root: false`, `extends: "//"`): `style/noRestrictedImports`, scoped to
+  `packages/injector`. Round 2 (verifier finding): the round-1 globs only caught relative paths
+  exactly two levels up (`../../contract*/**`), so `../../../contracts/...` from `src/transforms/`
+  and `../contracts/...` from the package root passed. The groups are now `@fiks/contract*`,
+  `@fiks/prox*` (each also `/**`) and the depth-independent `**/contract*`, `**/contract*/**`,
+  `**/prox*`, `**/prox*/**`. Biome matches these gitignore-style against the specifier text.
+  - Covered (each a probe in `test/isolation.test.ts`, at `packages/injector/probe.ts`, `src/`,
+    `src/transforms/` and `test/`): any specifier with a path segment starting `contract` or
+    `prox` (the package names, subpaths, bare `contracts`, relative paths at any depth, absolute
+    paths) in `import`, `import type`, `export … from`, `export type … from`, side-effect
+    `import '…'` and dynamic `import('…')`.
+  - Not covered by the lint rule (checked by hand, Biome 2.5.15): `require('…')` or
+    `createRequire(…)('…')`, and a segment that differs only in case (`../../../Contracts/…`,
+    which resolves on macOS's case-insensitive file system). Biome globs have no character
+    classes and no case option. A test covers these instead (below).
+  - Side effect: an injector-local file or folder named `contract*` or `prox*` cannot be
+    imported. None exists.
+  - The globs are spelled so that the acceptance `grep -R` finds nothing in the package.
   - The package imports the shared types by relative path (`../../interfaces/src/drift.ts`), not
     through `@fiks/interfaces`. That package depends on `@fiks/contracts`, so a pnpm symlink to it
     under `packages/injector/node_modules` would make `grep -R` (which follows symlinks) match.
@@ -75,7 +97,7 @@ It did not read `packages/contracts`, any `*.contracts.json` or `packages/proxy`
 - All six rules are `clockFrozen: true`. None reads the clock, but the flag freezes the `date`
   header.
 
-## Tests (`pnpm vitest run packages/injector`: 3 files, 49 tests)
+## Tests (`pnpm vitest run packages/injector`: 3 files, 62 tests)
 
 - `test/parity.test.ts`:
   - For each of D1–D5, every sequence is compared:
@@ -104,12 +126,20 @@ It did not read `packages/contracts`, any `*.contracts.json` or `packages/proxy`
   - The CLI: main() exit codes; the acceptance command spawned with tsx; `--write-hash`.
   - Injector behaviour: middleware restarts have fresh state; bodies and headers reach upstream;
     a 502 on a dead upstream; frozen vs live `date`.
-- `test/isolation.test.ts`:
+- `test/isolation.test.ts` (20 tests):
   - No file in the package (node_modules excluded) names the two packages.
-  - The real root and injector Biome configs, in a temp tree, reject four forbidden import
-    forms. A probe at `packages/cli/...` is not flagged (the rule is scoped), and a normal import
-    passes.
-  - Biome's stdin mode prints no diagnostics, hence the temp tree.
+  - The real root and injector Biome configs, in a temp tree, reject 16 forbidden import probes
+    (the forms listed above, at four depths). A probe at `packages/cli/...` is not flagged (the
+    rule is scoped), and a normal import passes. Biome's stdin mode prints no diagnostics, hence
+    the temp tree. Against the round-1 `biome.json`, 8 of the 16 probes fail.
+  - A resolution check, independent of the lint globs: every quoted relative or absolute string
+    in the package's `.ts/.js` files is resolved (realpath, compared case-insensitively) and must
+    not land in `packages/contracts/` or `packages/proxy/`. Files outside the package reached that
+    way (today only `packages/interfaces/src/drift.ts`, which imports nothing) are walked
+    transitively, and none may import the two packages by name or path. Manual mutations,
+    reverted: `require('../../../proxy/…')` and `import type … '../../../Contracts/…'` in
+    `src/transforms/`, and an `import type` of `../../interfaces/src/domain.ts` (which imports
+    the contracts package by type), each fail this test.
 - Mutation check (manual, reverted): D4 page size 5→4, D3 without the 404, and D5 `ms+1`, each
   re-hashed. The three parity tests and the "differs from v1" test fail.
 

@@ -15,12 +15,12 @@
                   "@fiks/contract*/**",
                   "@fiks/prox*",
                   "@fiks/prox*/**",
-                  "**/packages/contract*/**",
-                  "**/packages/prox*/**",
-                  "../../contract*/**",
-                  "../../prox*/**"
+                  "**/contract*",
+                  "**/contract*/**",
+                  "**/prox*",
+                  "**/prox*/**"
                 ],
-                "message": "The injector is built without reading contracts (PLAN 5.2): it may not import the contracts or proxy packages."
+                "message": "The injector is built without reading contracts (PLAN 5.2): it may not import the contracts or proxy packages, by package name or by any relative or absolute path with a contract* or prox* segment."
               }
             ]
           }
