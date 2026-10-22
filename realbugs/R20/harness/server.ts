@@ -27,6 +27,7 @@ import {
   DockerExecBackend,
   docker,
   imageDigest,
+  type Mount,
   manifestFiles,
   manifestHash,
   SANDBOX_ENV,
@@ -147,11 +148,20 @@ export async function prepareBuild(
 }
 
 const SESSION_DIR = '/opt/r20';
+/** The image's install root (package.json + node_modules from the lockfile). */
+const WORK = '/work';
+const TREE_DIR = '/opt/r20-tree';
+/** What tsup reads from the tree (tsup.config.ts entries, tsconfig paths alias `~`). */
+const TREE_INPUTS = ['src', 'tsconfig.json'];
+/** tsup bundles its config next to the config file, so the config sits in a writable mount under
+ *  /work (bare imports in it, e.g. `tsup`, still resolve from /work/node_modules). */
+const CFG_DIR = `${WORK}/.fiks-r20-config`;
 const STAMP = 'dist/.fiks-r20-build';
 
 /** One sandbox container for a build: compiles dist once, then runs cases. */
 export class R20Sandbox {
   private readonly session: string;
+  private readonly configDir: string;
   private readonly box: DockerExecBackend;
   private n = 0;
   private built = false;
@@ -175,10 +185,33 @@ export class R20Sandbox {
     for (const f of ['ca.pem', 'leaf.key', 'leaf.pem', 'case-runner.mjs'])
       chmodSync(join(this.session, f), 0o644);
     chmodSync(this.session, 0o755);
+    // The image already holds the lockfile's node_modules at /work/node_modules (with /work's
+    // package.json). Instead of copying them into a per-container volume (the SBX default, ~1 GB
+    // of Docker disk per container), only what the build and the server read is mounted over
+    // /work: src, the build config (read-only) and dist (read-write). The tree itself is mounted
+    // read-only at TREE_DIR and is not otherwise used.
+    mkdirSync(join(build.tree, 'dist'), { recursive: true });
+    this.configDir = join(this.session, 'config');
+    mkdirSync(this.configDir, { mode: 0o777 });
+    chmodSync(this.configDir, 0o777);
+    const ro = (rel: string): Mount => ({
+      type: 'bind',
+      source: join(build.tree, rel),
+      target: `${WORK}/${rel}`,
+      readonly: true,
+    });
     this.box = new DockerExecBackend({
       worktree: build.tree,
       image: build.image,
-      mounts: [{ type: 'bind', source: this.session, target: SESSION_DIR, readonly: true }],
+      workdir: TREE_DIR,
+      readonlyWorktree: true,
+      nodeModules: 'none',
+      mounts: [
+        { type: 'bind', source: this.session, target: SESSION_DIR, readonly: true },
+        ...TREE_INPUTS.filter((rel) => existsSync(join(build.tree, rel))).map(ro),
+        { type: 'bind', source: join(build.tree, 'dist'), target: `${WORK}/dist` },
+        { type: 'bind', source: this.configDir, target: CFG_DIR },
+      ],
     });
   }
 
@@ -205,7 +238,9 @@ export class R20Sandbox {
       version?: string;
     };
     this.log(`[r20] building dist in sandbox ${this.box.name} (${this.build.tree})`);
-    const r = await this.box.exec('node_modules/.bin/tsup', [], {
+    copyFileSync(join(this.build.tree, 'tsup.config.ts'), join(this.configDir, 'tsup.config.ts'));
+    const r = await this.box.exec('node_modules/.bin/tsup', ['--config', `${CFG_DIR}/tsup.config.ts`], {
+      containerCwd: WORK,
       env: { ...SANDBOX_ENV, npm_package_version: pkg.version ?? '0.0.0' },
       timeoutMs: 10 * 60_000,
     });
