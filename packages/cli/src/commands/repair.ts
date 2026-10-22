@@ -1209,6 +1209,10 @@ export async function runArm(opts: ArmOptions): Promise<ArmResult> {
   if (key && key.model !== model)
     throw new ArmUsageError(`--model ${model} does not match the run key's model ${key.model}`);
   if (!opts.traceFile && !opts.scenario) throw new ArmUsageError('repair needs --trace or --scenario');
+  if (key && existsSync(runDir(outRoot, key)))
+    throw new ArmUsageError(
+      `results for run key ${formatRunKey(key)} already exist at ${runDir(outRoot, key)}; results are never overwritten`,
+    );
   const repo = repoDir(domain);
 
   // The base must resolve locally before anything is captured or written.
@@ -1538,7 +1542,10 @@ export async function runArm(opts: ArmOptions): Promise<ArmResult> {
       result.costUsd += run.costUsd ?? 0;
       if (run.tokens)
         for (const k of Object.keys(result.tokens) as (keyof TokenUsage)[]) result.tokens[k] += run.tokens[k];
-      lastSession = run.sessionId ?? lastSession;
+      // Later sessions continue a stub's script by resuming it. The SDK runner starts a fresh
+      // session with the feedback in its prompt instead: SAFE's runner gives every query a fresh
+      // temp HOME, so an SDK session cannot be resumed (it ends in error_during_execution).
+      if (runner.kind === 'stub') lastSession = run.sessionId ?? lastSession;
       summary = run.summary;
       writeFileSync(join(dir, 'sessions', `${n}.log`), `${run.log}\n\n${run.summary}\n`);
       ev(
