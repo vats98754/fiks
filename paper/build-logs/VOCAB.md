@@ -106,3 +106,23 @@ present, so it appears twice. Proposed one-line fix in the spy:
 `realEvaluate(c, i, o && { ...o, perElement: false })`. When it was applied temporarily (then
 reverted), the file passed 12/12. MON's real-evaluator test (two rows at items[0] and items[2])
 already passes against VOCAB's evaluator.
+
+## Round 3 (rebased on main aa7e28a, BENCHX + DOM2 merged)
+
+`git rebase main` applied both VOCAB commits cleanly (no conflicts). SETUP re-run: apply-dep-fragments
+"nothing to apply", `pnpm install --no-frozen-lockfile` exit 0, ensure-shop-mcp leaves
+`.work/shop-mcp` at b77a0a0 = shop-sync-ref.json ref.
+
+Re-verified on the rebased tree: `pnpm vitest run packages/contracts` 56/56; replay-logged 200
+CallRecords, 0 verdict changes, 0 old/new differences (D1-D5 fixture and live traces);
+ls-remote main 7bf2e66, fiks/revendor-f2 = base-shop^{} = b77a0a0; fresh-clone sync check
+"identical"; diff 7bf2e66..base-shop lists only vendored evaluate.ts/types.ts; seed-v1 bb037cf;
+`grep -c disabled` 5; contracts diff vs ec241bc empty; shop-mcp CI on b77a0a0 success;
+ensure-shop-mcp pins a main-HEAD clone, refuses a dirty clone at main (exit 1, HEAD unchanged),
+GIT_TRACE fetch count 1 then 0; typecheck and lint clean.
+
+`with-lock suite pnpm test`: exit 1, 1 failed | 279 passed (280). The only failure is still the
+MON-owned `packages/proxy/test/replay.test.ts` spy test (same cause as round 2; VOCAB does not edit
+it). With the one-line spy fix `realEvaluate(c, i, o && { ...o, perElement: false })` applied
+temporarily (reverted, not committed), the full suite gives exit 0, 49/49 files, 280/280 tests.
+MON or the orchestrator must land that fix before or with VOCAB's merge.
