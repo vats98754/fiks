@@ -354,6 +354,8 @@ The system, the experiments and this manuscript were produced with substantial a
 
 \appendix
 \section{Reproducing the pilot numbers}
+Code, logs and the sources of this manuscript are public at \url{https://github.com/vats98754/fiks}; the mock server is at \url{https://github.com/vats98754/shop-mcp}. The first four commands below need only Python and Node.js; the live demo also needs a Claude Code OAuth token and GitHub CLI credentials.
+
 \begin{lstlisting}
 python3 paper/scripts/pilot_numbers.py --check   # rebuild every macro and table from bench/results
 python3 paper/scripts/make_bib.py --check        # references.bib from verified sources only

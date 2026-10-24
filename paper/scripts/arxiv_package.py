@@ -28,7 +28,7 @@ open(os.path.join(OUT, 'abstract.txt'), 'w').write(t + '\n')
 open(os.path.join(OUT, 'metadata.txt'), 'w').write(
     f"Title: {title}\nAuthors: Anvay Vats (University of Waterloo)\n"
     "Primary category: cs.SE\nCross-lists: cs.AI, cs.LG\n"
-    "Comments: Pilot study and pre-registration draft; the confirmatory study has not been run. AI-assisted (see the AI use statement).\n"
+    "Comments: Pilot study and pre-registration draft; the confirmatory study has not been run. AI-assisted (see the AI use statement). Code and logs: https://github.com/vats98754/fiks\n"
     f"Abstract ({len(t)} chars): see abstract.txt\n")
 
 bbl = os.path.join(P, 'main.bbl')
