@@ -27,7 +27,7 @@ EXTRA = {
     'reddit2026benchmarkwish': {
         'title': 'What benchmark do you wish someone would build?', 'authors': 'r/AI_Agents',
         'year': '2026', 'venue_or_publisher': 'Reddit discussion thread, r/AI_Agents',
-        'url': 'https://www.reddit.com/r/AI_Agents/comments/1wvojcs/', 'type': 'other'},
+        'url': 'https://www.reddit.com/r/AI_Agents/comments/1wvojcs/', 'type': 'other', 'accessed': '2026-10-24'},
 }
 
 
@@ -76,7 +76,7 @@ def entry(key, x):
         'year': x.get('year', '') or 'n.d.',
         'howpublished': tex_escape(venue),
         'url': x.get('url', ''),
-        'note': 'Accessed 2026-10-21',
+        'note': 'Accessed ' + x.get('accessed', '2026-10-21'),
     }
     kind = 'misc'
     if t == 'paper' and x.get('arxiv'):
