@@ -6,6 +6,7 @@
 \usepackage{lmodern}
 \usepackage{microtype}
 \usepackage{booktabs}
+\usepackage{array}
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{amsmath,amssymb}
@@ -23,24 +24,24 @@
 
 \title{\fiks: Turning Silent Tool Failures into Gated Repair Pull Requests\\for MCP Servers\\[4pt]
 \large System Design, Pilot Evaluation, and a Pre-Registration Draft}
-\author{\TODO{author names and affiliations}\\\small Repository owner: \texttt{github.com/vats98754}}
-\date{Preprint, October 2026}
+\author{Anvay Vats\\University of Waterloo}
+\date{October 2026}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Agents are meant to obtain ``ground truth'' from tool results at each step~\cite{anthropic2024agents}, yet MCP servers can return well-formed \emph{successful} responses despite incorrect behaviour~\cite{owotogbe2026mcpfaults}, and agents given empty or malformed success payloads often fabricate results~\cite{singh2026scapegoats}.
-Runtime monitors can warn the current agent~\cite{panthi2026outcomemonitors}, but the tool stays broken for every later agent, and spec-diff tools are blind when an upstream API changes behaviour without changing its schema~\cite{oasdiff-breaking}.
-We present \fiks, which closes this loop for MCP servers.
-A proxy checks every successful tool result against an \emph{outcome contract} (ranges, nullness, counts, freshness, agreement with the raw upstream HTTP exchange, read-after-write), and returns a receipt to the agent.
-On a violation it captures the exact call and upstream exchange, compiles it into a deterministic reproduction test that must fail on the current code \emph{for the named property}, and asks a coding agent to repair the server.
-\fiks{} opens a pull request only after that test, the full contract suite, every stored trace, typecheck, lint and CI on the exact commit all pass, and it never merges.
-In a pilot on one mock vendor with \nDrifts{} seeded behavioural drifts whose OpenAPI document is unchanged, \fiks{} flagged all \nDetected{} drifts, produced a valid fail-first repro for each, and obtained a green-CI pull request in one repair attempt per drift (\minsMin--\minsMax{} minutes from captured violation to PR; \$\costMin--\$\costMax{} API-price estimate per repair).
-In a \nTasks-task, \kTrials-trial agent bench, pass$^5$ was \pFiveBd{} without \fiks{}, \pFiveB{} with receipts and \pFiveC{} after the fixes were merged; with only \pairWins{} discordant tasks the receipts-vs-no-\fiks{} difference is not statistically significant (two-sided sign test $p=\pairP$), and an earlier receipt wording performed \emph{worse} than no monitor (\pFiveBold{} vs \pFiveBdold; \pairLossesOld{} tasks worse, \pairWinsOld{} better, $p=\pairPOld$).
-From a catalog of 508 sources (505 verified or metadata-corrected, 3 unreachable) we argue that the defensible novelty is the combination of trigger, artifact and gate placement, not any component.
-We release a pre-registration draft for a confirmatory study (four hypotheses, Holm-corrected); it has not yet been frozen or registered, and none of its experiments have been run.
+LLM agents act on tool results as ground truth, but tools can fail silently: a Model Context Protocol (MCP) server returns a well-formed success whose content is wrong, for example after its upstream API changes behaviour without changing its schema.
+Studies of MCP faults, agent robustness and benchmark tooling show that such failures occur, that agents rarely notice them, and that schema checks and specification diffs do not see them; runtime monitors can warn the current agent, but the tool stays broken for every later one.
+We present \fiks, a loop that turns a silent tool failure into a reviewable fix.
+A proxy checks every successful MCP result against an outcome contract, including agreement with the raw upstream HTTP exchange and read-after-write, and returns a receipt to the agent.
+A violation is compiled into a deterministic reproduction test that must fail on the current code for the named property; a tool-restricted coding agent repairs the server; and a pull request is opened only after that test, the full contract suite, all stored traces, typecheck, lint and CI on the exact commit pass. \fiks{} never merges.
+In a pilot with \nDrifts{} seeded drifts on a mock vendor whose OpenAPI document does not change, \fiks{} flagged all \nDetected, produced a valid fail-first test for each, and obtained a green-CI pull request in one repair attempt per drift (\minsMin--\minsMax{} minutes from violation to pull request; \$\costMin--\$\costMax{} per repair at API prices).
+In a \nTasks-task, \kTrials-trial agent bench, pass$^5$ was \pFiveBd{} without \fiks, \pFiveB{} with receipts and \pFiveC{} after the fixes were merged; the pilot is too small to establish the receipt effect (sign test $p=\pairP$), and an earlier receipt wording did worse than no monitor.
+We position \fiks{} against a catalog of 508 sources, state which of its parts are not new, and release a pre-registration draft for a confirmatory study that has not yet been run.
 \end{abstract}
+
+\noindent\textbf{Keywords:} Model Context Protocol; tool-using agents; silent failures; runtime verification; API drift; reproduction tests; automated program repair
 
 \section{Introduction}
 \label{sec:intro}
@@ -56,6 +57,7 @@ A common source of silent failure is upstream drift: the vendor API behind an MC
 Spec-diff tools compare documents and therefore report nothing~\cite{oasdiff-breaking}; in npm, about two thirds of documented breaking changes are behavioural rather than signature changes~\cite{kong2025npm}.
 Runtime outcome monitors close part of the gap: they check results and tell the running agent~\cite{panthi2026outcomemonitors,verimcp}.
 But detection alone leaves the tool broken for every later session, model and user.
+Section~\ref{sec:why} sets out the evidence for each of these statements and what it implies for the design.
 
 \fiks{} turns the runtime violation into a durable fix.
 Its premise is that a violation observed in live traffic is already most of a reproduction: the exact arguments, the raw upstream exchange and the property that failed.
@@ -72,7 +74,47 @@ Work on test-driven repair identifies writing a valid reproduction test as the b
 
 \paragraph{Scope.} This paper reports a pilot. Its evidence comes from one mock vendor, one MCP server, drifts and contracts written by the same authors, six agent tasks and one model family. We say in \S\ref{sec:limits} what the pilot cannot show, and the protocol in \S\ref{sec:protocol} is designed to test it.
 
-\section{Problem: silent failures at the agent--tool boundary}
+\section{Why this tool should exist: the evidence}
+\label{sec:why}
+
+We built \fiks{} because six independent lines of evidence point to the same gap. Table~\ref{tab:evidence} summarizes them; each row cites only the claim its source was verified to support.
+
+\paragraph{Agents depend on tool results, and silent tool faults are real.} Agents are meant to obtain ground truth from the environment, such as tool results, at each step~\cite{anthropic2024agents}. Practitioners surveyed about MCP faults rate tool-response handling (malformed, incomplete or semantically unusable output after a \emph{successful} call) as the most prevalent fault type, and the authors recommend validating responses after successful invocation~\cite{taraghi2026realfaults}. An analysis of 833 MCP fault threads found servers returning well-formed success responses despite incorrect behaviour~\cite{owotogbe2026mcpfaults}. The MCP reference memory server silently dropped writes for existing entities~\cite{mcp-memory-4887}, and an executable-contract audit found seven defects in the tools of agent benchmarks, including success messages for writes that never happened~\cite{bellibatlu2026contractaudit}.
+
+\paragraph{Agents do not catch them, and neither do observers.} When a production API silently accepts an invalid value, agents rarely notice (12\%) and never repair it; they tell the user nothing exists (41\%) or invent a figure (12\%)~\cite{li2026silentprobe}. Agents adopt corrupted but plausible tool returns at high rates, up to 68\% for web search~\cite{yang2026overreliance}; implicit tool failures cause the sharpest recovery drops~\cite{zhu2026toolmaze}; and agents given empty or malformed success payloads fabricated results in 56.6\% of valid responses~\cite{singh2026scapegoats}. Detection from the outside is also hard: no LLM-judge configuration exceeded AUROC 0.65 at detecting false success on $\tau^2$-bench~\cite{advani2026falsesuccess}, gray failures are by definition invisible to a system's own failure detectors~\cite{huang2017grayfailure}, and agent frameworks can alter valid MCP results after the wire~\cite{patodiya2026postwire}.
+
+\paragraph{Upstream behaviour drifts while schemas stay the same.} In npm, about two thirds of documented breaking changes are behavioural rather than signature changes~\cite{kong2025npm}. Real providers ship changes that clients misread without any error: GitHub treats enum additions as non-breaking~\cite{github-breaking-changes}, an LLM gateway turned a safety refusal into a normal completion through a default branch for unknown enum values~\cite{litellm-23899}, and a popular finance wrapper maintains a hand-built detector for 100$\times$ unit drift in its upstream data~\cite{yfinance-price-repair}. Production ML practice warns that a source-system upgrade can change a feature's meaning without producing values strange enough to trigger monitoring~\cite{breck2017mltestscore}. A specification diff of an unchanged document reports nothing~\cite{oasdiff-breaking}; MCP output-schema validation is a client-side recommendation~\cite{mcp-spec-2026-07-28-tools}; and static analysis of 1{,}899 MCP servers flags bug patterns but not behavioural, data-dependent faults~\cite{hasan2025mcpfirstglance}.
+
+\paragraph{Detection without repair does not last.} Outcome monitors give the running agent recovery affordances but explicitly do not repair the tool~\cite{panthi2026outcomemonitors}. In data validation, alerts that do not lead to a fix are ignored: alert precision is best measured by whether an alert gets fixed~\cite{polyzotis2018lifecycle}, and engineers silenced and eventually abandoned noisy completeness alerts~\cite{shankar2023brokendata}. Commercial repair loops start from errors and recurrence (Seer needs at least 10 events in 14 days for automatic runs) and treat reproduction tests as optional~\cite{sentry-seer-issue-fix,posthog-anatomy-pr}.
+
+\paragraph{Repair needs a valid test and green CI.} Writing a true reproduction test is the bottleneck of test-driven repair~\cite{tdflow}; fail-to-pass tests can be too lax to reject wrong patches~\cite{tan2026coharden} or admit partial ones~\cite{swe-doctor}; and industrial agentic repair starts from an existing failing test rather than from a runtime observation~\cite{maddila2025metaagent}. On the review side, each failed CI check on an agent-authored pull request is associated with about 15\% lower merge odds~\cite{ehsani2026failedagenticprs}. A runtime violation supplies the test's inputs and oracle; running CI before the pull request opens addresses the second point.
+
+\paragraph{Practitioners are asking for it.} In an informal October 2026 discussion of benchmarks practitioners wish existed~\cite{reddit2026benchmarkwish}, several replies asked for exactly this setting: how an agent handles a tool that returns garbage or an MCP server that dies mid-task; results the agent must decide whether to trust; writes whose response is lost or whose error claims failure although the write happened; scoring the final state of the world instead of the final answer; and agents that fail confidently while passing demos. One respondent summarized existing suites as ``happy path only''. This thread is self-selected and unverified (one respondent described itself as an AI agent), so we treat it as motivation, not as evidence of prevalence. It also marks our scope: \fiks{} addresses silently wrong results and unpersisted writes (\texttt{readAfterWrite}); it does not address timeouts, duplicated side effects after retries, permission drift or approvals that no longer cover an action, which other replies raised.
+
+\paragraph{Why this paper.} In the sources we reviewed (searched up to 2026-10-21), robustness benchmarks measure how agents cope with faulty tool output~\cite{zhu2026toolmaze,yang2026overreliance}, monitors warn the agent~\cite{panthi2026outcomemonitors,verimcp}, and repair products start from errors~\cite{sentry-seer-issue-fix,devin-oncall}; we found no open system or benchmark that measures whether a silent tool failure leads to a tested, reviewed fix of the tool itself. This paper contributes the design, a pilot with every number regenerated from committed logs, and a falsifiable protocol for the comparison that matters most: whether the loop beats a composition of existing monitors and coding agents.
+
+\paragraph{What is validated here and what is not.} Validated: the evidence above (every citation checked against its source), the pilot numbers (rebuilt by script from logs), and the feasibility of the loop on seeded drifts. Not validated: that \fiks{} outperforms a composition baseline, its false-alarm rate on unseen traffic, its behaviour on real bugs and legitimate vendor changes, and maintainer acceptance of its pull requests. Section~\ref{sec:protocol} describes how each will be tested.
+
+\begin{table}[t]
+\centering\scriptsize
+\caption{Evidence that motivates \fiks{} and the design response to each finding.}
+\label{tab:evidence}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.44\linewidth}>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}p{0.26\linewidth}}
+\toprule
+Finding & Implication & \fiks{} design response \\
+\midrule
+Tool-response handling after successful calls is the most prevalent MCP fault type~\cite{taraghi2026realfaults}; servers return successes despite incorrect behaviour~\cite{owotogbe2026mcpfaults} & errors and exceptions miss them & check every \emph{successful} result \\
+Agents rarely notice silent API failures and never repair them~\cite{li2026silentprobe}; they adopt plausible corrupted returns~\cite{yang2026overreliance} & the agent cannot be the detector & deterministic contracts outside the agent; receipt to the agent \\
+LLM judges reach AUROC $\le$ 0.65 on false success~\cite{advani2026falsesuccess} & model-based detection is weak & compare with the raw upstream exchange (\texttt{equalsUpstream}, \texttt{readAfterWrite}) \\
+Behavioural breaks dominate documented breaking changes in npm~\cite{kong2025npm}; spec diffs of unchanged documents are empty~\cite{oasdiff-breaking} & spec-level tools are blind & per-call checks on live results \\
+Monitors do not repair the tool~\cite{panthi2026outcomemonitors}; unfixed alerts get ignored~\cite{polyzotis2018lifecycle,shankar2023brokendata} & detection alone decays & turn each violation into a fix proposal \\
+A valid reproduction test is the repair bottleneck~\cite{tdflow}; fail-to-pass tests can be lax~\cite{tan2026coharden} & test validity matters & named-property fail-first test from the trace \\
+Failed CI checks are associated with lower merge odds for agent PRs~\cite{ehsani2026failedagenticprs} & red PRs waste review & CI on the exact commit before the PR \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Problem definition}
 \label{sec:problem}
 
 Let a tool $\tau$ map arguments $x$ to a result $r=\tau(x)$ by calling an upstream service $U$; the call produces an upstream exchange $e=(\mathrm{req},\mathrm{resp})$.

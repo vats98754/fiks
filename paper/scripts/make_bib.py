@@ -23,6 +23,11 @@ EXTRA = {
         'title': 'Building effective agents', 'authors': 'Erik Schluntz; Barry Zhang', 'year': '2024',
         'venue_or_publisher': 'Anthropic Engineering', 'url': 'https://www.anthropic.com/research/building-effective-agents',
         'type': 'blog'},
+    # Supplied by the author (pasted thread, read 2026-10-24); informal practitioner discussion, not a study.
+    'reddit2026benchmarkwish': {
+        'title': 'What benchmark do you wish someone would build?', 'authors': 'r/AI_Agents',
+        'year': '2026', 'venue_or_publisher': 'Reddit discussion thread, r/AI_Agents',
+        'url': 'https://www.reddit.com/r/AI_Agents/comments/1wvojcs/', 'type': 'other'},
 }
 
 
