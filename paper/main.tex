@@ -53,10 +53,10 @@ We position \fiks{} against a catalog of 508 sources, state which of its parts a
 
 When a tool fails loudly, with an exception or an error result, the agent can retry, an error tracker can file an issue, and a coding agent can be pointed at the stack trace~\cite{sentry-seer-issue-fix,devin-oncall}.
 When a tool fails silently, none of this happens: a Model Context Protocol (MCP) server returns a well-formed success whose content is wrong.
-A common cause is upstream drift: the vendor API behind the server changes a unit, a field name, pagination, a timestamp format or a write requirement, while its published schema stays the same.
+One cause, and the one this paper targets, is upstream drift: the vendor API behind the server changes a unit, a field name, pagination, a timestamp format or a write requirement, while its published schema stays the same; in npm, about two thirds of documented breaking changes are behavioural rather than signature changes~\cite{kong2025npm}.
 Section~\ref{sec:why} gives the evidence that such failures are frequently reported, that agents often adopt the wrong values and LLM judges detect false success poorly, and that monitors which catch them do not fix the tool.
 
-\fiks{} turns the violation into a fix.
+\fiks{} turns the violation into a reviewable fix.
 A violation seen at the proxy already contains most of a reproduction: the exact arguments, the raw upstream exchange and the property that failed.
 Writing a valid reproduction test is the bottleneck of test-driven repair~\cite{tdflow}, and fail-to-pass tests can still be lax~\cite{tan2026coharden}.
 \fiks{} therefore (i)~compiles the trace into a test that must fail on the current code \emph{for the stated reason}, (ii)~gives that test to a tool-restricted coding agent, and (iii)~runs every gate, including CI on the exact commit, \emph{before} a pull request is opened.
@@ -204,7 +204,7 @@ The pull request body states what broke, the trace, the test, the diff, before/a
 \label{sec:pilot}
 
 \subsection{Setup}
-\paragraph{Substrate.} A mock vendor API with a version switch (v1, v2) and an MCP server (\texttt{shop-mcp}, four tools: \texttt{search\_products}, \texttt{get\_product}, \texttt{create\_order}, \texttt{get\_order}) in its own repository, so pull requests and CI are real. The vendor's OpenAPI document is identical in v1 and v2. Version v2 introduces \nDrifts{} drifts (Table~\ref{tab:drifts}). We wrote the drifts and the contracts; \S\ref{sec:limits} discusses the circularity this creates.
+\paragraph{Substrate.} A mock vendor API with a version switch (v1, v2) and an MCP server (\texttt{shop-mcp}, four tools: \texttt{search\_products}, \texttt{get\_product}, \texttt{create\_order}, \texttt{get\_order}) in its own repository, so pull requests and CI are real. The vendor's OpenAPI document is identical in v1 and v2. Version v2 introduces \nDrifts{} drifts (Table~\ref{tab:drifts}). The author wrote the drifts and the contracts; \S\ref{sec:limits} discusses the circularity this creates.
 
 \begin{table}[t]
 \centering\small
