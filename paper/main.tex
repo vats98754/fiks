@@ -19,7 +19,10 @@
 \lstset{basicstyle=\ttfamily\footnotesize,breaklines=true,columns=fullflexible,frame=single}
 
 \newcommand{\fiks}{\textsc{fiks}}
-\newcommand{\TODO}[1]{\textcolor{red}{[TODO: #1]}}
+% Author-review markers. arxiv_package.py sets \reviewmodefalse in the submitted copy.
+\newif\ifreviewmode \reviewmodetrue
+\ifreviewmode\usepackage[textsize=footnotesize]{todonotes}\else\usepackage[disable]{todonotes}\fi
+\newcommand{\review}[1]{\todo[inline,color=yellow!30]{\textbf{Author review:} #1}}
 \input{generated/pilot.tex}
 
 \title{\fiks: Turning Silent Tool Failures into Gated Repair Pull Requests\\for MCP Servers\\[4pt]
@@ -29,6 +32,7 @@
 
 \begin{document}
 \maketitle
+\ifreviewmode\listoftodos[Author review checklist]\clearpage\fi
 
 \begin{abstract}
 LLM agents are meant to obtain ground truth from tool results, but tools can fail silently: a Model Context Protocol (MCP) server returns a well-formed success whose content is wrong, for example after its upstream API changes behaviour without changing its schema.
@@ -40,44 +44,38 @@ In a pilot with \nDrifts{} seeded drifts on a mock vendor whose OpenAPI document
 In a \nTasks-task, \kTrials-trial agent bench, pass$^5$ was \pFiveBd{} without \fiks, \pFiveB{} with receipts and \pFiveC{} after the fixes were merged; the pilot is too small to establish the receipt effect (sign test $p=\pairP$), and an earlier receipt wording did worse than no monitor (also not significant).
 We position \fiks{} against a catalog of 508 sources, state which of its parts are not new, and release a pre-registration draft for a confirmatory study that has not yet been run.
 \end{abstract}
+\review{Title, subtitle and abstract framing: confirm you want ``pilot + pre-registration draft'' as the paper's stated type.}
 
 \noindent\textbf{Keywords:} Model Context Protocol; tool-using agents; silent failures; runtime verification; API drift; reproduction tests; automated program repair
 
 \section{Introduction}
 \label{sec:intro}
 
-Agents act on what tools tell them.
-Anthropic describes agents as systems that must obtain ``ground truth'' from the environment, such as tool results, at each step~\cite{anthropic2024agents}; in the Model Context Protocol (MCP) that ground truth arrives as tool results.
-When a tool fails loudly, with an exception or an error result, existing machinery handles it: the agent retries, the error tracker files an issue, and coding agents can be pointed at the stack trace~\cite{sentry-seer-issue-fix,devin-oncall}.
-The harder case is a tool that fails \emph{silently}.
-A study of 833 MCP runtime-fault threads found servers that return well-formed success responses despite incorrect behaviour~\cite{owotogbe2026mcpfaults}.
-Agents given HTTP 200 responses with empty, null or malformed payloads fabricated results in 56.6\% of valid responses~\cite{singh2026scapegoats}; on $\tau^2$-bench no LLM-judge configuration exceeded AUROC 0.65 at detecting false success~\cite{advani2026falsesuccess}; and even the tools inside agent benchmarks report writes that never happened~\cite{bellibatlu2026contractaudit}.
+When a tool fails loudly, with an exception or an error result, the agent can retry, an error tracker can file an issue, and a coding agent can be pointed at the stack trace~\cite{sentry-seer-issue-fix,devin-oncall}.
+When a tool fails silently, none of this happens: a Model Context Protocol (MCP) server returns a well-formed success whose content is wrong.
+A common cause is upstream drift: the vendor API behind the server changes a unit, a field name, pagination, a timestamp format or a write requirement, while its published schema stays the same.
+Section~\ref{sec:why} gives the evidence that such failures are frequently reported, that agents often adopt the wrong values and LLM judges detect false success poorly, and that monitors which catch them do not fix the tool.
 
-A common source of silent failure is upstream drift: the vendor API behind an MCP server changes behaviour (a unit, a field name, pagination, a timestamp format, a write that now needs a header) while its published schema stays the same.
-Spec-diff tools compare documents and therefore report nothing~\cite{oasdiff-breaking}; in npm, about two thirds of documented breaking changes are behavioural rather than signature changes~\cite{kong2025npm}.
-Runtime outcome monitors close part of the gap: they check results and tell the running agent~\cite{panthi2026outcomemonitors,verimcp}.
-But detection alone leaves the tool broken for every later session, model and user.
-Section~\ref{sec:why} sets out the evidence for each of these statements and what it implies for the design.
-
-\fiks{} turns the runtime violation into a durable fix.
-Its premise is that a violation observed in live traffic is already most of a reproduction: the exact arguments, the raw upstream exchange and the property that failed.
-Work on test-driven repair identifies writing a valid reproduction test as the bottleneck~\cite{tdflow} and finds such tests hard to generate~\cite{mundler2024swtbench,otter}; it also warns that fail-to-pass tests can still be lax~\cite{tan2026coharden} or admit partial patches~\cite{swe-doctor}.
-\fiks{} therefore (i)~compiles the trace into a test that must fail on the current code \emph{for the stated reason}, (ii)~gives that test to a tool-restricted coding agent, and (iii)~places every gate, including CI on the exact commit, \emph{before} a pull request is opened.
+\fiks{} turns the violation into a fix.
+A violation seen at the proxy already contains most of a reproduction: the exact arguments, the raw upstream exchange and the property that failed.
+Writing a valid reproduction test is the bottleneck of test-driven repair~\cite{tdflow}, and fail-to-pass tests can still be lax~\cite{tan2026coharden}.
+\fiks{} therefore (i)~compiles the trace into a test that must fail on the current code \emph{for the stated reason}, (ii)~gives that test to a tool-restricted coding agent, and (iii)~runs every gate, including CI on the exact commit, \emph{before} a pull request is opened.
 
 \paragraph{Contributions.}
 \begin{enumerate}
-  \item \textbf{A loop and its gate placement} (\S\ref{sec:design}): per-call outcome contracts on successful MCP results, an immediate receipt to the agent, trace capture with the raw upstream exchange, a named-property fail-first reproduction, gated repair, and a pull request that is never merged automatically.
-  \item \textbf{An implementation and a pilot evaluation} (\S\ref{sec:pilot}) on five seeded drifts, with every number produced by a script from committed logs (Tables~\ref{tab:loop}--\ref{tab:receipts}), including a negative result on receipt wording.
-  \item \textbf{A positioning against a catalog of 508 sources} (\S\ref{sec:related}), with an explicit list of what is \emph{not} new.
+  \item \textbf{A loop and its gate placement} (\S\ref{sec:design}): per-call outcome contracts on successful MCP results, a receipt to the agent, trace capture with the raw upstream exchange, a named-property fail-first reproduction, gated repair, and a pull request that is never merged automatically.
+  \item \textbf{A pilot evaluation} (\S\ref{sec:pilot}) on \nDrifts{} seeded drifts, with every number regenerated by a script from committed logs, including a negative result on receipt wording.
+  \item \textbf{A novelty boundary} (\S\ref{sec:related}): the closest systems compared by loop step, with an explicit list of what is \emph{not} new.
   \item \textbf{A pre-registration draft} (\S\ref{sec:protocol}) with design, power analysis and analysis plan, to be frozen (tag \texttt{prereg-v1}) before any confirmatory run.
 \end{enumerate}
+\review{Confirm these four contributions are the ones you want to claim, in this order.}
 
-\paragraph{Scope.} This paper reports a pilot. Its evidence comes from one mock vendor, one MCP server, drifts and contracts written by the same authors, six agent tasks and one model family. We say in \S\ref{sec:limits} what the pilot cannot show, and the protocol in \S\ref{sec:protocol} is designed to test it.
+\paragraph{Scope and status.} This paper reports a pilot: one mock vendor, one MCP server, drifts, contracts and tasks written by the author, six agent tasks and one model family. Validated here: the published evidence in \S\ref{sec:why} (each citation checked against its source; the practitioner thread was supplied by the author and is not verified), the pilot numbers (rebuilt by script from logs), and the feasibility of the loop on seeded drifts. Not validated: that \fiks{} outperforms a composition baseline, the effect of receipts on agent outcomes, its false-alarm rate on unseen traffic, its behaviour on real bugs and legitimate vendor changes, and maintainer acceptance of its pull requests. The draft protocol (\S\ref{sec:protocol}) tests the composition comparison, the false-alarm rate and the behaviour on real bugs and legitimate changes; the receipt effect appears only as an optional exploratory run, and maintainer acceptance is outside the protocol.
 
 \section{Why this tool should exist: the evidence}
 \label{sec:why}
 
-We built \fiks{} because five lines of published evidence, and one informal practitioner discussion, point to the same gap. Table~\ref{tab:evidence} summarizes them; each row cites only the claim its source was verified to support.
+Five lines of published evidence and one informal practitioner discussion motivate \fiks{} (Table~\ref{tab:evidence}).
 
 \paragraph{Agents depend on tool results, and silent tool faults are real.} Agents are meant to obtain ground truth from the environment, such as tool results, at each step~\cite{anthropic2024agents}. In a survey of 41 practitioners, tool-response handling (malformed, incomplete or semantically unusable output after a \emph{successful} call) was the most frequently reported MCP fault type (66.67\%, ahead of documentation at 64.52\%), and the authors recommend validating responses after successful invocation~\cite{taraghi2026realfaults}. An analysis of 833 MCP fault threads found servers returning well-formed success responses despite incorrect behaviour~\cite{owotogbe2026mcpfaults}. The MCP reference memory server silently dropped new observations sent for existing entities (47 of 130 agent runs)~\cite{mcp-memory-4887}, and an executable-contract audit found seven defects in the tools of agent benchmarks, including success messages for writes that never happened~\cite{bellibatlu2026contractaudit}.
 
@@ -89,11 +87,10 @@ We built \fiks{} because five lines of published evidence, and one informal prac
 
 \paragraph{Repair needs a valid test and green CI.} Writing a true reproduction test is the bottleneck of test-driven repair~\cite{tdflow}; fail-to-pass tests can be too lax to reject wrong patches~\cite{tan2026coharden} or admit partial ones~\cite{swe-doctor}; and industrial agentic repair starts from an existing failing test rather than from a runtime observation~\cite{maddila2025metaagent}. On the review side, each failed CI check on an agent-authored pull request is associated with about 15\% lower merge odds~\cite{ehsani2026failedagenticprs}. A runtime violation supplies the test's inputs and oracle; running CI before the pull request opens addresses the second point.
 
-\paragraph{Practitioners are asking for it.} In an informal Reddit discussion of benchmarks practitioners wish existed (accessed 2026-10-24)~\cite{reddit2026benchmarkwish}, several replies asked for related settings: how an agent handles a tool that returns garbage or an MCP server that dies mid-task; results the agent must decide whether to trust; writes whose response is lost or whose error claims failure although the write happened; scoring the final state of the world instead of the final answer; and agents that fail confidently while passing demos. One respondent summarized existing suites as ``happy path only''. This thread is self-selected and unverified (one respondent described itself as an AI agent), so we treat it as motivation, not as evidence of prevalence. It also marks our scope: \fiks{} addresses silently wrong successful results and unpersisted writes (\texttt{readAfterWrite}); it does not address servers that die mid-task, error results whose action actually succeeded, lost responses, timeouts, duplicated side effects after retries, permission drift or approvals that no longer cover an action.
+\paragraph{Practitioners are asking for it.} In an informal Reddit discussion of benchmarks practitioners wish existed (accessed 2026-10-24)~\cite{reddit2026benchmarkwish}, several replies asked for related settings: how an agent handles a tool that returns garbage or an MCP server that dies mid-task; results the agent must decide whether to trust; writes whose response is lost or whose error claims failure although the write happened; scoring the final state of the world instead of the final answer; and agents that fail confidently while passing demos. This thread is self-selected and unverified (one respondent described itself as an AI agent), so we treat it as motivation, not as evidence of prevalence. It also marks our scope: \fiks{} addresses silently wrong successful results and unpersisted writes (\texttt{readAfterWrite}); it does not address servers that die mid-task, error results whose action actually succeeded, lost responses, timeouts, duplicated side effects after retries, permission drift or approvals that no longer cover an action.
 
-\paragraph{Why this paper.} In the sources we reviewed (searched up to 2026-10-21), robustness benchmarks measure how agents cope with faulty tool output~\cite{zhu2026toolmaze,yang2026overreliance}, monitors warn the agent~\cite{panthi2026outcomemonitors,verimcp}, and repair products start from errors~\cite{sentry-seer-issue-fix,devin-oncall}; we found no open system or benchmark that measures whether a silent tool failure leads to a tested, reviewed fix of the tool itself. This paper contributes the design, a pilot with every number regenerated from committed logs, and a draft, falsifiable protocol for the comparison that matters most: whether the loop beats a composition of existing monitors and coding agents.
-
-\paragraph{What is validated here and what is not.} Validated: the published evidence above (each citation checked against its source; the practitioner thread was supplied by the author and is not verified), the pilot numbers (rebuilt by script from logs), and the feasibility of the loop on seeded drifts. Not validated: that \fiks{} outperforms a composition baseline, the effect of receipts on agent outcomes, its false-alarm rate on unseen traffic, its behaviour on real bugs and legitimate vendor changes, and maintainer acceptance of its pull requests. Section~\ref{sec:protocol} describes how the composition comparison, the false-alarm rate and the behaviour on real bugs and legitimate changes will be tested; the receipt effect appears only as an optional exploratory run, and maintainer acceptance is outside the protocol.
+\paragraph{The gap.} In the sources we reviewed (searched up to 2026-10-21), robustness benchmarks measure how agents cope with faulty tool output~\cite{zhu2026toolmaze,yang2026overreliance}, monitors warn the agent~\cite{panthi2026outcomemonitors,verimcp}, and repair products start from errors~\cite{sentry-seer-issue-fix,devin-oncall}; we found no open system or benchmark that measures whether a silent tool failure leads to a tested, reviewed fix of the tool itself (\S\ref{sec:related}).
+\review{The practitioner paragraph cites a Reddit thread. Keep it (motivation, clearly labelled) or drop it (some reviewers discount forum sources)?}
 
 \begin{table}[t]
 \centering\scriptsize
@@ -186,6 +183,8 @@ Kind & Checks \\
 \end{tabular}
 \end{table}
 
+\review{Check that \S\ref{sec:design} describes the design you intend to defend (receipt channels, contract kinds, F/P gates, sandbox limits).}
+
 \subsection{Trace, reproduction and the F gate}
 On a violation the proxy stores a trace: tool, arguments, the raw upstream requests and responses recorded by an HTTP tap, the contract and the violated property ids.
 \fiks{} generates a test in the server's own repository that replays the recorded upstream exchange through the server's real code and asserts the contract.
@@ -226,7 +225,7 @@ D5 timestamp & ISO-8601 becomes epoch milliseconds & dates parsed as 1970 \\
 
 \paragraph{Agent bench.} \nTasks{} tasks (T1--T5 each exposed to one drift; T6 a control), \kTrials{} trials each, agent \benchModel{} via the Claude Agent SDK with only the shop MCP server and a \texttt{submit\_answer} tool. A deterministic grader compares the submitted answer with the vendor's ground truth; a hedged wrong value counts as wrong, and an answer never submitted counts as a failure (reported separately as ``no answer''). Phases: before drift through \fiks; after drift without \fiks{} (agent talks to the server directly); after drift with \fiks{} receipts; after drift with the \nPrsMerged{} \fiks{} pull requests merged. pass$^k$ uses the unbiased $\binom{c}{k}/\binom{n}{k}$ estimator averaged over tasks~\cite{yao2024taubench,chen2021codex}; intervals are Wilson~\cite{brown2001binomial}, computed over trials and therefore ignoring clustering by task, which can make them too narrow~\cite{bowyer2025clt}.
 
-\paragraph{Provenance.} All numbers in this section are emitted by \texttt{paper/scripts/pilot\_numbers.py} from committed logs (\texttt{bench/results/}, repair records, and a snapshot of the pull requests); \texttt{--check} rebuilds them and fails on any difference. Phases A, B and B-direct used \fiks{} commit \texttt{\fiksSha} and the server at tag \texttt{seed-v1} (\texttt{\shopShaAB}); phase C used the server's main branch at \texttt{\shopShaC} (the \nPrsMerged{} fix pull requests plus a test-harness pull request). \nDirtyRuns{} of these four runs record a dirty \fiks{} tree; at the time this flag also counted untracked bench output folders. The receipt-v1 runs and the D1--D3, D5 repairs (2026-10-18) ran from an uncommitted tree that predates commit \texttt{8c7daa8}; the D4 repair ran from an uncommitted tree before \texttt{\fiksSha}.
+\paragraph{Provenance.} All numbers in this section are emitted by \texttt{paper/scripts/pilot\_numbers.py} from committed logs (\texttt{bench/results/}, repair records, and a snapshot of the pull requests); \texttt{--check} rebuilds them and fails on any difference. Appendix~\ref{app:repro} lists the commits each run used, including uncommitted code.
 
 \subsection{Detection and false alarms}
 In the drift phase, \violatedCallsB{} of \callsB{} tool calls received a violated receipt, covering the violated properties of all five drifts (D1 \texttt{items.price.range}, D2 \texttt{price.notNull}, D3 \texttt{readAfterWrite}, D4 \texttt{countMatchesTotal}, D5 \texttt{created\_at} freshness and upstream agreement).
@@ -240,6 +239,7 @@ Total repair cost was \$\costTotal{} at API list prices; the runs used a subscri
 After the \nPrsMerged{} pull requests (and the harness pull request) were merged by an AI coding assistant on the owner's account at the owner's request, without line-by-line review, \texttt{fiks confirm} found each drift resolved (\nConfirmed/\nDrifts).
 Across the pilot and later demonstration runs, \fiks{} opened \nPrs{} repair pull requests, all with green checks; \nPrsMerged{} were merged, \nPrsDemoOpen{} demonstration pull requests target throw-away branches and remain open, and \nPrsClosed{} was a duplicate opened by an operator error and closed.
 These merges are not evidence of maintainer acceptance, which large-scale studies of agent pull requests measure separately~\cite{ehsani2026failedagenticprs}.
+\review{Confirm the account of who merged the pilot pull requests and how (AI assistant on your account, at your request, without line-by-line review).}
 
 \begin{table}[t]
 \centering\small
@@ -285,17 +285,18 @@ The second wording (v2) adds the upstream value the tool dropped, labelled uncon
 \section{Related work and novelty boundary}
 \label{sec:related}
 
-\paragraph{Silent failures and agent benchmarks.} MCP fault studies classify silent faults from issue threads but do not reproduce or repair them~\cite{owotogbe2026mcpfaults}. Controlled injection of silent failures into tool stubs shows agents fabricating results~\cite{singh2026scapegoats}, and false success is hard to detect from transcripts~\cite{advani2026falsesuccess}. Benchmarks that grade tool-using agents assume tools do what they advertise; an executable-contract audit found seven tool defects, including success messages for writes that never happened~\cite{bellibatlu2026contractaudit}. $\tau$-bench's tools are deterministic functions over JSON databases~\cite{yao2024taubench}.
+\paragraph{Silent failures and agent benchmarks.} MCP fault studies classify silent faults from issue threads but do not reproduce or repair them~\cite{owotogbe2026mcpfaults}. The robustness studies in \S\ref{sec:why} evaluate how the agent responds to bad tool output~\cite{singh2026scapegoats,zhu2026toolmaze,yang2026overreliance}, not how the tool gets fixed, and $\tau$-bench's tools are deterministic functions over JSON databases~\cite{yao2024taubench}.
 
 \paragraph{Runtime monitors.} Outcome Monitors check results and give the agent recovery affordances, explicitly without repairing the tool~\cite{panthi2026outcomemonitors}; verimcp re-derives outcomes after git, file and CI calls~\cite{verimcp}; a tool wrapper combining postcondition verification, verify-before-retry and idempotency keys reduced duplicate actions in simulation~\cite{mansoor2026verifiedtoolcalls}. Action-side enforcement such as AgentSpec checks planned actions rather than results~\cite{agentspec}. \fiks{}'s receipt step belongs to this line and is not new on its own.
 
-\paragraph{Specification, contract and data validation.} Spec-diff tools find nothing when the document does not change~\cite{oasdiff-breaking}; consumer-driven contracts need the provider to run consumer pacts~\cite{pact-how-it-works}; schema-derived fuzzing finds schema violations~\cite{hatfielddodds2022schemathesis}. Large-scale studies count breaking changes in library APIs~\cite{xavier2017apibreak,kong2025npm}. Data validation systems enforce similar presence, range and distribution checks on batches~\cite{tfdv-2019}, and invariant inference goes back to Daikon~\cite{daikon}. Record/replay tools turn captured traffic into regression tests whose oracle is the old response~\cite{keploy}; that oracle encodes the bug when the recording is made after the drift.
+\paragraph{Specification, contract and data validation.} Consumer-driven contracts need the provider to run consumer pacts~\cite{pact-how-it-works}; schema-derived fuzzing finds schema violations~\cite{hatfielddodds2022schemathesis}. Large-scale studies count breaking changes in library APIs~\cite{xavier2017apibreak,kong2025npm}. Data validation systems enforce similar presence, range and distribution checks on batches~\cite{tfdv-2019}, and invariant inference goes back to Daikon~\cite{daikon}. Record/replay tools turn captured traffic into regression tests whose oracle is the old response~\cite{keploy}; that oracle encodes the bug when the recording is made after the drift.
 
-\paragraph{Reproduction and repair.} Issue-to-test generation is hard and its validity is judged by fail-to-pass execution~\cite{libro,mundler2024swtbench,otter}; a true reproduction is the bottleneck of test-driven repair~\cite{tdflow}, yet fail-to-pass tests can be lax~\cite{tan2026coharden} or admit partial patches~\cite{swe-doctor}, and in a self-healing agent harness 55\% of gate-rejected instruction changes improved their trigger while regressing a protected case~\cite{tayebati2026selfhealingharness}. Repair systems start from issues~\cite{swe-agent,agentless}, compile errors after a dependency bump~\cite{reyes2025byam}, or an upstream breaking change with no localizing failing test~\cite{yang2026deprepair}. Structured upstream evidence helps dependency repair while raw evidence hurts~\cite{yang2026deprepair}, which motivates compiling the trace into a test rather than pasting it.
+\paragraph{Reproduction and repair.} Issue-to-test generation is hard and its validity is judged by fail-to-pass execution~\cite{libro,mundler2024swtbench,otter}. In a self-healing agent harness 55\% of gate-rejected instruction changes improved their trigger while regressing a protected case~\cite{tayebati2026selfhealingharness}. Repair systems start from issues~\cite{swe-agent,agentless}, compile errors after a dependency bump~\cite{reyes2025byam}, or an upstream breaking change with no localizing failing test~\cite{yang2026deprepair}. Structured upstream evidence helps dependency repair while raw evidence hurts~\cite{yang2026deprepair}, which motivates compiling the trace into a test rather than pasting it.
 
 \paragraph{Production-driven and commercial loops.} ClearView patched deployed software from learned invariants~\cite{perkins2009clearview}; Itzal validated production-driven patches on traffic~\cite{durieux2016itzal}; SapFix shipped detect--test--repair with human approval~\cite{marginean2019sapfix}. In 2026, observability and alerting products open fix pull requests from errors, incidents or LLM scans and iterate CI after opening~\cite{sentry-seer-issue-fix,posthog-anatomy-pr,devin-oncall,langsmith-changelog-2026}, and some measure recurrence after fixes~\cite{cleric-verifying-fixes}. AegisFlow detects silent pipeline drift statistically and deploys validated patches autonomously for pre-approved failure classes~\cite{awan2026aegisflow}. A granted patent claims language-model repair of a detected issue from its error information, with dependent claims adding a pull request accompanied by a software test~\cite{msft-us12711009}.
 
 \paragraph{What is and is not new.} Table~\ref{tab:matrix} compares the closest systems by loop step, from their documentation or papers. Each step exists somewhere. In the sources we reviewed (searched up to 2026-10-21; patent databases only partly searched), we found no system that combines: a trigger that is a deterministic contract violation in a \emph{successful} tool result, checked per call against the raw upstream exchange; a committed test that must fail first for the named property; and all gates, including CI on the exact commit, before the pull request opens, with a receipt to the agent while the fix is pending. We claim only that combination, and the pilot does not yet show that it outperforms a composition of existing parts; that is the question of \S\ref{sec:protocol}.
+\review{The novelty boundary is your claim to defend: patents were only partly searched (Google Patents, Espacenet and Patentscope not searched). Re-check before submission.}
 
 \begin{table}[t]
 \centering\scriptsize
@@ -320,6 +321,8 @@ Itzal~\cite{durieux2016itzal} & P & N & P & N & P & Y & P & P & N \\
 \end{tabular}
 \end{table}
 
+\review{Table~\ref{tab:matrix} rows for commercial products come from their documentation. Spot-check the cells you will be asked about.}
+
 \section{Confirmatory protocol (pre-registration draft)}
 \label{sec:protocol}
 
@@ -331,11 +334,12 @@ The draft pre-registration is \texttt{paper/prereg/PREREG.md}, sourced from \tex
   \item[H4 (vs composition).] The same comparison against COMP.
 \end{description}
 Drifts are authored blind to the contracts by a separate process and applied by a third-party response-rewriting injector; benign upstream evolution, mutation operators frozen before contracts, four real silent-failure bugs in public MCP servers, to be reproduced in private clones, and an adversarial-trace security suite are exploratory arms. Expected losses are stated in the draft as well: out-of-vocabulary string corruption, legitimate evolution that a fixed contract misreads as a fault, and cases where issue text already explains the bug.
+\review{The hypotheses, margins and analysis plan become binding when you tag \texttt{prereg-v1}. Read \texttt{paper/prereg/PREREG.md} and approve or change them first.}
 
 \section{Threats to validity and limitations}
 \label{sec:limits}
 
-\paragraph{Circularity.} The same authors wrote the drifts, the contracts and the tasks; detection of D1--D5 is therefore close to a construction property. Mutation-based oracle assessment and real faults are needed to measure what contracts miss~\cite{jahangirova2016oracle,just2014mutants}, and runtime contract vocabularies have known blind spots on out-of-vocabulary faults~\cite{panthi2026outcomemonitors}.
+\paragraph{Circularity.} The author wrote the drifts, the contracts and the tasks; detection of D1--D5 is therefore close to a construction property. Mutation-based oracle assessment and real faults are needed to measure what contracts miss~\cite{jahangirova2016oracle,just2014mutants}, and runtime contract vocabularies have known blind spots on out-of-vocabulary faults~\cite{panthi2026outcomemonitors}.
 \paragraph{Scale and statistics.} \nTasks{} tasks and \kTrials{} trials cannot support task-level significance; trial-level intervals ignore clustering~\cite{bowyer2025clt}. The false-alarm bound comes from \vOneCalls{} clean calls.
 \paragraph{Partial or overfitted patches.} A green suite shows the repro and the recorded contracts pass; it does not prove correctness~\cite{swe-doctor,tan2026coharden}. The pilot measured no held-out oracle.
 \paragraph{Security.} The repair agent reads attacker-controllable vendor bytes and its code runs in tests. Restricting terminal access does not stop injected agents from writing malicious source~\cite{liu2025aishelljack}, test-passing patches can hide vulnerabilities~\cite{chen2025swexploit}, and injection through tool output is measurable~\cite{debenedetti2024agentdojo,bouras2026capscope}. In the pilot the agent ran without an OS or network sandbox; a container backend and an injection suite are part of the protocol, not of these results.
@@ -343,8 +347,12 @@ Drifts are authored blind to the contracts by a separate process and applied by 
 \paragraph{Pilot build differences.} \nFTwoRuns{} of \nDrifts{} F gates ran twice rather than three times; all \nDrifts{} repairs and the receipt-v1 runs used uncommitted code; and every repair was triggered by a scripted call, not by agent traffic.
 \paragraph{External validity.} One mock vendor, one server, one model family (Claude) for both bench and repair, and seeded rather than organic drift. Merged pull requests were merged by an AI assistant at the owner's request without line-by-line review, so they say nothing about maintainer acceptance.
 
+\review{Add any limitation you know of that is not listed here.}
+
 \section{AI use and ethics statement}
-The system, the experiments and this manuscript were produced with substantial assistance from Claude (Claude Code and the Claude Agent SDK; claude-opus-5-5 and claude-sonnet-5-5), directed by the authors. Literature search and source verification were done by agents that recorded the supporting passage for each citation, except the author-supplied practitioner thread and the Anthropic engineering post (claim C1 in RESEARCH.md); every number in \S\ref{sec:pilot} is generated from committed logs by a script. The authors are responsible for all claims. No third-party repository was written to: pull requests were opened only on repositories owned by the authors, and real-bug reproductions use private clones.
+The system, the experiments and this manuscript were produced with substantial assistance from Claude (Claude Code and the Claude Agent SDK; claude-opus-5-5 and claude-sonnet-5-5), directed by the author. Literature search and source verification were done by agents that recorded the supporting passage for each citation, except the author-supplied practitioner thread and the Anthropic engineering post (claim C1 in RESEARCH.md); every number in \S\ref{sec:pilot} is generated from committed logs by a script. The author is responsible for all claims. No third-party repository was written to: pull requests were opened only on repositories owned by the author, and real-bug reproductions use private clones.
+
+\review{Check the AI-use statement against the policy of the venue or archive you submit to.}
 
 \section{Conclusion}
 \fiks{} shows that a silent tool failure caught by the proxy on a call against a drifted vendor can be turned, within minutes, into a named-property failing test and a gate-passing pull request against the tool. The pilot demonstrates feasibility on seeded drifts; it does not show that the loop beats a composition of existing monitors and coding agents, that its contracts generalize beyond the drifts they were written for, or that its pull requests would be accepted. The draft protocol is designed to answer the first two questions; maintainer acceptance needs a separate study.
@@ -354,6 +362,7 @@ The system, the experiments and this manuscript were produced with substantial a
 
 \appendix
 \section{Reproducing the pilot numbers}
+\label{app:repro}
 Code, logs and the sources of this manuscript are public at \url{https://github.com/vats98754/fiks}; the mock server is at \url{https://github.com/vats98754/shop-mcp}. The first four commands below need only Python and Node.js; the live demo also needs a Claude Code OAuth token and GitHub CLI credentials.
 
 \begin{lstlisting}
@@ -363,6 +372,8 @@ pnpm fiks summarize --check                      # bench summary.json matches th
 pnpm fiks vendor-diff                            # OpenAPI identical across v1/v2; five behaviours differ
 pnpm demo --drifts D2 --base fresh               # one live loop: violation -> repro -> repair -> green CI -> PR
 \end{lstlisting}
+\paragraph{Run provenance.} Phases A, B and B-direct used \fiks{} commit \texttt{\fiksSha} and the server at tag \texttt{seed-v1} (\texttt{\shopShaAB}); phase C used the server's main branch at \texttt{\shopShaC} (the \nPrsMerged{} fix pull requests plus a test-harness pull request). \nDirtyRuns{} of these four runs record a dirty \fiks{} tree; at the time this flag also counted untracked bench output folders. The receipt-v1 runs and the D1--D3, D5 repairs (2026-10-18) ran from an uncommitted tree that predates commit \texttt{8c7daa8}; the D4 repair ran from an uncommitted tree before \texttt{\fiksSha}.
+
 {\sloppy Bench runs: \texttt{bench/results/\{A\_v1,B\_v2,B\_v2\_direct,C\_v2\_fixed\}\_20261020T*}; receipt-v1 history: \texttt{*\_20261018T*}. Repair records: \texttt{bench/results/loop/repairs/}. Pull-request snapshot: \texttt{paper/results/pilot/prs.json}.\par}
 
 \section{Bench tasks}

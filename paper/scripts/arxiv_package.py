@@ -34,11 +34,21 @@ open(os.path.join(OUT, 'metadata.txt'), 'w').write(
 bbl = os.path.join(P, 'main.bbl')
 if not os.path.exists(bbl):
     sys.exit('main.bbl missing: run latexmk first')
+# Submitted copy: author-review markers off.
+sub_tex = tex.replace('\\newif\\ifreviewmode \\reviewmodetrue', '\\newif\\ifreviewmode \\reviewmodefalse')
+if sub_tex == tex:
+    sys.exit('could not switch off review mode')
 files = ['main.tex', 'main.bbl'] + [os.path.join('generated', f) for f in sorted(os.listdir(os.path.join(P, 'generated'))) if f.endswith('.tex')]
 tar = os.path.join(OUT, 'fiks-arxiv-src.tar.gz')
 with tarfile.open(tar, 'w:gz') as tf:
     for f in files:
-        tf.add(os.path.join(P, f), arcname=f)
+        if f == 'main.tex':
+            import io
+            data = sub_tex.encode()
+            info = tarfile.TarInfo('main.tex'); info.size = len(data)
+            tf.addfile(info, io.BytesIO(data))
+        else:
+            tf.add(os.path.join(P, f), arcname=f)
 
 # Prove the tarball compiles the way arXiv does it (no bibtex run).
 with tempfile.TemporaryDirectory() as d:
@@ -50,6 +60,8 @@ with tempfile.TemporaryDirectory() as d:
         if r.returncode != 0:
             sys.exit('tarball does not compile:\n' + r.stdout[-2000:])
     log = open(os.path.join(d, 'main.log')).read()
+    if 'Author review' in log or 'todonotes' in open(os.path.join(d, 'main.tex')).read() and 'reviewmodetrue' in open(os.path.join(d, 'main.tex')).read():
+        sys.exit('review markers leaked into the submitted copy')
     if re.search(r'undefined (citation|reference)|Citation .* undefined|Reference .* undefined', log):
         sys.exit('tarball compiles with undefined citations or references')
 print(f'abstract {len(t)} chars; wrote {OUT}/abstract.txt, metadata.txt, fiks-arxiv-src.tar.gz ({len(files)} files); tarball compiles cleanly')
