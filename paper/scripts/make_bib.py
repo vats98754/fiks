@@ -67,7 +67,14 @@ def catalog():
     return cat
 
 
+def clean(v):
+    # Research notes such as "(... [verify ...])" are for the catalog, not for the printed reference.
+    v = re.sub(r'\s*\([^()]*\[verify[^\]]*\][^()]*\)', '', v or '')
+    return re.sub(r'\s*\[verify[^\]]*\]', '', v).strip()
+
+
 def entry(key, x):
+    x = {k: clean(v) if isinstance(v, str) else v for k, v in x.items()}
     t = x.get('type', 'other')
     venue = x.get('venue_or_publisher', '') or ''
     fields = {
