@@ -41,11 +41,15 @@ export function gitHead(dir: string): string | null {
   }
 }
 
+/** Tracked changes only: untracked run outputs under bench/results do not make the code dirty. */
 export function gitDirty(dir: string): boolean | null {
   try {
     return (
-      execFileSync('git', ['status', '--porcelain'], { cwd: dir, encoding: 'utf8', stdio: 'pipe' }).trim() !==
-      ''
+      execFileSync('git', ['status', '--porcelain', '--untracked-files=no'], {
+        cwd: dir,
+        encoding: 'utf8',
+        stdio: 'pipe',
+      }).trim() !== ''
     );
   } catch {
     return null;
