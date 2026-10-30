@@ -1,0 +1,736 @@
+{
+ "_meta": {
+  "generated": "2026-10-30",
+  "inputs": "paper/references.bib (66 @misc entries)",
+  "method": "arXiv API batch query for all 38 arXiv ids; CrossRef query.bibliographic per title and /works/<doi>; OpenReview notes search; PMLR and MLSys proceedings pages; Meta Research page and PDF for SapFix; Google Patents; direct GET of every web URL. DBLP and later OpenReview note fetches returned bot challenges and were not used.",
+  "year_policy": "For papers with a published version, year is the published year; eprint is kept as a secondary pointer."
+ },
+ "advani2026falsesuccess": {
+  "type": "misc",
+  "eprint": "2606.09863",
+  "archivePrefix": "arXiv",
+  "year": "2026",
+  "url": "https://arxiv.org/abs/2606.09863",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2606.09863",
+  "note": "Also presented as a poster at the FAGEN workshop @ ICML 2026 (OpenReview cPxxSqUFYj); workshop is non-archival as far as checked, so cite the arXiv preprint."
+ },
+ "awan2026aegisflow": {
+  "type": "misc",
+  "eprint": "2610.06971",
+  "archivePrefix": "arXiv",
+  "year": "2026",
+  "url": "https://arxiv.org/abs/2610.06971",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2610.06971"
+ },
+ "bellibatlu2026contractaudit": {
+  "type": "misc",
+  "eprint": "2609.37315",
+  "archivePrefix": "arXiv",
+  "year": "2026",
+  "url": "https://arxiv.org/abs/2609.37315",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2609.37315",
+  "note": "arXiv comment: submitted to IEEE BigData 2026; no published version found."
+ },
+ "chen2021codex": {
+  "type": "misc",
+  "eprint": "2107.03374",
+  "archivePrefix": "arXiv",
+  "year": "2021",
+  "url": "https://arxiv.org/abs/2107.03374",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2107.03374",
+  "note": "58 authors on arXiv; print as \"Mark Chen and Jerry Tworek and Heewoo Jun and others\" rather than \"(58 authors)\"."
+ },
+ "durieux2016itzal": {
+  "type": "misc",
+  "eprint": "1609.06848",
+  "archivePrefix": "arXiv",
+  "year": "2016",
+  "url": "https://arxiv.org/abs/1609.06848",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=1609.06848",
+  "note": "arXiv v1 2016-09-22, last revised 2018-06-12. A shorter, differently titled paper by the same authors (\"Production-Driven Patch Generation\", ICSE-NIER 2017, pp. 23-26, doi 10.1109/ICSE-NIER.2017.8) exists; it is not the cited work, so the citation stays on the arXiv preprint."
+ },
+ "li2026silentprobe": {
+  "type": "misc",
+  "eprint": "2609.00035",
+  "archivePrefix": "arXiv",
+  "year": "2026",
+  "url": "https://arxiv.org/abs/2609.00035",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2609.00035"
+ },
+ "liu2025aishelljack": {
+  "type": "misc",
+  "eprint": "2509.22040",
+  "archivePrefix": "arXiv",
+  "year": "2025",
+  "url": "https://arxiv.org/abs/2509.22040",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2509.22040"
+ },
+ "mansoor2026verifiedtoolcalls": {
+  "type": "misc",
+  "eprint": "2608.02645",
+  "archivePrefix": "arXiv",
+  "year": "2026",
+  "url": "https://arxiv.org/abs/2608.02645",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2608.02645"
+ },
+ "owotogbe2026mcpfaults": {
+  "type": "misc",
+  "eprint": "2606.05339",
+  "archivePrefix": "arXiv",
+  "year": "2026",
+  "url": "https://arxiv.org/abs/2606.05339",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2606.05339"
+ },
+ "panthi2026outcomemonitors": {
+  "type": "misc",
+  "eprint": "2608.19303",
+  "archivePrefix": "arXiv",
+  "year": "2026",
+  "url": "https://arxiv.org/abs/2608.19303",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2608.19303"
+ },
+ "patodiya2026postwire": {
+  "type": "misc",
+  "eprint": "2610.00182",
+  "archivePrefix": "arXiv",
+  "year": "2026",
+  "url": "https://arxiv.org/abs/2610.00182",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2610.00182",
+  "note": "arXiv comment: submitted to SE4AgenticAI 2026; artifact doi 10.5281/zenodo.22784143 (Zenodo, not the paper). arXiv first version dated 2026-09-17."
+ },
+ "shankar2023brokendata": {
+  "type": "misc",
+  "eprint": "2303.06094",
+  "archivePrefix": "arXiv",
+  "year": "2023",
+  "url": "https://arxiv.org/abs/2303.06094",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2303.06094"
+ },
+ "singh2026scapegoats": {
+  "type": "misc",
+  "eprint": "2607.19449",
+  "archivePrefix": "arXiv",
+  "year": "2026",
+  "url": "https://arxiv.org/abs/2607.19449",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2607.19449",
+  "note": "Also accepted at the ACM KDD 2026 Workshop on Evaluation and Trustworthiness of Agentic AI (arXiv comment; OpenReview 9ueUav40nn). No workshop proceedings DOI found; cite arXiv."
+ },
+ "swe-doctor": {
+  "type": "misc",
+  "eprint": "2607.00990",
+  "archivePrefix": "arXiv",
+  "year": "2026",
+  "url": "https://arxiv.org/abs/2607.00990",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2607.00990"
+ },
+ "tan2026coharden": {
+  "type": "misc",
+  "eprint": "2607.19843",
+  "archivePrefix": "arXiv",
+  "year": "2026",
+  "url": "https://arxiv.org/abs/2607.19843",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2607.19843",
+  "note": "Under review as an ICLR 2027 submission (OpenReview udaDJMHDwy); cite arXiv."
+ },
+ "tayebati2026selfhealingharness": {
+  "type": "misc",
+  "eprint": "2609.24130",
+  "archivePrefix": "arXiv",
+  "year": "2026",
+  "url": "https://arxiv.org/abs/2609.24130",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2609.24130"
+ },
+ "yang2026deprepair": {
+  "type": "misc",
+  "eprint": "2607.17957",
+  "archivePrefix": "arXiv",
+  "year": "2026",
+  "url": "https://arxiv.org/abs/2607.17957",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2607.17957"
+ },
+ "yang2026overreliance": {
+  "type": "misc",
+  "eprint": "2609.05587",
+  "archivePrefix": "arXiv",
+  "year": "2026",
+  "url": "https://arxiv.org/abs/2609.05587",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2609.05587",
+  "note": "Under review as an ICLR 2027 submission (OpenReview NpQjihOVvb); cite arXiv."
+ },
+ "zhu2026toolmaze": {
+  "type": "misc",
+  "eprint": "2606.05806",
+  "archivePrefix": "arXiv",
+  "year": "2026",
+  "url": "https://arxiv.org/abs/2606.05806",
+  "verified_via": "http://export.arxiv.org/api/query?id_list=2606.05806"
+ },
+ "agentless": {
+  "type": "article",
+  "journal": "Proceedings of the ACM on Software Engineering",
+  "year": "2025",
+  "volume": "2",
+  "number": "FSE",
+  "pages": "801--824",
+  "publisher": "Association for Computing Machinery",
+  "title_published": "Demystifying LLM-Based Software Engineering Agents",
+  "doi": "10.1145/3715754",
+  "eprint": "2407.01489",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://api.crossref.org/works/10.1145/3715754",
+  "note": "Published (FSE 2025, PACMSE) under the title \"Demystifying LLM-Based Software Engineering Agents\"; same authors and same work as arXiv 2407.01489 (\"Agentless: ...\")."
+ },
+ "agentspec": {
+  "type": "inproceedings",
+  "booktitle": "Proceedings of the 2026 IEEE/ACM 48th International Conference on Software Engineering (ICSE '26)",
+  "year": "2026",
+  "pages": "2938--2950",
+  "publisher": "ACM",
+  "doi": "10.1145/3744916.3764546",
+  "eprint": "2503.18666",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://api.crossref.org/works/10.1145/3744916.3764546",
+  "note": "arXiv journal_ref and CrossRef agree. Year changes 2025 (arXiv v1) -> 2026 (published)."
+ },
+ "bouras2026capscope": {
+  "type": "inproceedings",
+  "booktitle": "Proceedings of the 2nd ACM SIGPLAN International Workshop on Language Models and Programming Languages (LMPL '26)",
+  "year": "2026",
+  "pages": "36--45",
+  "publisher": "ACM",
+  "doi": "10.1145/3843750.3843843",
+  "eprint": "2609.08371",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://api.crossref.org/works/10.1145/3843750.3843843"
+ },
+ "bowyer2025clt": {
+  "type": "inproceedings",
+  "booktitle": "Proceedings of the 42nd International Conference on Machine Learning (ICML 2025)",
+  "year": "2025",
+  "series": "Proceedings of Machine Learning Research",
+  "volume": "267",
+  "pages": "81143--81184",
+  "publisher": "PMLR",
+  "url": "https://proceedings.mlr.press/v267/bowyer25a.html",
+  "eprint": "2503.01747",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://proceedings.mlr.press/v267/bowyer25a.html",
+  "note": "PMLR title uses a typographic apostrophe (\"Don’t\"). No DOI (PMLR does not assign DOIs)."
+ },
+ "breck2017mltestscore": {
+  "type": "inproceedings",
+  "booktitle": "2017 IEEE International Conference on Big Data (Big Data)",
+  "year": "2017",
+  "pages": "1123--1132",
+  "publisher": "IEEE",
+  "doi": "10.1109/BigData.2017.8258038",
+  "verified_via": "https://api.crossref.org/works/10.1109/BigData.2017.8258038"
+ },
+ "brown2001binomial": {
+  "type": "article",
+  "journal": "Statistical Science",
+  "year": "2001",
+  "volume": "16",
+  "number": "2",
+  "pages": "101--133",
+  "publisher": "Institute of Mathematical Statistics",
+  "doi": "10.1214/ss/1009213286",
+  "verified_via": "https://api.crossref.org/works/10.1214/ss/1009213286"
+ },
+ "chen2025swexploit": {
+  "type": "inproceedings",
+  "booktitle": "Conference on Language Modeling (COLM 2026)",
+  "year": "2026",
+  "url": "https://openreview.net/forum?id=WPGbESS31g",
+  "title_published": "When Correct Patches Become Vulnerable: Red Teaming LLM-Based Program Repair Agents",
+  "eprint": "2509.25894",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://api2.openreview.net/notes/search?term=Red%20Teaming%20Program%20Repair%20Agents%20Correct%20Patches%20Hide%20Vulnerabilities&type=terms&content=all&source=forum&limit=5",
+  "note": "Same authors; arXiv comment says \"accepted to COLM 2026\"; the COLM version (OpenReview WPGbESS31g, venue \"COLM 2026\") carries a new title. No DOI. If the paper text cites the arXiv title or its content specifically, keep type misc with eprint 2509.25894 (year 2025) instead."
+ },
+ "daikon": {
+  "type": "article",
+  "journal": "Science of Computer Programming",
+  "year": "2007",
+  "volume": "69",
+  "number": "1--3",
+  "pages": "35--45",
+  "publisher": "Elsevier",
+  "doi": "10.1016/j.scico.2007.01.015",
+  "verified_via": "https://api.crossref.org/works/10.1016/j.scico.2007.01.015"
+ },
+ "debenedetti2024agentdojo": {
+  "type": "inproceedings",
+  "booktitle": "Advances in Neural Information Processing Systems 37 (NeurIPS 2024)",
+  "year": "2024",
+  "pages": "82895--82920",
+  "publisher": "Curran Associates, Inc.",
+  "doi": "10.52202/079017-2636",
+  "eprint": "2406.13352",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://api.crossref.org/works/10.52202/079017-2636",
+  "note": "CrossRef lists publisher \"Neural Information Processing Systems Foundation, Inc.\"; the 10.52202 prefix is the Curran print proceedings. Track (Datasets and Benchmarks) not verified from the fetched record, so it is omitted."
+ },
+ "ehsani2026failedagenticprs": {
+  "type": "inproceedings",
+  "booktitle": "Proceedings of the 23rd International Conference on Mining Software Repositories (MSR '26)",
+  "year": "2026",
+  "pages": "807--811",
+  "publisher": "ACM",
+  "doi": "10.1145/3793302.3793579",
+  "eprint": "2601.15195",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://api.crossref.org/works/10.1145/3793302.3793579"
+ },
+ "hasan2025mcpfirstglance": {
+  "type": "article",
+  "journal": "ACM Transactions on Software Engineering and Methodology",
+  "year": "2026",
+  "publisher": "Association for Computing Machinery",
+  "doi": "10.1145/3814959",
+  "eprint": "2506.13538",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://api.crossref.org/works/10.1145/3814959",
+  "note": "Online-first (CrossRef issued 2026-05-12); no volume/issue/pages assigned yet. Year changes 2025 (arXiv) -> 2026 (published); key unchanged."
+ },
+ "hatfielddodds2022schemathesis": {
+  "type": "inproceedings",
+  "booktitle": "Proceedings of the ACM/IEEE 44th International Conference on Software Engineering: Companion Proceedings (ICSE '22 Companion)",
+  "year": "2022",
+  "pages": "345--346",
+  "publisher": "ACM",
+  "doi": "10.1145/3510454.3528637",
+  "eprint": "2112.10328",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://api.crossref.org/works/10.1145/3510454.3528637",
+  "note": "Same paper also registered by IEEE as doi 10.1109/ICSE-Companion55297.2022.9793781 (ICSE-Companion 2022, pp. 345-346). Use one DOI only."
+ },
+ "huang2017grayfailure": {
+  "type": "inproceedings",
+  "booktitle": "Proceedings of the 16th Workshop on Hot Topics in Operating Systems (HotOS '17)",
+  "year": "2017",
+  "pages": "150--155",
+  "publisher": "ACM",
+  "doi": "10.1145/3102980.3103005",
+  "verified_via": "https://api.crossref.org/works/10.1145/3102980.3103005",
+  "note": "CrossRef splits the title: 'Gray Failure' + subtitle 'The Achilles' Heel of Cloud-Scale Systems'."
+ },
+ "jahangirova2016oracle": {
+  "type": "inproceedings",
+  "booktitle": "Proceedings of the 25th International Symposium on Software Testing and Analysis (ISSTA '16)",
+  "year": "2016",
+  "pages": "247--258",
+  "publisher": "ACM",
+  "doi": "10.1145/2931037.2931062",
+  "verified_via": "https://api.crossref.org/works/10.1145/2931037.2931062"
+ },
+ "just2014mutants": {
+  "type": "inproceedings",
+  "booktitle": "Proceedings of the 22nd ACM SIGSOFT International Symposium on Foundations of Software Engineering (FSE '14)",
+  "year": "2014",
+  "pages": "654--665",
+  "publisher": "ACM",
+  "doi": "10.1145/2635868.2635929",
+  "verified_via": "https://api.crossref.org/works/10.1145/2635868.2635929"
+ },
+ "kong2025npm": {
+  "type": "article",
+  "journal": "ACM Transactions on Software Engineering and Methodology",
+  "year": "2025",
+  "volume": "34",
+  "number": "4",
+  "pages": "1--23",
+  "publisher": "Association for Computing Machinery",
+  "title_published": "Toward Better Comprehension of Breaking Changes in the NPM Ecosystem",
+  "doi": "10.1145/3702991",
+  "eprint": "2408.14431",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://api.crossref.org/works/10.1145/3702991",
+  "note": "Published title says \"Toward\"; arXiv says \"Towards\". url can move from arxiv.org/html/2408.14431v2 to the DOI."
+ },
+ "libro": {
+  "type": "inproceedings",
+  "booktitle": "2023 IEEE/ACM 45th International Conference on Software Engineering (ICSE)",
+  "year": "2023",
+  "pages": "2312--2323",
+  "publisher": "IEEE",
+  "doi": "10.1109/ICSE48619.2023.00194",
+  "eprint": "2209.11515",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://api.crossref.org/works/10.1109/ICSE48619.2023.00194"
+ },
+ "maddila2025metaagent": {
+  "type": "article",
+  "journal": "IEEE Transactions on Software Engineering",
+  "year": "2026",
+  "volume": "52",
+  "number": "8",
+  "pages": "2446--2462",
+  "publisher": "IEEE",
+  "doi": "10.1109/TSE.2026.3696849",
+  "eprint": "2507.18755",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://api.crossref.org/works/10.1109/TSE.2026.3696849",
+  "note": "Published title capitalisation: \"Agentic Program Repair From Test Failures at Scale: A Neuro-Symbolic Approach With Static Analysis and Test Execution Feedback\". Year changes 2025 (arXiv) -> 2026 (published). 24 authors; see corrections."
+ },
+ "mundler2024swtbench": {
+  "type": "inproceedings",
+  "booktitle": "Advances in Neural Information Processing Systems 37 (NeurIPS 2024)",
+  "year": "2024",
+  "pages": "81857--81887",
+  "publisher": "Curran Associates, Inc.",
+  "doi": "10.52202/079017-2601",
+  "eprint": "2406.12952",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://api.crossref.org/works/10.52202/079017-2601"
+ },
+ "otter": {
+  "type": "inproceedings",
+  "booktitle": "Proceedings of the 42nd International Conference on Machine Learning (ICML 2025)",
+  "year": "2025",
+  "series": "Proceedings of Machine Learning Research",
+  "volume": "267",
+  "pages": "752--771",
+  "publisher": "PMLR",
+  "url": "https://proceedings.mlr.press/v267/ahmed25b.html",
+  "eprint": "2502.05368",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://proceedings.mlr.press/v267/ahmed25b.html",
+  "note": "No DOI (PMLR)."
+ },
+ "perkins2009clearview": {
+  "type": "inproceedings",
+  "booktitle": "Proceedings of the ACM SIGOPS 22nd Symposium on Operating Systems Principles (SOSP '09)",
+  "year": "2009",
+  "pages": "87--102",
+  "publisher": "ACM",
+  "doi": "10.1145/1629575.1629585",
+  "verified_via": "https://api.crossref.org/works/10.1145/1629575.1629585",
+  "note": "14 authors; see corrections."
+ },
+ "polyzotis2018lifecycle": {
+  "type": "article",
+  "journal": "ACM SIGMOD Record",
+  "year": "2018",
+  "volume": "47",
+  "number": "2",
+  "pages": "17--28",
+  "publisher": "Association for Computing Machinery",
+  "doi": "10.1145/3299887.3299891",
+  "verified_via": "https://api.crossref.org/works/10.1145/3299887.3299891",
+  "note": "Issue dated June 2018; CrossRef online date 2018-12-11. Title confirmed from the PDF (CrossRef stores \": A Survey\" as subtitle)."
+ },
+ "reyes2025byam": {
+  "type": "article",
+  "journal": "Empirical Software Engineering",
+  "year": "2026",
+  "volume": "31",
+  "number": "4",
+  "pages": "113",
+  "publisher": "Springer",
+  "doi": "10.1007/s10664-026-10835-1",
+  "eprint": "2505.07522",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://api.crossref.org/works/10.1007/s10664-026-10835-1",
+  "note": "Article number 113 (no page range). arXiv record also links this DOI. Year changes 2025 (arXiv) -> 2026 (published)."
+ },
+ "swe-agent": {
+  "type": "inproceedings",
+  "booktitle": "Advances in Neural Information Processing Systems 37 (NeurIPS 2024)",
+  "year": "2024",
+  "pages": "50528--50652",
+  "publisher": "Curran Associates, Inc.",
+  "doi": "10.52202/079017-1601",
+  "eprint": "2405.15793",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://api.crossref.org/works/10.52202/079017-1601"
+ },
+ "taraghi2026realfaults": {
+  "type": "article",
+  "journal": "ACM Transactions on Software Engineering and Methodology",
+  "year": "2026",
+  "publisher": "Association for Computing Machinery",
+  "doi": "10.1145/3850159",
+  "eprint": "2603.05637",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://api.crossref.org/works/10.1145/3850159",
+  "note": "Online-first (CrossRef issued 2026-09-30); no volume/issue/pages yet."
+ },
+ "tdflow": {
+  "type": "inproceedings",
+  "booktitle": "Proceedings of the 19th Conference of the European Chapter of the Association for Computational Linguistics (Volume 1: Long Papers)",
+  "year": "2026",
+  "pages": "1511--1527",
+  "publisher": "Association for Computational Linguistics",
+  "doi": "10.18653/v1/2026.eacl-long.70",
+  "eprint": "2510.23761",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://api.crossref.org/works/10.18653/v1/2026.eacl-long.70",
+  "note": "Year changes 2025 (arXiv) -> 2026 (EACL 2026)."
+ },
+ "tfdv-2019": {
+  "type": "inproceedings",
+  "booktitle": "Proceedings of Machine Learning and Systems (MLSys/SysML 2019)",
+  "year": "2019",
+  "volume": "1",
+  "pages": "334--347",
+  "editor": "A. Talwalkar and V. Smith and M. Zaharia",
+  "url": "https://proceedings.mlsys.org/paper_files/paper/2019/file/928f1160e52192e3e0017fb63ab65391-Paper.pdf",
+  "verified_via": "https://proceedings.mlsys.org/paper_files/paper/2019/hash/928f1160e52192e3e0017fb63ab65391-Abstract.html",
+  "note": "No DOI. Proceedings author order differs from the bib; see corrections."
+ },
+ "xavier2017apibreak": {
+  "type": "inproceedings",
+  "booktitle": "2017 IEEE 24th International Conference on Software Analysis, Evolution and Reengineering (SANER)",
+  "year": "2017",
+  "pages": "138--147",
+  "publisher": "IEEE",
+  "doi": "10.1109/SANER.2017.7884616",
+  "verified_via": "https://api.crossref.org/works/10.1109/SANER.2017.7884616"
+ },
+ "yao2024taubench": {
+  "type": "inproceedings",
+  "booktitle": "International Conference on Learning Representations (ICLR 2025)",
+  "year": "2025",
+  "url": "https://openreview.net/forum?id=roNSXZpUDN",
+  "eprint": "2406.12045",
+  "archivePrefix": "arXiv",
+  "verified_via": "https://api2.openreview.net/notes/search?term=tau-bench%20Tool-Agent-User%20Interaction%20Real-World%20Domains&type=terms&content=all&source=forum&limit=5",
+  "note": "OpenReview roNSXZpUDN, venue \"ICLR 2025 Poster\", same four authors. No DOI. Year changes 2024 (arXiv) -> 2025; key unchanged. Typeset title as {$\\tau$-bench}."
+ },
+ "marginean2019sapfix": {
+  "type": "misc",
+  "url": "https://engineering.fb.com/2018/09/13/developer-tools/finding-and-fixing-software-bugs-automatically-with-sapfix-and-sapienz/",
+  "verified_via": "https://engineering.fb.com/2018/09/13/developer-tools/finding-and-fixing-software-bugs-automatically-with-sapfix-and-sapienz/",
+  "howpublished": "Meta Engineering blog",
+  "year": "2018",
+  "note": "This key holds the 2018 blog by Yue Jia, Ke Mao and Mark Harman (byline confirmed 2026-10-30), not the Marginean et al. paper. The blog says SapFix \"is not designed to deploy fixes to production code on its own\" and sends patches \"to a human reviewer for approval\". For the peer-reviewed paper use marginean2019sapfix-paper."
+ },
+ "marginean2019sapfix-paper": {
+  "new_entry": true,
+  "type": "inproceedings",
+  "title": "SapFix: Automated End-to-End Repair at Scale",
+  "author": "Alexandru Marginean and Johannes Bader and Satish Chandra and Mark Harman and Yue Jia and Ke Mao and Alexander Mols and Andrew Scott",
+  "booktitle": "2019 IEEE/ACM 41st International Conference on Software Engineering: Software Engineering in Practice (ICSE-SEIP)",
+  "year": "2019",
+  "pages": "269--278",
+  "publisher": "IEEE",
+  "doi": "10.1109/ICSE-SEIP.2019.00039",
+  "url": "https://research.facebook.com/publications/sapfix-automated-end-to-end-repair-at-scale/",
+  "verified_via": "https://api.crossref.org/works/10.1109/icse-seip.2019.00039",
+  "also_checked": [
+   "https://research.facebook.com/publications/sapfix-automated-end-to-end-repair-at-scale/",
+   "https://research.facebook.com/file/543683290210642/SapFix-Automated-End-to-End-Repair-at-Scale-v2.pdf"
+  ],
+  "cite_claim": "First end-to-end detect-test-repair pipeline at industrial scale, with mandatory human approval.",
+  "supports_cite_claim": "yes",
+  "evidence": {
+   "abstract": "Abstract: SapFix is \"the first deployment of automated end-to-end fault fixing, from test case design through to deployed repairs in production code\", used at Facebook on 6 production systems of tens of millions of lines each.",
+   "contribution_list": "Contribution 1: \"The first end-to-end deployment of industrial repair\".",
+   "human_approval": "Not in the abstract; in the body (Sec. on fix publication, Fig. 1): a fix lands only \"If the reviewer accepts the fix\"; it is abandoned if the developer rejects it or does not review within 7 days; \"all Diffs proposed by SapFix are guaranteed to have at least one (suitably qualified) human reviewer\"."
+  },
+  "note": "Supports the claim. Caveats: the detector is Sapienz crash testing (crashes, not silent wrong data), and \"first\" is the authors' own claim. The human-approval half comes from the body and Fig. 1, not the abstract."
+ },
+ "anthropic2024agents": {
+  "type": "misc",
+  "url": "https://www.anthropic.com/research/building-effective-agents",
+  "verified_via": "https://www.anthropic.com/research/building-effective-agents",
+  "note": "Article heading \"Building effective agents\", dated 2024-12-19 on the page (HTML <title> now reads \"Building effective AI agents\")."
+ },
+ "cleric-verifying-fixes": {
+  "type": "misc",
+  "url": "https://cleric.ai/blog/verifying-fixes",
+  "verified_via": "https://cleric.ai/blog/verifying-fixes"
+ },
+ "devin-oncall": {
+  "type": "misc",
+  "url": "https://docs.devin.ai/product-guides/devin-oncall",
+  "verified_via": "https://docs.devin.ai/product-guides/devin-oncall"
+ },
+ "github-breaking-changes": {
+  "type": "misc",
+  "url": "https://docs.github.com/en/rest/about-the-rest-api/breaking-changes",
+  "verified_via": "https://docs.github.com/en/rest/about-the-rest-api/breaking-changes"
+ },
+ "keploy": {
+  "type": "misc",
+  "url": "https://keploy.io/docs/concepts/what-is-keploy",
+  "verified_via": "https://keploy.io/docs/concepts/what-is-keploy"
+ },
+ "langsmith-changelog-2026": {
+  "type": "misc",
+  "url": "https://docs.langchain.com/langsmith/changelog",
+  "verified_via": "https://docs.langchain.com/langsmith/changelog"
+ },
+ "litellm-23899": {
+  "type": "misc",
+  "url": "https://github.com/BerriAI/litellm/pull/23899",
+  "verified_via": "https://github.com/BerriAI/litellm/pull/23899"
+ },
+ "mcp-memory-4887": {
+  "type": "misc",
+  "url": "https://github.com/modelcontextprotocol/servers/issues/4887",
+  "verified_via": "https://github.com/modelcontextprotocol/servers/issues/4887"
+ },
+ "mcp-spec-2026-07-28-tools": {
+  "type": "misc",
+  "url": "https://modelcontextprotocol.io/specification/latest/server/tools",
+  "verified_via": "https://modelcontextprotocol.io/specification/latest/server/tools"
+ },
+ "oasdiff-breaking": {
+  "type": "misc",
+  "url": "https://github.com/oasdiff/oasdiff/blob/main/docs/BREAKING-CHANGES.md",
+  "verified_via": "https://github.com/oasdiff/oasdiff/blob/main/docs/BREAKING-CHANGES.md"
+ },
+ "pact-how-it-works": {
+  "type": "misc",
+  "url": "https://docs.pact.io/getting_started/how_pact_works",
+  "verified_via": "https://docs.pact.io/getting_started/how_pact_works"
+ },
+ "posthog-anatomy-pr": {
+  "type": "misc",
+  "url": "https://posthog.com/docs/self-driving/anatomy-of-a-pr",
+  "verified_via": "https://posthog.com/docs/self-driving/anatomy-of-a-pr"
+ },
+ "reddit2026benchmarkwish": {
+  "type": "misc",
+  "url": "https://www.reddit.com/r/AI_Agents/comments/1wvojcs/",
+  "note": "Not re-verified: reddit.com returned 403 to a script fetch on 2026-10-30. Entry supplied by the author (read 2026-10-24)."
+ },
+ "sentry-seer-issue-fix": {
+  "type": "misc",
+  "url": "https://docs.sentry.io/product/ai-in-sentry/seer/issue-fix",
+  "verified_via": "https://docs.sentry.io/product/ai-in-sentry/seer/issue-fix",
+  "note": "URL resolves but the page is now titled \"Autofix\" with canonical URL https://docs.sentry.io/product/ai-in-sentry/seer/autofix/ ; re-check that the cited content is unchanged before updating the title."
+ },
+ "verimcp": {
+  "type": "misc",
+  "url": "https://pypi.org/project/verimcp/",
+  "verified_via": "https://pypi.org/pypi/verimcp/json",
+  "note": "PyPI JSON: version 0.3.0, author Rudra Naresh, uploaded 2026-08-15; repo https://github.com/rudranaresh0201/mcp."
+ },
+ "yfinance-price-repair": {
+  "type": "misc",
+  "url": "https://ranaroussi.github.io/yfinance/advanced/price_repair.html",
+  "verified_via": "https://ranaroussi.github.io/yfinance/advanced/price_repair.html"
+ },
+ "msft-us12711009": {
+  "type": "patent",
+  "number": "US 12,711,009 B2",
+  "holder": "Microsoft Technology Licensing, LLC",
+  "author": "Rajeev Prabhu Acharya and Siamak Ahari and Vinay Rao",
+  "year": "2026",
+  "date": "2026-08-18",
+  "title": "Detecting and repairing reliability issues in operating systems and applications using a generative artificial intelligence system",
+  "url": "https://patents.google.com/patent/US12711009B2/en",
+  "verified_via": "https://patents.google.com/patent/US12711009B2/en",
+  "also_checked": [
+   "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12711009"
+  ],
+  "note": "Google Patents: issued 2026-08-18, application US 18/507,287 filed 2023-11-13, inventors Acharya, Ahari, Rao, assignee Microsoft Technology Licensing LLC. The pre-grant publication number (US 2025/0045148 A1) and the 2023-07-31 provisional date in the current entry were not re-checked. @patent is a biblatex type; with plain BibTeX use @misc and put the number in howpublished."
+ },
+ "corrections": {
+  "liu2025aishelljack": {
+   "field": "author",
+   "current": "{Liu} and {Zhao} and {Lyu} and {Zhang} and {Wang} and {Lo}",
+   "correct": "Yue Liu and Yanjie Zhao and Yunbo Lyu and Ting Zhang and Haoyu Wang and David Lo",
+   "source": "http://export.arxiv.org/api/query?id_list=2509.22040"
+  },
+  "maddila2025metaagent": {
+   "field": "author",
+   "current": "Chandra Maddila and Adam Tait and Peter C. Rigby (3 names)",
+   "correct": "24 authors: Chandra Maddila and Adam Tait and Claire Chang and Daniel Cheng and Nauman Ahmad and Vijayaraghavan Murali and Marshall Roch and Arnaud Avondet and Aaron Meltzer and Victor Montalvao and Michael Hopko and Chris Waterson and Parth Thakkar and Renuka Fernandez and Kristian Kristensen and Sivan Barzily and Sherry Chen and Rui Abreu and Nachiappan Nagappan and Payam Shodjai and Killian Murphy and James Everingham and Aparna Ramani and Peter C. Rigby (print as \"Chandra Maddila and Adam Tait and others\" if shortening)",
+   "source": "https://api.crossref.org/works/10.1109/tse.2026.3696849"
+  },
+  "tan2026coharden": {
+   "field": "author",
+   "current": "6 names ending at Lu Wang",
+   "correct": "Yuhao Tan and Zhibang Yang and Fangkai Yang and Yuan Yao and Yu Kang and Lu Wang and Pu Zhao and Xin Zhang and Xiaoxing Ma and Qingwei Lin and Saravan Rajmohan and Dongmei Zhang",
+   "source": "http://export.arxiv.org/api/query?id_list=2607.19843"
+  },
+  "yang2026deprepair": {
+   "field": "author",
+   "current": "... Bo Lu and Yao Liu and ... and Saravan Rajmohan (7 names)",
+   "correct": "Shenghao Yang and Bo Lu and Yaochen Liu and Yu Kang and Qiongfang Zhang and Chetan Bansal and Saravan Rajmohan and Minghua Ma (\"Yaochen Liu\", not \"Yao Liu\"; Minghua Ma missing)",
+   "source": "http://export.arxiv.org/api/query?id_list=2607.17957"
+  },
+  "perkins2009clearview": {
+   "field": "author",
+   "current": "6 names",
+   "correct": "Jeff H. Perkins and Sunghun Kim and Sam Larsen and Saman Amarasinghe and Jonathan Bachrach and Michael Carbin and Carlos Pacheco and Frank Sherwood and Stelios Sidiroglou and Greg Sullivan and Weng-Fai Wong and Yoav Zibin and Michael D. Ernst and Martin Rinard",
+   "source": "https://api.crossref.org/works/10.1145/1629575.1629585"
+  },
+  "chen2021codex": {
+   "field": "author",
+   "current": "Mark Chen and Jerry Tworek and Heewoo Jun and (58 authors)",
+   "correct": "Mark Chen and Jerry Tworek and Heewoo Jun and others (58 authors in total); \"(58 authors)\" is parsed by BibTeX as an author name",
+   "source": "http://export.arxiv.org/api/query?id_list=2107.03374"
+  },
+  "hatfielddodds2022schemathesis": {
+   "field": "author",
+   "current": "Zac Hatfield-Dodds, Dmitry Dygalo",
+   "correct": "Zac Hatfield-Dodds and Dmitry Dygalo (the comma makes BibTeX read one author \"Zac Hatfield-Dodds, Dmitry Dygalo\" as Last, First)",
+   "source": "https://api.crossref.org/works/10.1145/3510454.3528637"
+  },
+  "tfdv-2019": {
+   "field": "author",
+   "current": "Eric Breck and Neoklis Polyzotis and Sudip Roy and Steven Euijong Whang and Martin Zinkevich",
+   "correct": "Neoklis Polyzotis and Martin Zinkevich and Sudip Roy and Eric Breck and Steven Whang (proceedings order)",
+   "source": "https://proceedings.mlsys.org/paper_files/paper/2019/hash/928f1160e52192e3e0017fb63ab65391-Abstract.html"
+  },
+  "huang2017grayfailure": {
+   "field": "author",
+   "current": "Peng (Ryan) Huang",
+   "correct": "Peng Huang",
+   "source": "https://api.crossref.org/works/10.1145/3102980.3103005"
+  },
+  "durieux2016itzal": {
+   "field": "year",
+   "current": "2016 (v2 2018)",
+   "correct": "2016 (non-numeric year breaks sorting; revision date belongs in note)",
+   "source": "http://export.arxiv.org/api/query?id_list=1609.06848"
+  },
+  "zhu2026toolmaze": {
+   "field": "title",
+   "current": "When Tools Fail: Benchmarking Dynamic Replanning and Anomaly Recovery in LLM Agents (ToolMaze)",
+   "correct": "When Tools Fail: Benchmarking Dynamic Replanning and Anomaly Recovery in LLM Agents (\"(ToolMaze)\" is not part of the title)",
+   "source": "http://export.arxiv.org/api/query?id_list=2606.05806"
+  },
+  "kong2025npm": {
+   "field": "title",
+   "current": "Towards Better Comprehension of Breaking Changes in the NPM Ecosystem",
+   "correct": "Toward Better Comprehension of Breaking Changes in the NPM Ecosystem (published TOSEM title; arXiv uses \"Towards\")",
+   "source": "https://api.crossref.org/works/10.1145/3702991"
+  },
+  "agentless": {
+   "field": "title",
+   "current": "Agentless: Demystifying LLM-based Software Engineering Agents",
+   "correct": "Demystifying LLM-Based Software Engineering Agents (published FSE/PACMSE title; arXiv title is the current one)",
+   "source": "https://api.crossref.org/works/10.1145/3715754"
+  },
+  "chen2025swexploit": {
+   "field": "title",
+   "current": "Red Teaming Program Repair Agents: When Correct Patches can Hide Vulnerabilities",
+   "correct": "When Correct Patches Become Vulnerable: Red Teaming LLM-Based Program Repair Agents (COLM 2026 title; arXiv title is the current one)",
+   "source": "https://openreview.net/forum?id=WPGbESS31g"
+  },
+  "yao2024taubench": {
+   "field": "year",
+   "current": "2024",
+   "correct": "2025 if cited as the ICLR 2025 paper; 2024 is the arXiv year",
+   "source": "https://openreview.net/forum?id=roNSXZpUDN"
+  },
+  "marginean2019sapfix": {
+   "field": "key/author",
+   "current": "key names Marginean 2019; entry is the 2018 blog by Jia, Mao, Harman",
+   "correct": "Keep the blog under this key (or rename to jia2018sapfixblog) and cite marginean2019sapfix-paper for the ICSE-SEIP paper",
+   "source": "https://engineering.fb.com/2018/09/13/developer-tools/finding-and-fixing-software-bugs-automatically-with-sapfix-and-sapienz/"
+  },
+  "sentry-seer-issue-fix": {
+   "field": "title/url",
+   "current": "Issue Fix (Seer); .../seer/issue-fix",
+   "correct": "Page now titled \"Autofix\"; canonical URL https://docs.sentry.io/product/ai-in-sentry/seer/autofix/",
+   "source": "https://docs.sentry.io/product/ai-in-sentry/seer/issue-fix"
+  }
+ }
+}
