@@ -1,0 +1,9 @@
+{
+  "stream": "EXP-ARMS",
+  "add": {
+    "packages/cli": {
+      "@fiks/attacks": "workspace:*",
+      "@fiks/sandbox": "workspace:*"
+    }
+  }
+}
