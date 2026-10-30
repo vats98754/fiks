@@ -1,0 +1,1 @@
+{"callId":"old","kind":"product","tool":"get_product","args":{"id":"p-9"},"verdict":"violated","propertyIds":["x"],"entities":["p-9"]}

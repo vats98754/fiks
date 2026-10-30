@@ -125,12 +125,18 @@ importers:
       '@fiks/interfaces':
         specifier: workspace:*
         version: link:../interfaces
+      '@fiks/mutate':
+        specifier: workspace:*
+        version: link:../mutate
       '@fiks/proxy':
         specifier: workspace:*
         version: link:../proxy
       '@fiks/repair':
         specifier: workspace:*
         version: link:../repair
+      '@fiks/replay-proc':
+        specifier: workspace:*
+        version: link:../replay-proc
       '@fiks/repro':
         specifier: workspace:*
         version: link:../repro
@@ -146,6 +152,15 @@ importers:
       zod:
         specifier: 4.6.5
         version: 4.6.5
+
+  packages/contract-update:
+    dependencies:
+      '@fiks/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@fiks/interfaces':
+        specifier: workspace:*
+        version: link:../interfaces
 
   packages/contracts: {}
 

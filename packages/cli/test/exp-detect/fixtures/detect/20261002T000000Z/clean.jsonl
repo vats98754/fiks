@@ -1,0 +1,4 @@
+{"callId":"a","kind":"product","tool":"get_product","args":{"id":"p-1"},"verdict":"verified","propertyIds":[],"entities":["p-1"]}
+{"callId":"b","kind":"product","tool":"get_product","args":{"id":"p-2"},"verdict":"verified","propertyIds":[],"entities":["p-2"]}
+{"callId":"c","kind":"category","tool":"search_products","args":{"query":"x"},"verdict":"verified","propertyIds":[],"entities":["p-1","p-2","p-3"]}
+{"callId":"d","kind":"product","tool":"get_product","args":{"id":"p-3"},"verdict":"violated","propertyIds":["shop.get_product/price.range"],"entities":["p-3"]}
