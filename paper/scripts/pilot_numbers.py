@@ -210,6 +210,24 @@ def build():
     sens = dict((t, (v['c'] + S['Bd']['noAnswerByTask'].get(t, 0), v['n'])) for t, v in S['Bd']['perTask'].items())
     M['pFiveBdSens'] = fmt_pct(pass_hat_k(sens, 5))
 
+    # Statistics restated (task is the unit)
+    M['runToRunPts'] = f"{100 * abs(S['Bdold']['passk'][4] - S['Bd']['passk'][4]):.1f}"
+    n_t = len(S['B']['perTask'])
+    min_split = next((k for k in range(1, n_t + 1) if sign_test_two_sided(k, 0) < 0.05), None)
+    M['minSplitForSig'] = str(min_split) if min_split else 'none'
+    M['minSplitP'] = f"{sign_test_two_sided(min_split, 0):.3f}" if min_split else 'n/a'
+
+    def t3_declines_correct(key):
+        trials = load_run(RUNS[key])[1]
+        pt = {}
+        for t in trials:
+            ok = t['pass'] or (t['taskId'] == 'T3' and t['outcome'] == 'declined')
+            c, n = pt.get(t['taskId'], (0, 0))
+            pt[t['taskId']] = (c + (1 if ok else 0), n + 1)
+        return pass_hat_k(pt, 5)
+    M['pFiveBTthree'] = fmt_pct(t3_declines_correct('B'))
+    M['pFiveBdTthree'] = fmt_pct(t3_declines_correct('Bd'))
+
     # Loop (D1-D5)
     costs = [r['costUsd'] for r in repairs]
     turns = sorted(r['turns'] for r in repairs)
