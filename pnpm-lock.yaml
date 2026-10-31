@@ -113,6 +113,9 @@ importers:
 
   packages/cli:
     dependencies:
+      '@fiks/attacks':
+        specifier: workspace:*
+        version: link:../attacks
       '@fiks/bench':
         specifier: workspace:*
         version: link:../bench
@@ -140,6 +143,9 @@ importers:
       '@fiks/repro':
         specifier: workspace:*
         version: link:../repro
+      '@fiks/sandbox':
+        specifier: workspace:*
+        version: link:../sandbox
       '@fiks/vendor-api':
         specifier: workspace:*
         version: link:../vendor-api

@@ -9,6 +9,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@fiks/attacks": "workspace:*",
     "@fiks/bench": "workspace:*",
     "@fiks/contracts": "workspace:*",
     "@fiks/domains": "workspace:*",
@@ -18,6 +19,7 @@
     "@fiks/repair": "workspace:*",
     "@fiks/replay-proc": "workspace:*",
     "@fiks/repro": "workspace:*",
+    "@fiks/sandbox": "workspace:*",
     "@fiks/vendor-api": "workspace:*",
     "@fiks/vendor-tracker": "workspace:*",
     "@modelcontextprotocol/sdk": "1.32.0",
