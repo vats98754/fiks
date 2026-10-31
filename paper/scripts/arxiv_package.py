@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the arXiv submission: plain-text abstract (numbers substituted from generated/pilot.tex),
+"""Build the arXiv submission: plain-text abstract (numbers substituted from generated/pilot.tex and exp-*.tex),
 metadata, and a source tarball (main.tex + main.bbl + generated/*.tex) that compiles without bibtex.
 
 Usage: python3 paper/scripts/arxiv_package.py   (run after latexmk has produced main.bbl)
@@ -9,7 +9,11 @@ import os, re, shutil, subprocess, sys, tarfile, tempfile
 P = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 OUT = os.path.join(P, 'arxiv')
 
-macros = dict(re.findall(r'\\newcommand\{\\(\w+)\}\{([^}]*)\}', open(os.path.join(P, 'generated', 'pilot.tex')).read()))
+macros = {}
+for _f in ('pilot.tex', 'exp-detect.tex', 'exp-ablation.tex', 'exp-inject.tex'):
+    _p = os.path.join(P, 'generated', _f)
+    if os.path.exists(_p):
+        macros.update(re.findall(r'\\newcommand\{\\(\w+)\}\{([^}]*)\}', open(_p).read()))
 tex = open(os.path.join(P, 'main.tex')).read()
 abs_tex = tex[tex.index('\\begin{abstract}') + 16:tex.index('\\end{abstract}')]
 t = abs_tex.replace('\\fiks{}', 'fiks').replace('\\fiks', 'fiks')
