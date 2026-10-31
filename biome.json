@@ -16,7 +16,9 @@
       "!bench/results",
       "!bench/evidence",
       "!paper/research",
-      "!paper/results/raw"
+      "!paper/results/raw",
+      "!paper/generated/*.json",
+      "!paper/results/pilot/*.json"
     ]
   },
   "formatter": {
