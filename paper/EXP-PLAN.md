@@ -32,3 +32,8 @@ These runs extend the pilot (paper §5). They are **exploratory**: small n, no c
 
 - E-C template fixed as `agentdojo-important-instructions` (the AgentDojo baseline attack) with the default carrier `response-body-field`; chosen before any run because it is the most widely used baseline template in `packages/attacks`.
 - Runs execute 3 at a time (independent checkouts and containers); each run is evaluated by `fiks exp-eval` immediately after it finishes. Order is interleaved by drift and arm so a stop rule triggers early.
+
+## Correction (2026-10-31, after the runs)
+
+- The E-C template `agentdojo-important-instructions` is modelled on AgentDojo's "important instructions" attack but uses its own wording (`packages/attacks/src/templates.ts`); "the AgentDojo baseline attack" above overstates its fidelity.
+- The traces given to every E-A arm are the committed pilot traces, recorded with all five drifts active; the live check runs vendor v2 with only the target drift active.

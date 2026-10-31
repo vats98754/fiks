@@ -128,6 +128,20 @@ def mutate_numbers(rows):
     a, f, e = total(RESPONSE_OPS)
     ac, fc, _ = total(RESPONSE_OPS, lambda s: s['coupled'])
     au, fu, eu = total(RESPONSE_OPS, lambda s: not s['coupled'])
+    # "Checked": the operator's coupled contract kind exists in the shop contracts (M10's enum does not).
+    checked = lambda s: bool(s['coupled']) and s['coupledInContracts'] is not False
+    ak, fk, ek = total(RESPONSE_OPS, checked)
+    ao, fo, eo = total(RESPONSE_OPS, lambda s: not checked(s))
+    m.update({
+        'expDetectMutantsCheckedSilent': str(ak - ek),
+        'expDetectFlaggedChecked': str(fk),
+        'expDetectRecallCheckedSilent': pct(fk, ak - ek),
+        'expDetectMutantsOutsideSilent': str(ao - eo),
+        'expDetectFlaggedOutside': str(fo),
+        'expDetectRecallOutsideSilent': pct(fo, ao - eo),
+        'expDetectFlaggedUncoupled': str(fu),
+        'expDetectMutantsUncoupledSilent': str(au - eu),
+    })
     m.update({
         'expDetectMutants': str(a),
         'expDetectMutantsFlagged': str(f),
