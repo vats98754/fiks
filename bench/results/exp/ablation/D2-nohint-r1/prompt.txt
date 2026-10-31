@@ -1,0 +1,103 @@
+You are fixing a bug in shop-mcp, an MCP server that wraps a vendor HTTP API.
+
+## What broke (captured from real traffic)
+Tool call: get_product({"id":"p-1001"})
+Violated contract properties:
+- shop.get_product/price.notNull: price is null, but p-1001 should have one
+
+Upstream HTTP during that call (recorded):
+GET /products/p-1001 -> 200
+  vendor-api-version: 2026-10-01
+  {"id":"p-1001","name":"Aero 14 Laptop","category":"laptop","currency":"USD","stock":12,"unit_amount":1199}
+
+## The failing reproduction test
+test/repro/tr_079b90c89e.test.ts replays that exact call against the recording and fails:
+AssertionError: shop.get_product/price.notNull violated (/Users/anvayvats/fiks-wt/RUNS/.work/exp/D2-nohint-r1-20261031T010346Z-4add-try0/test/repro/tr_079b90c89e.json): expected [ Array(1) ] to deeply equal []
+    at expectRecordingHolds (/Users/anvayvats/fiks-wt/RUNS/.work/exp/D2-nohint-r1-20261031T010346Z-4add-try0/test/fiks/check.ts:79:53)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at /Users/anvayvats/fiks-wt/RUNS/.work/exp/D2-nohint-r1-20261031T010346Z-4add-try0/test/repro/tr_079b90c89e.test.ts:12:3
+    at async file:///Users/anvayvats/fiks-wt/RUNS/.work/exp/D2-nohint-r1-20261031T010346Z-4add-try0/node_modules/.pnpm/vitest@5.0.3_@types+node@22.20.5_vite@8.3.4_@types+node@22.20.5_esbuild@0.28.2_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BTlFXlnv.js:2783:20
+
+## The contract for get_product
+{
+  "id": "shop.get_product",
+  "tool": "get_product",
+  "invariants": [
+    {
+      "id": "price.notNull",
+      "kind": "notNull",
+      "path": "price",
+      "onlyKnownGood": true
+    },
+    {
+      "id": "price.range",
+      "kind": "range",
+      "path": "price",
+      "min": 20,
+      "max": 2000,
+      "unit": "USD"
+    }
+  ],
+  "knownGoodInputs": [
+    {
+      "id": "p-1001"
+    },
+    {
+      "id": "p-1002"
+    },
+    {
+      "id": "p-1003"
+    },
+    {
+      "id": "p-1004"
+    },
+    {
+      "id": "p-1005"
+    },
+    {
+      "id": "p-1006"
+    },
+    {
+      "id": "p-1007"
+    },
+    {
+      "id": "p-1008"
+    },
+    {
+      "id": "p-1101"
+    },
+    {
+      "id": "p-1102"
+    },
+    {
+      "id": "p-1103"
+    },
+    {
+      "id": "p-1104"
+    },
+    {
+      "id": "p-1105"
+    },
+    {
+      "id": "p-1106"
+    },
+    {
+      "id": "p-1107"
+    }
+  ]
+}
+
+## Useful files
+- src/tools/*.ts: one file per tool. src/vendor.ts: the HTTP client.
+- vendor/openapi.json: the vendor's published spec (it did not change).
+
+## Rules
+- Change only files under src/. Do not edit tests, fixtures, traces, vendored files, CI, package.json or the lockfile.
+- Fix the root cause so the tool returns correct data. Do not return an error instead of data, do not invent or cache values, and do not hide the problem.
+- Keep the old vendor version working: the v1 fixtures must keep producing exactly the same output.
+- Check your work with: pnpm typecheck, pnpm lint, pnpm test. Only these pnpm commands are allowed.
+- Keep the change small and in the style of the surrounding code.
+
+When you are done, reply in exactly this form:
+Subject: <an imperative commit subject, at most 60 characters, e.g. "read unit_amount when price is missing">
+<one short paragraph: the root cause and the fix>

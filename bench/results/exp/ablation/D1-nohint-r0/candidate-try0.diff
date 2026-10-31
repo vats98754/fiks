@@ -1,0 +1,38 @@
+diff --git a/src/tools/search_products.ts b/src/tools/search_products.ts
+index 1e4cbf6..6451e19 100644
+--- a/src/tools/search_products.ts
++++ b/src/tools/search_products.ts
+@@ -1,6 +1,6 @@
+ import { z } from 'zod';
+ import { ok } from '../result.ts';
+-import type { VendorClient } from '../vendor.ts';
++import { priceToDollars, type VendorClient } from '../vendor.ts';
+ 
+ export const name = 'search_products';
+ 
+@@ -44,7 +44,7 @@ export async function handler(args: { query: string }, vendor: VendorClient) {
+     id: p.id,
+     name: p.name,
+     category: p.category,
+-    price: p.price,
++    price: priceToDollars(res, p.price),
+     currency: p.currency,
+   }));
+   return ok({ items, count: items.length, total: body.total });
+diff --git a/src/vendor.ts b/src/vendor.ts
+index 646409e..ddf935d 100644
+--- a/src/vendor.ts
++++ b/src/vendor.ts
+@@ -9,6 +9,12 @@ export interface VendorClient {
+   post(path: string, body: unknown, headers?: Record<string, string>): Promise<VendorResponse>;
+ }
+ 
++/** Vendor API 2026-10-01 and later report prices in cents instead of dollars. */
++export function priceToDollars(res: VendorResponse, price: number): number {
++  const version = res.headers.get('vendor-api-version') ?? '';
++  return version >= '2026-10-01' ? price / 100 : price;
++}
++
+ export function createVendorClient(
+   baseUrl = process.env.VENDOR_BASE_URL ?? 'http://127.0.0.1:4010',
+ ): VendorClient {

@@ -1,0 +1,44 @@
+diff --git a/src/tools/get_product.ts b/src/tools/get_product.ts
+index f3db241..ed0a130 100644
+--- a/src/tools/get_product.ts
++++ b/src/tools/get_product.ts
+@@ -23,6 +23,8 @@ interface VendorProduct {
+   name: string;
+   category: string;
+   price?: number | null;
++  /** Vendor API 2026-10-01 sends the unit price here instead of `price`. */
++  unit_amount?: number | null;
+   currency: string;
+   stock: number;
+ }
+@@ -35,7 +37,7 @@ export async function handler(args: { id: string }, vendor: VendorClient) {
+     id: p.id,
+     name: p.name,
+     category: p.category,
+-    price: p.price ?? null,
++    price: p.price ?? p.unit_amount ?? null,
+     currency: p.currency,
+     in_stock: p.stock > 0,
+   });
+diff --git a/src/tools/search_products.ts b/src/tools/search_products.ts
+index 1e4cbf6..f50f605 100644
+--- a/src/tools/search_products.ts
++++ b/src/tools/search_products.ts
+@@ -34,6 +34,8 @@ interface VendorProduct {
+   name: string;
+   category: string;
+   price: number;
++  /** Vendor API 2026-10-01 sends the unit price here instead of `price`. */
++  unit_amount?: number;
+   currency: string;
+ }
+ 
+@@ -44,7 +46,7 @@ export async function handler(args: { query: string }, vendor: VendorClient) {
+     id: p.id,
+     name: p.name,
+     category: p.category,
+-    price: p.price,
++    price: p.price ?? p.unit_amount,
+     currency: p.currency,
+   }));
+   return ok({ items, count: items.length, total: body.total });

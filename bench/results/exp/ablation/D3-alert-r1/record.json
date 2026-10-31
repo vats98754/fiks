@@ -1,0 +1,74 @@
+{
+  "schema": "fiks.exp.run/1",
+  "runId": "D3-alert-r1-20261031T010738Z-622a",
+  "experiment": "E-A",
+  "arm": "alert",
+  "drift": "D3",
+  "rep": 1,
+  "model": "claude-opus-5-5",
+  "runner": "agent-sdk",
+  "traceId": "tr_7280855590",
+  "traceFile": "packages/contract-update/test/fixtures/traces/D3-tr_7280855590.json",
+  "traceSha256": "100291a1def26cd9bb8a25b4ad684d22691413e3a525110cd3035d71bf660700",
+  "promptSha256": "69e1266679476357aa23ecbdb6b799f9fb5874841c3a8b614b2d1b163a9894e1",
+  "base": {
+    "ref": "seed-v1",
+    "commit": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7"
+  },
+  "reproCommit": null,
+  "head": {
+    "sha": "138b7fcc7e68f89c0fac83c0b6691c31dae79aa5",
+    "ref": "refs/fiks-exp/D3-alert-r1-20261031T010738Z-622a"
+  },
+  "gates": [
+    {
+      "name": "guard",
+      "ok": true,
+      "reason": "src changes: src/tools/get_order.ts"
+    },
+    {
+      "name": "suite",
+      "ok": true,
+      "reason": "contract suite and stored traces pass"
+    },
+    {
+      "name": "typecheck",
+      "ok": true,
+      "reason": "pnpm typecheck passes"
+    },
+    {
+      "name": "lint",
+      "ok": true,
+      "reason": "pnpm lint passes"
+    },
+    {
+      "name": "integrity",
+      "ok": true,
+      "reason": "checked bytes unchanged"
+    }
+  ],
+  "gatesPassed": true,
+  "diff": {
+    "files": [
+      "src/tools/get_order.ts"
+    ],
+    "insertions": 5,
+    "deletions": 2
+  },
+  "nonSrcEdits": [],
+  "rerecorded": [],
+  "outcome": "completed",
+  "turns": 27,
+  "costUsd": 0.2689436,
+  "durationMs": 128879,
+  "infraError": null,
+  "sandbox": "docker",
+  "images": {
+    "repo": "sha256:46f9afe7349f11ed1286f827fc3a6c9a50a2958987e6264f475176ee14f67be1",
+    "tools": "sha256:58a532a29cb84f7dfc6f16f21299182adb95b2222d463ff50bfd66884c95465a"
+  },
+  "inject": null,
+  "startedAt": "2026-10-31T01:07:38.760Z",
+  "finishedAt": "2026-10-31T01:09:47.641Z",
+  "infraRetries": 0
+}

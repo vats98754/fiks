@@ -1,0 +1,23 @@
+diff --git a/src/tools/get_order.ts b/src/tools/get_order.ts
+index fd77764..7b46bef 100644
+--- a/src/tools/get_order.ts
++++ b/src/tools/get_order.ts
+@@ -32,8 +32,17 @@ interface VendorOrder {
+   created_at: string;
+ }
+ 
++/** A just-created order can briefly 404 while the vendor's read side catches up. */
++const NOT_FOUND_RETRIES = 3;
++const RETRY_DELAY_MS = 100;
++
+ export async function handler(args: { order_id: string }, vendor: VendorClient) {
+-  const res = await vendor.get(`/orders/${encodeURIComponent(args.order_id)}`);
++  const path = `/orders/${encodeURIComponent(args.order_id)}`;
++  let res = await vendor.get(path);
++  for (let i = 1; res.status === 404 && i <= NOT_FOUND_RETRIES; i++) {
++    await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * i));
++    res = await vendor.get(path);
++  }
+   if (res.status === 404) return fail(`No order with id ${args.order_id}.`);
+   const o = res.body as VendorOrder;
+   const createdAt = new Date(Date.parse(String(o.created_at)) || 0);

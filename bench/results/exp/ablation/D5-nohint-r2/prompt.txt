@@ -1,0 +1,64 @@
+You are fixing a bug in shop-mcp, an MCP server that wraps a vendor HTTP API.
+
+## What broke (captured from real traffic)
+Tool call: get_order({"order_id":"o-5001"})
+Violated contract properties:
+- shop.get_order/created_at.freshness: created_at shows 1970-01-01, 20744 days old
+- shop.get_order/created_at.equalsUpstream: created_at shows 1970-01-01 but upstream sent 2026-10-16T09:27Z
+
+Upstream HTTP during that call (recorded):
+GET /orders/o-5001 -> 200
+  vendor-api-version: 2026-10-01
+  {"id":"o-5001","status":"confirmed","items":[{"product_id":"p-1005","quantity":2,"unit_price":329}],"total":658,"created_at":1792142857943}
+
+## The failing reproduction test
+test/repro/tr_4db46c86e4.test.ts replays that exact call against the recording and fails:
+AssertionError: shop.get_order/created_at.freshness, shop.get_order/created_at.equalsUpstream violated (/Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-nohint-r2-20261031T012419Z-4d8d-try0/test/repro/tr_4db46c86e4.json): expected [ …(2) ] to deeply equal []
+    at expectRecordingHolds (/Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-nohint-r2-20261031T012419Z-4d8d-try0/test/fiks/check.ts:79:53)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at /Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-nohint-r2-20261031T012419Z-4d8d-try0/test/repro/tr_4db46c86e4.test.ts:13:3
+    at async file:///Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-nohint-r2-20261031T012419Z-4d8d-try0/node_modules/.pnpm/vitest@5.0.3_@types+node@22.20.5_vite@8.3.4_@types+node@22.20.5_esbuild@0.28.2_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BTlFXlnv.js:2783:20
+
+## The contract for get_order
+{
+  "id": "shop.get_order",
+  "tool": "get_order",
+  "invariants": [
+    {
+      "id": "created_at.freshness",
+      "kind": "freshness",
+      "path": "created_at",
+      "maxAgeDays": 365,
+      "maxFutureDays": 1
+    },
+    {
+      "id": "created_at.equalsUpstream",
+      "kind": "equalsUpstream",
+      "path": "created_at",
+      "upstreamPath": "created_at",
+      "compare": "instant"
+    },
+    {
+      "id": "total.range",
+      "kind": "range",
+      "path": "total",
+      "min": 0.5,
+      "unit": "USD"
+    }
+  ]
+}
+
+## Useful files
+- src/tools/*.ts: one file per tool. src/vendor.ts: the HTTP client.
+- vendor/openapi.json: the vendor's published spec (it did not change).
+
+## Rules
+- Change only files under src/. Do not edit tests, fixtures, traces, vendored files, CI, package.json or the lockfile.
+- Fix the root cause so the tool returns correct data. Do not return an error instead of data, do not invent or cache values, and do not hide the problem.
+- Keep the old vendor version working: the v1 fixtures must keep producing exactly the same output.
+- Check your work with: pnpm typecheck, pnpm lint, pnpm test. Only these pnpm commands are allowed.
+- Keep the change small and in the style of the surrounding code.
+
+When you are done, reply in exactly this form:
+Subject: <an imperative commit subject, at most 60 characters, e.g. "read unit_amount when price is missing">
+<one short paragraph: the root cause and the fix>

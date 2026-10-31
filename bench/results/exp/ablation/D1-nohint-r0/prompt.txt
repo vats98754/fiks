@@ -1,0 +1,84 @@
+You are fixing a bug in shop-mcp, an MCP server that wraps a vendor HTTP API.
+
+## What broke (captured from real traffic)
+Tool call: search_products({"query":"laptop"})
+Violated contract properties:
+- shop.search_products/items.price.range: 4 of 4 prices outside 20-2000 USD (p-1001 = 119900)
+
+Upstream HTTP during that call (recorded):
+GET /products?q=laptop -> 200
+  vendor-api-version: 2026-10-01
+  {"items":[{"id":"p-1001","name":"Aero 14 Laptop","category":"laptop","currency":"USD","stock":12,"price":119900},{"id":"p-1002","name":"Volt 13 Laptop","category":"laptop","currency":"USD","stock":30,"price":89900},{"id":"p-1003","name":"Titan 16 Laptop","category":"laptop","currency":"USD","stock":4,"price":149900},{"id":"p-1004","name":"Nimbus 15 Laptop","category":"laptop","currency":"USD","stock":18,"price":74950}],"total":4,"next_cursor":null}
+
+## The failing reproduction test
+test/repro/tr_b47c5b77c6.test.ts replays that exact call against the recording and fails:
+AssertionError: shop.search_products/items.price.range violated (/Users/anvayvats/fiks-wt/RUNS/.work/exp/D1-nohint-r0-20261031T004802Z-10f1-try0/test/repro/tr_b47c5b77c6.json): expected [ Array(1) ] to deeply equal []
+    at expectRecordingHolds (/Users/anvayvats/fiks-wt/RUNS/.work/exp/D1-nohint-r0-20261031T004802Z-10f1-try0/test/fiks/check.ts:79:53)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at /Users/anvayvats/fiks-wt/RUNS/.work/exp/D1-nohint-r0-20261031T004802Z-10f1-try0/test/repro/tr_b47c5b77c6.test.ts:12:3
+    at async file:///Users/anvayvats/fiks-wt/RUNS/.work/exp/D1-nohint-r0-20261031T004802Z-10f1-try0/node_modules/.pnpm/vitest@5.0.3_@types+node@22.20.5_vite@8.3.4_@types+node@22.20.5_esbuild@0.28.2_tsx@4.23.15_/node_modules/vitest/dist/chunks/run.BTlFXlnv.js:2783:20
+
+## The contract for search_products
+{
+  "id": "shop.search_products",
+  "tool": "search_products",
+  "invariants": [
+    {
+      "id": "items.price.range",
+      "kind": "range",
+      "path": "items[*].price",
+      "min": 20,
+      "max": 2000,
+      "unit": "USD"
+    },
+    {
+      "id": "countMatchesTotal",
+      "kind": "countMatchesTotal",
+      "itemsPath": "items",
+      "totalPath": "total"
+    },
+    {
+      "id": "total.equalsUpstream",
+      "kind": "equalsUpstream",
+      "path": "total",
+      "upstreamPath": "total"
+    },
+    {
+      "id": "items.id.unique",
+      "kind": "unique",
+      "path": "items[*].id"
+    },
+    {
+      "id": "items.nonEmpty",
+      "kind": "nonEmpty",
+      "path": "items",
+      "onlyKnownGood": true
+    }
+  ],
+  "knownGoodInputs": [
+    {
+      "query": "laptop"
+    },
+    {
+      "query": "monitor"
+    },
+    {
+      "query": "cable"
+    }
+  ]
+}
+
+## Useful files
+- src/tools/*.ts: one file per tool. src/vendor.ts: the HTTP client.
+- vendor/openapi.json: the vendor's published spec (it did not change).
+
+## Rules
+- Change only files under src/. Do not edit tests, fixtures, traces, vendored files, CI, package.json or the lockfile.
+- Fix the root cause so the tool returns correct data. Do not return an error instead of data, do not invent or cache values, and do not hide the problem.
+- Keep the old vendor version working: the v1 fixtures must keep producing exactly the same output.
+- Check your work with: pnpm typecheck, pnpm lint, pnpm test. Only these pnpm commands are allowed.
+- Keep the change small and in the style of the surrounding code.
+
+When you are done, reply in exactly this form:
+Subject: <an imperative commit subject, at most 60 characters, e.g. "read unit_amount when price is missing">
+<one short paragraph: the root cause and the fix>

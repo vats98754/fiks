@@ -1,0 +1,1 @@
+D5-alert-r2, first attempt (2026-10-30 21:24 local): the exp-repair process crashed in host cleanup (EACCES on rmdir of the checkout .git, transient; the directory was owner-writable afterwards) before writing record.json. Counted as one infra attempt; the run was repeated once with the same settings. Kept here, not counted.

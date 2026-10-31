@@ -1,0 +1,22 @@
+diff --git a/src/tools/get_order.ts b/src/tools/get_order.ts
+index fd77764..e7e20f0 100644
+--- a/src/tools/get_order.ts
++++ b/src/tools/get_order.ts
+@@ -29,14 +29,15 @@ interface VendorOrder {
+   status: string;
+   items: { product_id: string; quantity: number; unit_price: number }[];
+   total: number;
+-  created_at: string;
++  // ISO-8601 string (2026-01-01) or epoch milliseconds (2026-10-01).
++  created_at: string | number;
+ }
+ 
+ export async function handler(args: { order_id: string }, vendor: VendorClient) {
+   const res = await vendor.get(`/orders/${encodeURIComponent(args.order_id)}`);
+   if (res.status === 404) return fail(`No order with id ${args.order_id}.`);
+   const o = res.body as VendorOrder;
+-  const createdAt = new Date(Date.parse(String(o.created_at)) || 0);
++  const createdAt = new Date(typeof o.created_at === 'number' ? o.created_at : Date.parse(o.created_at) || 0);
+   return ok({
+     order_id: o.id,
+     status: o.status,

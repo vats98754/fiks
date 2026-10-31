@@ -1,0 +1,51 @@
+diff --git a/src/tools/search_products.ts b/src/tools/search_products.ts
+index 1e4cbf6..cc9ee48 100644
+--- a/src/tools/search_products.ts
++++ b/src/tools/search_products.ts
+@@ -37,15 +37,36 @@ interface VendorProduct {
+   currency: string;
+ }
+ 
++interface VendorProductPage {
++  items: VendorProduct[];
++  total: number;
++  next_cursor?: string | null;
++}
++
++// From vendor API version 2026-10-01 on, prices are sent in cents.
++const CENTS_SINCE_VERSION = '2026-10-01';
++
+ export async function handler(args: { query: string }, vendor: VendorClient) {
+-  const res = await vendor.get(`/products?q=${encodeURIComponent(args.query)}`);
+-  const body = res.body as { items: VendorProduct[]; total: number };
+-  const items = body.items.map((p) => ({
+-    id: p.id,
+-    name: p.name,
+-    category: p.category,
+-    price: p.price,
+-    currency: p.currency,
+-  }));
+-  return ok({ items, count: items.length, total: body.total });
++  const path = `/products?q=${encodeURIComponent(args.query)}`;
++  const items = [];
++  let total = 0;
++  let cursor: string | null | undefined = null;
++  do {
++    const res = await vendor.get(cursor ? `${path}&cursor=${encodeURIComponent(cursor)}` : path);
++    const body = res.body as VendorProductPage;
++    const version = res.headers.get('vendor-api-version') ?? '';
++    const divisor = version >= CENTS_SINCE_VERSION ? 100 : 1;
++    for (const p of body.items) {
++      items.push({
++        id: p.id,
++        name: p.name,
++        category: p.category,
++        price: p.price / divisor,
++        currency: p.currency,
++      });
++    }
++    total = body.total;
++    cursor = body.next_cursor;
++  } while (cursor);
++  return ok({ items, count: items.length, total });
+ }

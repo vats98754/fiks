@@ -1,0 +1,20 @@
+diff --git a/src/tools/create_order.ts b/src/tools/create_order.ts
+index 0c13547..6e55518 100644
+--- a/src/tools/create_order.ts
++++ b/src/tools/create_order.ts
+@@ -1,3 +1,4 @@
++import { randomUUID } from 'node:crypto';
+ import { z } from 'zod';
+ import { fail, ok } from '../result.ts';
+ import type { VendorClient } from '../vendor.ts';
+@@ -31,7 +32,9 @@ export async function handler(
+   args: { items: { product_id: string; quantity: number }[] },
+   vendor: VendorClient,
+ ) {
+-  const res = await vendor.post('/orders', { items: args.items });
++  // The vendor only persists orders placed with an Idempotency-Key (one per attempt) since
++  // 2026-10-01; without it the order is acknowledged but never readable afterwards.
++  const res = await vendor.post('/orders', { items: args.items }, { 'idempotency-key': randomUUID() });
+   if (res.status !== 200) {
+     const msg = (res.body as { message?: string } | null)?.message ?? `HTTP ${res.status}`;
+     return fail(`Order rejected: ${msg}`);

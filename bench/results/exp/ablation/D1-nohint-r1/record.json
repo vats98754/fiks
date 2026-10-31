@@ -1,0 +1,84 @@
+{
+  "schema": "fiks.exp.run/1",
+  "runId": "D1-nohint-r1-20261031T010126Z-b0d0",
+  "experiment": "E-A",
+  "arm": "nohint",
+  "drift": "D1",
+  "rep": 1,
+  "model": "claude-opus-5-5",
+  "runner": "agent-sdk",
+  "traceId": "tr_b47c5b77c6",
+  "traceFile": "packages/contract-update/test/fixtures/traces/D1-tr_b47c5b77c6.json",
+  "traceSha256": "02474787904e47675761ed6afb93883c8cf5cadc844ce8cdcbc449aafac5b687",
+  "promptSha256": "bd08d76791fc6c6ea54c285e99048325b1147682b470d6ce723a5604840ad4f4",
+  "base": {
+    "ref": "seed-v1",
+    "commit": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7"
+  },
+  "reproCommit": "2f3fb6b1294ca83933f3414c63353ce9c3d292b1",
+  "head": {
+    "sha": "c5eca1558a98f0efd30d0162998cb621da5dbbaa",
+    "ref": "refs/fiks-exp/D1-nohint-r1-20261031T010126Z-b0d0"
+  },
+  "gates": [
+    {
+      "name": "F",
+      "ok": true,
+      "reason": "fails for the stated reason on 3/3 runs"
+    },
+    {
+      "name": "guard",
+      "ok": true,
+      "reason": "src changes: src/tools/search_products.ts"
+    },
+    {
+      "name": "repro",
+      "ok": true,
+      "reason": "repro test ran and passed"
+    },
+    {
+      "name": "suite",
+      "ok": true,
+      "reason": "contract suite and stored traces pass"
+    },
+    {
+      "name": "typecheck",
+      "ok": true,
+      "reason": "pnpm typecheck passes"
+    },
+    {
+      "name": "lint",
+      "ok": true,
+      "reason": "pnpm lint passes"
+    },
+    {
+      "name": "integrity",
+      "ok": true,
+      "reason": "checked bytes unchanged"
+    }
+  ],
+  "gatesPassed": true,
+  "diff": {
+    "files": [
+      "src/tools/search_products.ts"
+    ],
+    "insertions": 4,
+    "deletions": 1
+  },
+  "nonSrcEdits": [],
+  "rerecorded": [],
+  "outcome": "completed",
+  "turns": 16,
+  "costUsd": 0.1601446,
+  "durationMs": 77177,
+  "infraError": null,
+  "sandbox": "docker",
+  "images": {
+    "repo": "sha256:46f9afe7349f11ed1286f827fc3a6c9a50a2958987e6264f475176ee14f67be1",
+    "tools": "sha256:58a532a29cb84f7dfc6f16f21299182adb95b2222d463ff50bfd66884c95465a"
+  },
+  "inject": null,
+  "startedAt": "2026-10-31T01:01:26.671Z",
+  "finishedAt": "2026-10-31T01:02:43.850Z",
+  "infraRetries": 0
+}
