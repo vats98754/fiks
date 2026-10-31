@@ -37,3 +37,13 @@ These runs extend the pilot (paper §5). They are **exploratory**: small n, no c
 
 - The E-C template `agentdojo-important-instructions` is modelled on AgentDojo's "important instructions" attack but uses its own wording (`packages/attacks/src/templates.ts`); "the AgentDojo baseline attack" above overstates its fidelity.
 - The traces given to every E-A arm are the committed pilot traces, recorded with all five drifts active; the live check runs vendor v2 with only the target drift active.
+
+## Addendum E-A2: ALERT+ arm (2026-10-31, written before any ALERT+ run)
+
+Motivation: in E-A the ALERT gates passed patches that failed the live check, while the FIKS and NOHINT gates agreed with the live check. ALERT differs from FIKS both in what the agent sees (no contract, no repro test, no hints) and in the gates (no replay of the triggering call). ALERT+ separates the gate difference from the input difference.
+
+- **Arm ALERT+:** the ALERT prompt byte for byte (same builder, same inputs; the run records' `promptSha256` per drift must equal ALERT's). The agent never sees a repro test: before the attempt fiks runs the F gate on seed-v1 and then removes the generated files from the checkout. After the attempt, fiks generates the repro test for the trace, commits it on top of the start commit, and runs it as a gate together with the ALERT gates: guard, re-record if stale, **repro (P)**, suite, typecheck, lint, integrity. The head keeps only the agent's `src/` bytes and fiks re-recordings outside `test/repro/` (as in ALERT); exp-eval adds its own held-out repro as for every arm.
+- **One attempt, no feedback:** as in every E-A arm, a failed gate is not reported back to the agent. The added gate therefore cannot change the patches, only which patches pass. ALERT+ patches are new samples from the ALERT prompt.
+- **Runs:** D1–D5 × 3 reps = 15, same model, caps, sandbox and tools image as E-A (`FIKS_TOOLS_IMAGE` pinned to the E-A image).
+- **Readouts (descriptive):** (1) runs whose gates pass and whose live check fails, ALERT+ vs ALERT (does a trigger-replay gate stop them?); (2) runs whose gates fail and whose live check passes (does it block good patches?); (3) live-check success of ALERT+, and FIKS vs ALERT+ by exact sign test over drifts; (4) ALERT and ALERT+ pooled as 30 samples of the ALERT prompt, reported in addition, never instead of the per-arm numbers.
+- Stop rules as above. No other arm is re-run.
