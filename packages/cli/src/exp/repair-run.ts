@@ -371,7 +371,8 @@ async function runOnce(
             ? `re-recorded: ${rr.files.join(', ') || 'nothing'}`
             : `re-recording failed: ${rr.output.slice(-500)}`,
         });
-        const kept = rr.files.filter((f) => !hiddenPaths.includes(f));
+        // ALERT+ keeps no test/repro files: not the hidden repro, nor a re-recording of its call.
+        const kept = hiddenPaths.length ? rr.files.filter((f) => !f.startsWith('test/repro/')) : rr.files;
         for (const f of kept) owned[f] = readFileSync(join(dir, f));
         record.rerecorded = kept;
         suite = await runSuiteIn(sb);

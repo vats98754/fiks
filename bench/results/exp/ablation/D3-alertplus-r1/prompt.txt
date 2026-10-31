@@ -1,0 +1,34 @@
+You are fixing a bug in shop-mcp, an MCP server that wraps a vendor HTTP API.
+
+## Alert from production monitoring
+A monitor in front of shop-mcp flagged this tool call. The agent that made the call was told:
+[fiks] VIOLATED create_order: not found on read-back: get_order o-5002 returned an error. Do not tell the user it succeeded or retry without asking; say it is unconfirmed.
+
+Tool call: create_order({"items":[{"product_id":"p-1004","quantity":2}]})
+Violated properties:
+- shop.create_order/readAfterWrite: not found on read-back: get_order o-5002 returned an error
+
+What shop-mcp returned:
+{"order_id":"o-5002","status":"confirmed","total":1499}
+
+Upstream HTTP during that call (recorded):
+POST /orders -> 200
+  vendor-api-version: 2026-10-01
+  {"id":"o-5002","status":"confirmed","items":[{"product_id":"p-1004","quantity":2,"unit_price":749.5}],"total":1499,"created_at":1792315539045}
+Read-back probe get_order({"order_id":"o-5002"}):
+GET /orders/o-5002 -> 404
+
+## Useful files
+- src/tools/*.ts: one file per tool. src/vendor.ts: the HTTP client.
+- vendor/openapi.json: the vendor's published spec (it did not change).
+
+## Rules
+- Change only files under src/. Do not edit tests, fixtures, traces, vendored files, CI, package.json or the lockfile.
+- Fix the root cause so the tool returns correct data. Do not return an error instead of data, do not invent or cache values, and do not hide the problem.
+- Keep the old vendor version working: the v1 fixtures must keep producing exactly the same output.
+- Check your work with: pnpm typecheck, pnpm lint, pnpm test. Only these pnpm commands are allowed.
+- Keep the change small and in the style of the surrounding code.
+
+When you are done, reply in exactly this form:
+Subject: <an imperative commit subject, at most 60 characters, e.g. "read unit_amount when price is missing">
+<one short paragraph: the root cause and the fix>

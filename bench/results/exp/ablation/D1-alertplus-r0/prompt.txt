@@ -1,0 +1,32 @@
+You are fixing a bug in shop-mcp, an MCP server that wraps a vendor HTTP API.
+
+## Alert from production monitoring
+A monitor in front of shop-mcp flagged this tool call. The agent that made the call was told:
+[fiks] VIOLATED search_products: 4 of 4 prices outside 20-2000 USD (p-1001 = 119900). Don't quote flagged values as is. Check another tool; if you infer a value, say how, as unconfirmed.
+
+Tool call: search_products({"query":"laptop"})
+Violated properties:
+- shop.search_products/items.price.range: 4 of 4 prices outside 20-2000 USD (p-1001 = 119900)
+
+What shop-mcp returned:
+{"items":[{"id":"p-1001","name":"Aero 14 Laptop","category":"laptop","price":119900,"currency":"USD"},{"id":"p-1002","name":"Volt 13 Laptop","category":"laptop","price":89900,"currency":"USD"},{"id":"p-1003","name":"Titan 16 Laptop","category":"laptop","price":149900,"currency":"USD"},{"id":"p-1004","name":"Nimbus 15 Laptop","category":"laptop","price":74950,"currency":"USD"}],"count":4,"total":4}
+
+Upstream HTTP during that call (recorded):
+GET /products?q=laptop -> 200
+  vendor-api-version: 2026-10-01
+  {"items":[{"id":"p-1001","name":"Aero 14 Laptop","category":"laptop","currency":"USD","stock":12,"price":119900},{"id":"p-1002","name":"Volt 13 Laptop","category":"laptop","currency":"USD","stock":30,"price":89900},{"id":"p-1003","name":"Titan 16 Laptop","category":"laptop","currency":"USD","stock":4,"price":149900},{"id":"p-1004","name":"Nimbus 15 Laptop","category":"laptop","currency":"USD","stock":18,"price":74950}],"total":4,"next_cursor":null}
+
+## Useful files
+- src/tools/*.ts: one file per tool. src/vendor.ts: the HTTP client.
+- vendor/openapi.json: the vendor's published spec (it did not change).
+
+## Rules
+- Change only files under src/. Do not edit tests, fixtures, traces, vendored files, CI, package.json or the lockfile.
+- Fix the root cause so the tool returns correct data. Do not return an error instead of data, do not invent or cache values, and do not hide the problem.
+- Keep the old vendor version working: the v1 fixtures must keep producing exactly the same output.
+- Check your work with: pnpm typecheck, pnpm lint, pnpm test. Only these pnpm commands are allowed.
+- Keep the change small and in the style of the surrounding code.
+
+When you are done, reply in exactly this form:
+Subject: <an imperative commit subject, at most 60 characters, e.g. "read unit_amount when price is missing">
+<one short paragraph: the root cause and the fix>

@@ -1,0 +1,127 @@
+{
+  "id": "tr_7280855590",
+  "capturedAt": "2026-10-18T09:25:39.581Z",
+  "runId": "run_20261018T092539044Z",
+  "contractId": "shop.create_order",
+  "tool": "create_order",
+  "args": {
+    "items": [
+      {
+        "product_id": "p-1004",
+        "quantity": 2
+      }
+    ]
+  },
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"order_id\":\"o-5002\",\"status\":\"confirmed\",\"total\":1499}"
+      }
+    ],
+    "structuredContent": {
+      "order_id": "o-5002",
+      "status": "confirmed",
+      "total": 1499
+    }
+  },
+  "http": [
+    {
+      "seq": 0,
+      "startedAt": "2026-10-18T09:25:39.566Z",
+      "durationMs": 5,
+      "request": {
+        "method": "POST",
+        "url": "/orders",
+        "headers": {
+          "content-type": "application/json",
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": "{\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2}]}"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-10-01"
+        },
+        "body": "{\"id\":\"o-5002\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2,\"unit_price\":749.5}],\"total\":1499,\"created_at\":1792315539045}"
+      }
+    }
+  ],
+  "probe": {
+    "tool": "get_order",
+    "args": {
+      "order_id": "o-5002"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "No order with id o-5002."
+        }
+      ],
+      "isError": true
+    },
+    "http": [
+      {
+        "seq": 1,
+        "startedAt": "2026-10-18T09:25:39.578Z",
+        "durationMs": 1,
+        "request": {
+          "method": "GET",
+          "url": "/orders/o-5002",
+          "headers": {
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate"
+          },
+          "body": null
+        },
+        "response": {
+          "status": 404,
+          "headers": {
+            "content-type": "application/json",
+            "vendor-api-version": "2026-10-01"
+          },
+          "body": "{\"error\":\"not_found\",\"message\":\"Unknown order.\"}"
+        }
+      }
+    ]
+  },
+  "vendorVersionHeader": "2026-10-01",
+  "upstream": {
+    "version": "v2",
+    "drifts": [
+      "D1",
+      "D2",
+      "D3",
+      "D4",
+      "D5"
+    ],
+    "clock": "2026-10-18T09:25:39.045Z"
+  },
+  "violated": [
+    {
+      "propertyId": "shop.create_order/readAfterWrite",
+      "kind": "readAfterWrite",
+      "path": "get_order",
+      "expected": "probe reads back the write",
+      "actual": "error",
+      "message": "not found on read-back: get_order o-5002 returned an error"
+    }
+  ],
+  "target": [
+    "shop.create_order/readAfterWrite"
+  ],
+  "server": {
+    "name": "shop-mcp",
+    "transport": "stdio"
+  }
+}

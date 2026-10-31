@@ -1,0 +1,126 @@
+{
+  "schema": "fiks.exp.eval/2",
+  "runId": "D3-alertplus-r2-20261031T112058Z-bb61",
+  "control": null,
+  "arm": "alertplus",
+  "drift": "D3",
+  "head": "01e7f9608cb984d4f7f4eb053bd84ae2dd8722bb",
+  "base": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7",
+  "heldOutRepro": {
+    "ok": false,
+    "reason": "repro test still fails: AssertionError: shop.create_order/readAfterWrite violated (/opt/fiks/.work/shop-mcp/test/repro/tr_7280855590.json): expected [ Array(1) ] to deeply equal []",
+    "rerecorded": [],
+    "suiteGreen": false
+  },
+  "live": {
+    "drift": {
+      "ok": false,
+      "calls": [
+        {
+          "tool": "create_order",
+          "args": {
+            "items": [
+              {
+                "product_id": "p-1004",
+                "quantity": 2
+              }
+            ]
+          },
+          "verdict": "violated"
+        }
+      ]
+    },
+    "v1": {
+      "ok": true,
+      "calls": [
+        {
+          "tool": "search_products",
+          "args": {
+            "query": "laptop"
+          },
+          "verdict": "verified"
+        },
+        {
+          "tool": "search_products",
+          "args": {
+            "query": "cable"
+          },
+          "verdict": "verified"
+        },
+        {
+          "tool": "search_products",
+          "args": {
+            "query": "monitor"
+          },
+          "verdict": "verified"
+        },
+        {
+          "tool": "search_products",
+          "args": {
+            "query": "teapot"
+          },
+          "verdict": "verified"
+        },
+        {
+          "tool": "get_product",
+          "args": {
+            "id": "p-1001"
+          },
+          "verdict": "verified"
+        },
+        {
+          "tool": "get_product",
+          "args": {
+            "id": "p-1004"
+          },
+          "verdict": "verified"
+        },
+        {
+          "tool": "get_product",
+          "args": {
+            "id": "p-1107"
+          },
+          "verdict": "verified"
+        },
+        {
+          "tool": "get_product",
+          "args": {
+            "id": "p-0000"
+          },
+          "verdict": "unverifiable"
+        },
+        {
+          "tool": "create_order",
+          "args": {
+            "items": [
+              {
+                "product_id": "p-1004",
+                "quantity": 2
+              }
+            ]
+          },
+          "verdict": "verified"
+        },
+        {
+          "tool": "get_order",
+          "args": {
+            "order_id": "o-5001"
+          },
+          "verdict": "verified"
+        }
+      ]
+    }
+  },
+  "liveCheck": false,
+  "changedLines": {
+    "files": 1,
+    "insertions": 5,
+    "deletions": 2,
+    "lines": 7
+  },
+  "sandbox": "docker",
+  "evaluatedAt": "2026-10-31T11:22:47.655Z",
+  "headErrors": [],
+  "infraError": null,
+  "infraRetries": 0
+}

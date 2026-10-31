@@ -47,3 +47,7 @@ Motivation: in E-A the ALERT gates passed patches that failed the live check, wh
 - **Runs:** D1–D5 × 3 reps = 15, same model, caps, sandbox and tools image as E-A (`FIKS_TOOLS_IMAGE` pinned to the E-A image).
 - **Readouts (descriptive):** (1) runs whose gates pass and whose live check fails, ALERT+ vs ALERT (does a trigger-replay gate stop them?); (2) runs whose gates fail and whose live check passes (does it block good patches?); (3) live-check success of ALERT+, and FIKS vs ALERT+ by exact sign test over drifts; (4) ALERT and ALERT+ pooled as 30 samples of the ALERT prompt, reported in addition, never instead of the per-arm numbers.
 - Stop rules as above. No other arm is re-run.
+
+### Deviation (2026-10-31, after the ALERT+ runs)
+
+- In the three D4 ALERT+ runs the re-recording of the hidden repro's call (`test/repro/tr_d02358451e.rerecorded.json`) was committed into the head; the run excluded only the repro's test and trace paths. FIKS and NOHINT D4 heads carry the same file. Re-evaluating the three heads with that file removed left every outcome unchanged (`bench/results/exp/controls/alertplus-d4-rerecord-sensitivity/`). The original runs are the counted ones; no run was repeated. The tool now excludes every `test/repro/` re-recording from ALERT+ heads.

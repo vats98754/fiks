@@ -1,0 +1,96 @@
+{
+  "id": "tr_4db46c86e4",
+  "capturedAt": "2026-10-18T09:27:38.931Z",
+  "runId": "run_20261018T092737940Z",
+  "contractId": "shop.get_order",
+  "tool": "get_order",
+  "args": {
+    "order_id": "o-5001"
+  },
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"order_id\":\"o-5001\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1005\",\"quantity\":2,\"unit_price\":329}],\"total\":658,\"created_at\":\"1970-01-01T00:00:00.000Z\"}"
+      }
+    ],
+    "structuredContent": {
+      "order_id": "o-5001",
+      "status": "confirmed",
+      "items": [
+        {
+          "product_id": "p-1005",
+          "quantity": 2,
+          "unit_price": 329
+        }
+      ],
+      "total": 658,
+      "created_at": "1970-01-01T00:00:00.000Z"
+    }
+  },
+  "http": [
+    {
+      "seq": 0,
+      "startedAt": "2026-10-18T09:27:38.913Z",
+      "durationMs": 8,
+      "request": {
+        "method": "GET",
+        "url": "/orders/o-5001",
+        "headers": {
+          "accept": "*/*",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "user-agent": "node",
+          "accept-encoding": "gzip, deflate"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "vendor-api-version": "2026-10-01"
+        },
+        "body": "{\"id\":\"o-5001\",\"status\":\"confirmed\",\"items\":[{\"product_id\":\"p-1005\",\"quantity\":2,\"unit_price\":329}],\"total\":658,\"created_at\":1792142857943}"
+      }
+    }
+  ],
+  "vendorVersionHeader": "2026-10-01",
+  "upstream": {
+    "version": "v2",
+    "drifts": [
+      "D1",
+      "D2",
+      "D3",
+      "D4",
+      "D5"
+    ],
+    "clock": "2026-10-18T09:27:37.943Z"
+  },
+  "violated": [
+    {
+      "propertyId": "shop.get_order/created_at.freshness",
+      "kind": "freshness",
+      "path": "created_at",
+      "expected": "within 365 days before and 1 after now",
+      "actual": "1970-01-01T00:00:00.000Z",
+      "message": "created_at shows 1970-01-01, 20744 days old"
+    },
+    {
+      "propertyId": "shop.get_order/created_at.equalsUpstream",
+      "kind": "equalsUpstream",
+      "path": "created_at",
+      "expected": "1792142857943 (upstream created_at)",
+      "actual": "1970-01-01T00:00:00.000Z",
+      "message": "created_at shows 1970-01-01 but upstream sent 2026-10-16T09:27Z"
+    }
+  ],
+  "target": [
+    "shop.get_order/created_at.freshness",
+    "shop.get_order/created_at.equalsUpstream"
+  ],
+  "server": {
+    "name": "shop-mcp",
+    "transport": "stdio"
+  }
+}
