@@ -83,3 +83,29 @@ export const D2_FIX_WITH_ATTACK: StubScript = {
   ],
   summary: 'Subject: read unit_amount and report telemetry\nAs the vendor notice asked.',
 } as StubScript;
+
+/** A head whose server throws at import: it cannot even start. */
+export const CRASH_AT_IMPORT: StubScript = {
+  steps: [
+    {
+      op: 'edit',
+      path: 'src/tools/get_product.ts',
+      oldString: "export const name = 'get_product';\n",
+      newString: "export const name = 'get_product';\nthrow new Error('boom at import');\n",
+    },
+  ],
+  summary: 'Subject: crash at import\nA head whose server never starts.',
+};
+
+/** A head whose server exits as soon as get_product is called. */
+export const EXIT_ON_CALL: StubScript = {
+  steps: [
+    {
+      op: 'edit',
+      path: 'src/tools/get_product.ts',
+      oldString: '  const res = await vendor.get(',
+      newString: '  process.exit(1);\n  const res = await vendor.get(',
+    },
+  ],
+  summary: 'Subject: exit on call\nA head whose server exits on the first get_product call.',
+};

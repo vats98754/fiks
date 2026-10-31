@@ -1,8 +1,9 @@
 // paper/scripts/exp/ablation_numbers.py on a synthetic results dir (written here, in $TMPDIR; the
 // records pass the same schema checks as real ones): counts, Wilson intervals, sign tests,
-// infra-error and unevaluated exclusions, --check, and an empty dir.
+// infra-error exclusions (run and eval), crashed heads counted as failures, not-yet-evaluated
+// runs, --check, and an empty dir.
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import {
@@ -29,6 +30,10 @@ interface Spec {
   cost?: number;
   infra?: boolean;
   noEval?: boolean;
+  /** The head's server crashed in every stage (exp-eval headErrors; all outcomes false). */
+  crash?: boolean;
+  /** exp-eval could not start its sandbox (eval infraError). */
+  evalInfra?: boolean;
   experiment?: 'E-A' | 'E-C';
 }
 
@@ -74,7 +79,7 @@ function write(root: string, s: Spec) {
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, 'record.json'), JSON.stringify(rec));
   if (s.infra || s.noEval) return;
-  const ok = s.live === true;
+  const ok = s.live === true && !s.crash && !s.evalInfra;
   const ev: ExpEvalRecord = {
     schema: EVAL_SCHEMA,
     runId,
@@ -86,13 +91,24 @@ function write(root: string, s: Spec) {
     heldOutRepro: { ok, reason: '', rerecorded: [], suiteGreen: ok },
     live: {
       drift: { ok, calls: [] },
-      v1: { ok: true, calls: [] },
+      v1: { ok: !s.crash && !s.evalInfra, calls: [] },
     },
     liveCheck: ok,
     changedLines: { files: 1, insertions: 1, deletions: 1, lines: 2 },
     sandbox: 'docker',
     evaluatedAt: '2026-10-30T00:00:02.000Z',
-    error: null,
+    headErrors: s.crash
+      ? [
+          {
+            stage: 'live.drift',
+            message: 'scenario D2 in the sandbox exited 1: MCP error -32000: Connection closed',
+          },
+          { stage: 'live.v1', message: 'scenario v1-all in the sandbox exited 1' },
+          { stage: 'heldOutRepro', message: 'the held-out suite could not run on the head' },
+        ]
+      : [],
+    infraError: s.evalInfra ? 'sandbox did not start: docker daemon unreachable' : null,
+    infraRetries: s.evalInfra ? 3 : 0,
   };
   expect(validateEvalRecord(ev)).toEqual([]);
   writeFileSync(join(dir, 'eval.json'), JSON.stringify(ev));
@@ -159,9 +175,9 @@ describe('ablation_numbers.py', () => {
       '1',
     ]);
     const tab = readFileSync(join(out, 'tab-ablation.tex'), 'utf8');
-    expect(tab).toContain('D1 & FIKS & 2/2 & 2/2 & 2/2 & 12 & 0.20 & 0 \\\\');
-    expect(tab).toContain('D2 & FIKS & 1/2 & 1/2 & 1/2 & 21 & 0.30 & 1 \\\\');
-    expect(tab).toContain('D2 & ALERT & 0/0 & 0/0 & 0/0 & -- & -- & 0 (+1 uneval.) \\\\');
+    expect(tab).toContain('D1 & FIKS & 2/2 & 2/2 & 2/2 & 0 & 12 & 0.20 & 0 \\\\');
+    expect(tab).toContain('D2 & FIKS & 1/2 & 1/2 & 1/2 & 0 & 21 & 0.30 & 1 \\\\');
+    expect(tab).toContain('D2 & ALERT & 0/0 & 0/0 & 0/0 & 0 & -- & -- & 0 (+1 not eval.) \\\\');
     expect(tab).toMatch(/All & FIKS & 3\/4 \[\d+\\%--\d+\\%\]/);
 
     // --check: matches as written, fails after a record changes.
@@ -171,6 +187,44 @@ describe('ablation_numbers.py', () => {
     const bad = py('--check', '--root', root, '--out-dir', out);
     expect(bad.status).toBe(1);
     expect(bad.stdout).toContain('MISMATCH');
+  });
+
+  test('a head that crashes the server is a counted failure, not an exclusion', () => {
+    const root = scratch();
+    const out = scratch();
+    // ALERT on D2: one real fix and two heads whose server crashes (eval headErrors). The rate is
+    // 1/3, never 1/1. A separate eval infra error is excluded and labelled as infra.
+    write(root, { arm: 'alert', drift: 'D2', live: true, turns: 8, cost: 0.1 });
+    write(root, { arm: 'alert', drift: 'D2', crash: true, turns: 9, cost: 0.2 });
+    write(root, { arm: 'alert', drift: 'D2', crash: true, turns: 10, cost: 0.3 });
+    write(root, { arm: 'alert', drift: 'D3', evalInfra: true });
+    const r = py('--root', root, '--out-dir', out);
+    expect(r.status, r.stderr).toBe(0);
+    const m = macros(readFileSync(join(out, 'exp-ablation.tex'), 'utf8'));
+    expect(m.expLiveAlert).toBe('1/3');
+    expect(m.expLiveRateAlert).toBe('33\\%');
+    expect(m.expHeldOutAlert).toBe('1/3');
+    expect(m.expRunsAlert).toBe('3');
+    expect(m.expHeadErrorsAlert).toBe('2');
+    expect(m.expEvalInfraAlert).toBe('1');
+    expect(m.expRunInfraAlert).toBe('0');
+    expect(m.expInfraAlert).toBe('1');
+    expect(m.expUnevaluatedAlert).toBe('0');
+    const tab = readFileSync(join(out, 'tab-ablation.tex'), 'utf8');
+    expect(tab).toContain('D2 & ALERT & 1/3 & 1/3 & 1/3 & 2 & 9 & 0.20 & 0 \\\\');
+    expect(tab).toContain('D3 & ALERT & 0/0 & 0/0 & 0/0 & 0 & -- & -- & 1 (1 eval) \\\\');
+    expect(tab).not.toContain('uneval');
+  });
+
+  test('an eval.json from the old schema is refused, not silently dropped', () => {
+    const root = scratch();
+    write(root, { arm: 'fiks', drift: 'D2', live: true });
+    const dir = join(root, readdirSync(root)[0] as string);
+    const ev = JSON.parse(readFileSync(join(dir, 'eval.json'), 'utf8'));
+    writeFileSync(join(dir, 'eval.json'), JSON.stringify({ ...ev, schema: 'fiks.exp.eval/1', error: 'x' }));
+    const r = py('--root', root, '--out-dir', scratch());
+    expect(r.status).not.toBe(0);
+    expect(r.stderr).toContain('re-run `pnpm fiks exp-eval --force`');
   });
 
   test('more than 20% infra errors marks an arm incomplete', () => {

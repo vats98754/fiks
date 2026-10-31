@@ -11,7 +11,7 @@ export type ExpDrift = (typeof DRIFTS)[number];
 export type SandboxKind = 'host' | 'docker';
 
 export const RUN_SCHEMA = 'fiks.exp.run/1';
-export const EVAL_SCHEMA = 'fiks.exp.eval/1';
+export const EVAL_SCHEMA = 'fiks.exp.eval/2';
 
 export interface GateRecord {
   /** guard | F | rerecord | repro | suite | typecheck | lint | integrity */
@@ -120,7 +120,28 @@ export interface ExpEvalRecord {
   changedLines: { files: number; insertions: number; deletions: number; lines: number };
   sandbox: SandboxKind;
   evaluatedAt: string;
-  error: string | null;
+  /**
+   * The head itself failed a stage (its server crashed, exited or hung in a scenario, or the
+   * held-out suite could not run on it). These are deterministic failures of the head: the stage's
+   * outcome is false and the run counts in every denominator.
+   */
+  headErrors: HeadError[];
+  /**
+   * The evaluation could not be carried out for a reason outside the head (the checkout, Docker or
+   * the tools container failing to start or dying). Only these evals are excluded from counts, and
+   * they are reported as infra errors. All outcomes are false when set.
+   */
+  infraError: string | null;
+  /** Evaluation attempts that ended in an infra error before this one (exp-eval retries up to 3). */
+  infraRetries: number;
+}
+
+export const HEAD_STAGES = ['live.drift', 'live.v1', 'heldOutRepro'] as const;
+export type HeadStage = (typeof HEAD_STAGES)[number];
+
+export interface HeadError {
+  stage: HeadStage;
+  message: string;
 }
 
 const isStr = (x: unknown): x is string => typeof x === 'string';
@@ -248,6 +269,21 @@ export function validateEvalRecord(x: unknown): string[] {
   );
   need(x.sandbox === 'host' || x.sandbox === 'docker', 'sandbox');
   need(isStr(x.evaluatedAt), 'evaluatedAt');
-  need(x.error === null || isStr(x.error), 'error');
+  need(x.infraError === null || isStr(x.infraError), 'infraError');
+  need(isNum(x.infraRetries), 'infraRetries');
+  need(
+    Array.isArray(x.headErrors) &&
+      x.headErrors.every((e) => isObj(e) && HEAD_STAGES.includes(e.stage as HeadStage) && isStr(e.message)),
+    'headErrors',
+  );
+  // A stage the head failed has a false outcome; an infra-excluded eval claims no success.
+  if (Array.isArray(x.headErrors) && isObj(l) && isObj(l.drift) && isObj(l.v1) && isObj(h)) {
+    const failed = new Set(x.headErrors.map((e) => (isObj(e) ? e.stage : null)));
+    need(!failed.has('live.drift') || l.drift.ok === false, 'headErrors live.drift => drift not ok');
+    need(!failed.has('live.v1') || l.v1.ok === false, 'headErrors live.v1 => v1 not ok');
+    need(!failed.has('heldOutRepro') || h.ok === false, 'headErrors heldOutRepro => repro not ok');
+  }
+  if (isStr(x.infraError) && isObj(h))
+    need(x.liveCheck === false && h.ok === false, 'infraError => no outcome true');
   return errors;
 }

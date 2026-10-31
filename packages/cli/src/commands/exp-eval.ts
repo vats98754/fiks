@@ -7,7 +7,10 @@
 // Each run's head is checked out fresh; held-out repro, live check and changed lines go to
 // <runDir>/eval.json. Controls: the oracle patches (all outcomes must be true) and seed-v1 unpatched
 // (held-out repro and live check must be false); exit 1 when a control does not come out that way.
-// The sandbox defaults to the run's own (controls: host).
+// The sandbox defaults to the run's own (controls: host). A head whose server crashes, exits or hangs
+// fails the stage it crashed in (recorded as headErrors, outcome false); only a sandbox that cannot
+// start or run commands is an infra error (retried up to 3 times, then recorded as infraError and
+// excluded from counts by ablation_numbers.py).
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -26,7 +29,7 @@ const USAGE =
   'exp-eval (--run <dir>... | --root <dir> [--force] | --control oracle|seed --drift D1..D5|all [--out <dir>]) [--sandbox docker|host] [--json]';
 
 const line = (ev: ExpEvalRecord) =>
-  `${ev.runId ?? `control ${ev.control}`} ${ev.drift}: heldOutRepro=${ev.heldOutRepro.ok} live.drift=${ev.live.drift.ok} live.v1=${ev.live.v1.ok} changedLines=${ev.changedLines.lines}${ev.error ? ` error=${ev.error.split('\n')[0]}` : ''}`;
+  `${ev.runId ?? `control ${ev.control}`} ${ev.drift}: heldOutRepro=${ev.heldOutRepro.ok} live.drift=${ev.live.drift.ok} live.v1=${ev.live.v1.ok} changedLines=${ev.changedLines.lines}${ev.headErrors.map((e) => ` headError[${e.stage}]=${e.message.split('\n')[0]?.slice(0, 200)}`).join('')}${ev.infraError ? ` INFRA (excluded, ${ev.infraRetries} retries)=${ev.infraError.split('\n')[0]}` : ''}`;
 
 const command: CliCommandModule = {
   name: 'exp-eval',

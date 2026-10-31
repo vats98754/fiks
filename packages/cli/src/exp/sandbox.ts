@@ -35,6 +35,15 @@ import type { CallVerdict, SandboxKind } from './types.ts';
 export const CONTAINER_SHOP = '/opt/fiks/.work/shop-mcp';
 const CONTAINER_SCRATCH = '/tmp/fiks-exp';
 
+/**
+ * The sandbox itself failed (Docker could not run the command, the tools image is broken), as
+ * opposed to the code under test failing inside it. exp-eval excludes only these from counts.
+ */
+export class SandboxInfraError extends Error {}
+
+/** `docker exec` exit codes that mean Docker or the image failed, not the command it ran. */
+const DOCKER_INFRA_CODES = new Set([125, 126, 127]);
+
 export interface ScenarioOutcome {
   calls: CallVerdict[];
   output: string;
@@ -63,6 +72,8 @@ export interface ExpSandbox {
   scenario(id: string): Promise<ScenarioOutcome>;
   /** Every refused outbound connection seen in command output so far. */
   egressDenials(): string[];
+  /** The sandbox can still run a command (docker: the container is up and execs). */
+  healthy(): Promise<boolean>;
   cleanup(): Promise<void>;
 }
 
@@ -137,6 +148,9 @@ export class HostExpSandbox implements ExpSandbox {
   }
   egressDenials() {
     return [...this.denials];
+  }
+  async healthy() {
+    return true;
   }
   async cleanup() {}
 }
@@ -307,8 +321,16 @@ export class DockerExpSandbox implements ExpSandbox {
       timeoutMs: 10 * 60_000,
     });
     this.denials.push(...egressDenials(out(r)));
-    if (r.code !== 0)
-      throw new Error(`scenario ${id} in the sandbox exited ${r.code}: ${out(r).slice(-1500)}`);
+    if (DOCKER_INFRA_CODES.has(r.code))
+      throw new SandboxInfraError(
+        `docker could not run scenario ${id} (exit ${r.code}): ${out(r).slice(-800)}`,
+      );
+    if (r.code !== 0) {
+      // Lead with the error line (e.g. "McpError: MCP error -32000: Connection closed").
+      const lines = out(r).split('\n');
+      const lead = lines.find((l) => /^\s*\w*Error\b.*:/.test(l))?.trim() ?? lines.find(Boolean) ?? '';
+      throw new Error(`scenario ${id} in the sandbox exited ${r.code}: ${lead}\n${out(r).slice(-1500)}`);
+    }
     const json = JSON.parse(r.stdout.slice(r.stdout.indexOf('{'))) as Parameters<typeof verdictsOf>[0];
     return { calls: verdictsOf(json), output: r.stderr };
   }
@@ -322,6 +344,18 @@ export class DockerExpSandbox implements ExpSandbox {
         .map((l) => (JSON.parse(l) as { line: string }).line);
     } catch {}
     return [...new Set([...logged, ...this.denials])];
+  }
+  async healthy() {
+    try {
+      const r = await this.backend.exec('true', [], {
+        env: { ...SANDBOX_ENV },
+        containerCwd: '/tmp',
+        timeoutMs: 60_000,
+      });
+      return r.code === 0;
+    } catch {
+      return false;
+    }
   }
   async cleanup() {
     try {

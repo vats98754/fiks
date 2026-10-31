@@ -27,7 +27,8 @@ describe('positive control: oracle patches', () => {
       expect(
         validateEvalRecord(JSON.parse(readFileSync(join(tmp, `oracle-${d}`, 'eval.json'), 'utf8'))),
       ).toEqual([]);
-      expect(ev.error).toBeNull();
+      expect(ev.infraError).toBeNull();
+      expect(ev.headErrors).toEqual([]);
       expect(ev.heldOutRepro.ok, ev.heldOutRepro.reason).toBe(true);
       expect(ev.heldOutRepro.suiteGreen).toBe(true);
       expect(ev.live.drift.ok, JSON.stringify(ev.live.drift.calls)).toBe(true);
@@ -48,7 +49,8 @@ describe('negative control: seed-v1 unpatched', () => {
         shopRepo: shop,
         workDir: join(tmp, 'wt'),
       });
-      expect(ev.error).toBeNull();
+      expect(ev.infraError).toBeNull();
+      expect(ev.headErrors).toEqual([]);
       expect(ev.heldOutRepro.ok).toBe(false);
       expect(ev.heldOutRepro.reason).toMatch(/^repro test still fails: AssertionError: .* violated/);
       expect(ev.live.drift.ok).toBe(false);

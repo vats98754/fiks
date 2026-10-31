@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import expRepair from '../../src/commands/exp-repair.ts';
 import { pilotTrace } from '../../src/exp/drifts.ts';
-import { driftLiveOk, findRunDirs, v1LiveOk } from '../../src/exp/evaluate.ts';
+import { driftLiveOk, findRunDirs, isInfraError, v1LiveOk } from '../../src/exp/evaluate.ts';
 import {
   commandsFromLog,
   injectionOracles,
@@ -14,6 +14,7 @@ import {
   withCanary,
 } from '../../src/exp/inject.ts';
 import { newRunId, receiptOf } from '../../src/exp/repair-run.ts';
+import { SandboxInfraError } from '../../src/exp/sandbox.ts';
 import {
   DRIFTS,
   EVAL_SCHEMA,
@@ -76,7 +77,9 @@ const ev = (): ExpEvalRecord => ({
   changedLines: { files: 1, insertions: 2, deletions: 1, lines: 3 },
   sandbox: 'docker',
   evaluatedAt: '2026-10-30T00:02:00.000Z',
-  error: null,
+  headErrors: [],
+  infraError: null,
+  infraRetries: 0,
 });
 
 describe('record schemas', () => {
@@ -97,6 +100,38 @@ describe('record schemas', () => {
     expect(validateEvalRecord({ ...ev(), liveCheck: false })).toContain('liveCheck = drift && v1');
     expect(validateEvalRecord({ ...ev(), control: 'oracle' })).toContain('exactly one of runId and control');
     expect(validateEvalRecord({ ...ev(), heldOutRepro: { ok: true } })).toContain('heldOutRepro');
+    expect(validateEvalRecord({ ...ev(), headErrors: [{ stage: 'other', message: 'x' }] })).toContain(
+      'headErrors',
+    );
+    // A stage the head crashed in cannot claim success, and an infra-excluded eval claims nothing.
+    expect(
+      validateEvalRecord({ ...ev(), headErrors: [{ stage: 'live.drift', message: 'Connection closed' }] }),
+    ).toContain('headErrors live.drift => drift not ok');
+    expect(
+      validateEvalRecord({ ...ev(), headErrors: [{ stage: 'heldOutRepro', message: 'boom' }] }),
+    ).toContain('headErrors heldOutRepro => repro not ok');
+    expect(validateEvalRecord({ ...ev(), infraError: 'docker' })).toContain('infraError => no outcome true');
+    const { infraError: _drop, ...noInfra } = ev();
+    expect(validateEvalRecord(noInfra)).toContain('infraError');
+  });
+});
+
+describe('eval error classification', () => {
+  test("MCP and scenario failures are the head's; sandbox and system errors are infra", () => {
+    const mcp = Object.assign(new Error('MCP error -32000: Connection closed'), { code: -32000 });
+    expect(isInfraError(mcp)).toBe(false);
+    expect(isInfraError(new Error('scenario D2 in the sandbox exited 1: ...'))).toBe(false);
+    expect(isInfraError(new SandboxInfraError('docker could not run scenario D2 (exit 125)'))).toBe(true);
+    expect(
+      isInfraError(Object.assign(new Error('spawn node ENOENT'), { code: 'ENOENT', syscall: 'spawn node' })),
+    ).toBe(true);
+    // A pipe to a server that died is the head's doing.
+    expect(isInfraError(Object.assign(new Error('write EPIPE'), { code: 'EPIPE', syscall: 'write' }))).toBe(
+      false,
+    );
+    expect(isInfraError(Object.assign(new Error('read ECONNRESET'), { code: 'ECONNRESET' }))).toBe(false);
+    expect(isInfraError(Object.assign(new Error('open x'), { code: 'ENOENT', syscall: 'open' }))).toBe(false);
+    expect(isInfraError(Object.assign(new Error('listen EADDRINUSE'), { code: 'EADDRINUSE' }))).toBe(true);
   });
 });
 

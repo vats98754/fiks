@@ -1,15 +1,23 @@
 // exp-repair + exp-eval end to end on D2 with the stub runner (zero model calls), on the host
 // sandbox, one test per arm: a record and an eval are written and are schema-valid. Plus a guard
 // rejection, and the E-C oracles on a clean and on an attacker-directed head.
-import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, renameSync } from 'node:fs';
 import { join } from 'node:path';
 import type { RepairRunner, StubScript } from '@fiks/repair';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { evaluateRun } from '../../src/exp/evaluate.ts';
 import { runExpRepair } from '../../src/exp/repair-run.ts';
 import { ARMS, validateEvalRecord, validateRunRecord } from '../../src/exp/types.ts';
-import { D2_FIX_STEPS, D2_FIX_WITH_ATTACK, nonSrcRunner, scratch, shopClone } from './support.ts';
+import {
+  CRASH_AT_IMPORT,
+  D2_FIX_STEPS,
+  D2_FIX_WITH_ATTACK,
+  EXIT_ON_CALL,
+  nonSrcRunner,
+  scratch,
+  shopClone,
+} from './support.ts';
 
 const T = 300_000;
 let shop: string;
@@ -74,7 +82,8 @@ describe('stub runs on D2, each arm', () => {
       const evDisk = JSON.parse(readFileSync(join(outDir, 'eval.json'), 'utf8'));
       expect(validateEvalRecord(evDisk)).toEqual([]);
       expect(evDisk).toEqual(ev);
-      expect(ev?.error).toBeNull();
+      expect(ev?.infraError).toBeNull();
+      expect(ev?.headErrors).toEqual([]);
       expect(ev?.heldOutRepro.ok).toBe(true);
       expect(ev?.live.drift.ok).toBe(true);
       expect(ev?.live.v1.ok).toBe(true);
@@ -96,6 +105,54 @@ describe('guard and failure paths', () => {
     expect(ev?.heldOutRepro.ok).toBe(false);
     expect(ev?.liveCheck).toBe(false);
     expect(ev?.changedLines.lines).toBe(0);
+  });
+});
+
+describe('heads that crash the server are counted failures', () => {
+  const SCRIPT = new URL('../../../../paper/scripts/exp/ablation_numbers.py', import.meta.url).pathname;
+  test('ALERT on D2: one fix and two crashing heads give 1/3, not 1/1', { timeout: 3 * T }, async () => {
+    const root = join(tmp, 'crash-root');
+    mkdirSync(root, { recursive: true });
+    const dirs: string[] = [];
+    for (const [i, script] of [D2_FIX_STEPS, CRASH_AT_IMPORT, EXIT_ON_CALL].entries()) {
+      const { record, outDir } = await run('alert', script, `crash-${i}`);
+      expect(validateRunRecord(record)).toEqual([]);
+      expect(record.infraError).toBeNull();
+      expect(record.head).not.toBeNull();
+      const dest = join(root, record.runId);
+      renameSync(outDir, dest);
+      dirs.push(dest);
+    }
+    const evs = [];
+    for (const d of dirs) evs.push(await evaluateRun(d, { shopRepo: shop, workDir: join(tmp, 'wt') }));
+    const [fix, atImport, onCall] = evs;
+    expect(fix?.liveCheck).toBe(true);
+    expect(fix?.heldOutRepro.ok).toBe(true);
+    for (const ev of [atImport, onCall]) {
+      expect(validateEvalRecord(ev)).toEqual([]);
+      // Not excluded: the head's own failure, with every outcome false.
+      expect(ev?.infraError, ev?.infraError ?? '').toBeNull();
+      expect(ev?.liveCheck).toBe(false);
+      expect(ev?.live.drift.ok).toBe(false);
+      expect(ev?.live.v1.ok).toBe(false);
+      expect(ev?.heldOutRepro.ok).toBe(false);
+      expect(ev?.heldOutRepro.reason).not.toBe('not run');
+    }
+    // The server that never starts fails every stage, and each failure is recorded as the head's.
+    expect(atImport?.headErrors.map((e) => e.stage)).toEqual(['live.drift', 'live.v1', 'heldOutRepro']);
+    expect(atImport?.headErrors[0]?.message).toMatch(/Connection closed|exited/);
+
+    const out = join(tmp, 'crash-gen');
+    const r = spawnSync('python3', ['-I', SCRIPT, '--root', root, '--out-dir', out], { encoding: 'utf8' });
+    expect(r.status, r.stderr).toBe(0);
+    const macros = readFileSync(join(out, 'exp-ablation.tex'), 'utf8');
+    expect(macros).toContain('\\newcommand{\\expLiveAlert}{1/3}');
+    expect(macros).toContain('\\newcommand{\\expHeldOutAlert}{1/3}');
+    expect(macros).toContain('\\newcommand{\\expInfraAlert}{0}');
+    expect(macros).toContain('\\newcommand{\\expHeadErrorsAlert}{'); // >= 1, the at-import head
+    const tab = readFileSync(join(out, 'tab-ablation.tex'), 'utf8');
+    expect(tab).toMatch(/^D2 & ALERT & 1\/3 & 1\/3 & 1\/3 & [12] & /m);
+    expect(tab).not.toContain('uneval');
   });
 });
 

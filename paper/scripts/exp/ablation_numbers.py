@@ -10,10 +10,16 @@ Outputs (default paper/generated/):
                      median turns, mean cost, infra errors
 
 Counting rules (EXP-PLAN stop rules):
-  - a run whose record has infraError is excluded from every success count and reported in the
-    infra-error column; an arm with more than 20% infra errors is marked incomplete;
-  - a run without a usable eval.json (missing, or eval error) is excluded and counted as
-    unevaluated;
+  - a run whose record has infraError (rate limits, API errors, Docker failures, after 3 retries)
+    is excluded from every success count and reported in the infra-error column;
+  - an eval whose infraError is set (the sandbox could not start or run commands, after 3
+    retries) is excluded the same way and reported as an eval infra error;
+  - a head that fails a stage itself (its server crashes, exits or hangs in a scenario, or the
+    held-out suite cannot load on it: eval.json headErrors) is a FAILURE of that run: it stays in
+    every denominator with the failed outcomes false, and is also counted in the head-error column;
+  - an arm whose run + eval infra errors exceed 20% of its attempted runs is marked incomplete;
+  - a run with a head but no eval.json yet is reported as not evaluated (exp-eval has not run on
+    it; a warning is printed) and is in no count until it is evaluated;
   - paired comparison FIKS vs NOHINT and FIKS vs ALERT: exact two-sided sign test over drifts on
     the per-drift live-check success rates (ties dropped). n is small; all results are descriptive.
 
@@ -36,7 +42,7 @@ ARM_LABEL = {'fiks': 'FIKS', 'nohint': 'NOHINT', 'alert': 'ALERT'}
 ARM_MACRO = {'fiks': 'Fiks', 'nohint': 'Nohint', 'alert': 'Alert'}
 DRIFTS = ['D1', 'D2', 'D3', 'D4', 'D5']
 RUN_SCHEMA = 'fiks.exp.run/1'
-EVAL_SCHEMA = 'fiks.exp.eval/1'
+EVAL_SCHEMA = 'fiks.exp.eval/2'
 INFRA_STOP = 0.20
 
 
@@ -86,8 +92,20 @@ def load(run_dir):
     if os.path.exists(p):
         with open(p) as f:
             ev = json.load(f)
-        if ev.get('schema') != EVAL_SCHEMA or ev.get('runId') != rec['runId']:
+        if ev.get('schema') != EVAL_SCHEMA:
+            raise SystemExit(
+                f'{p}: schema {ev.get("schema")!r}, expected {EVAL_SCHEMA} '
+                '(re-run `pnpm fiks exp-eval --force` on this run)'
+            )
+        if ev.get('runId') != rec['runId']:
             raise SystemExit(f'{p}: not the eval of {rec["runId"]}')
+        for k in ('liveCheck', 'heldOutRepro', 'changedLines', 'headErrors', 'infraError'):
+            if k not in ev:
+                raise SystemExit(f'{p}: missing {k}')
+        if ev['infraError'] is None and ev['headErrors'] and ev['liveCheck'] and any(
+            e.get('stage', '').startswith('live.') for e in ev['headErrors']
+        ):
+            raise SystemExit(f'{p}: liveCheck true although the head failed a live stage')
     return rec, ev
 
 
@@ -100,8 +118,13 @@ def fmt_p(p):
 
 
 def compute(root):
-    cells = {(d, a): {'runs': [], 'infra': 0, 'unevaluated': 0} for d in DRIFTS for a in ARMS}
+    cells = {
+        (d, a): {'runs': [], 'infra': 0, 'evalInfra': 0, 'unevaluated': 0, 'headErr': 0}
+        for d in DRIFTS
+        for a in ARMS
+    }
     n_records = 0
+    pending = []
     for run_dir in find_runs(root):
         rec, ev = load(run_dir)
         if rec['experiment'] != 'E-A':
@@ -111,9 +134,20 @@ def compute(root):
         if rec['infraError'] is not None:
             c['infra'] += 1
             continue
-        if ev is None or ev.get('error') is not None:
-            c['unevaluated'] += 1
+        if rec.get('head') is None:
+            # No infra error and no head: the run produced nothing to evaluate. A failure.
+            c['runs'].append({'live': False, 'heldOut': False, 'gates': False,
+                              'turns': rec['turns'], 'cost': rec['costUsd'], 'lines': 0})
             continue
+        if ev is None:
+            c['unevaluated'] += 1
+            pending.append(run_dir)
+            continue
+        if ev['infraError'] is not None:
+            c['evalInfra'] += 1
+            continue
+        if ev['headErrors']:
+            c['headErr'] += 1
         c['runs'].append({
             'live': bool(ev['liveCheck']),
             'heldOut': bool(ev['heldOutRepro']['ok']),
@@ -122,15 +156,28 @@ def compute(root):
             'cost': rec['costUsd'],
             'lines': ev['changedLines']['lines'],
         })
+    for d in pending:
+        print(f'warning: {d} has no eval.json (run `pnpm fiks exp-eval`); it is in no count', file=sys.stderr)
     return n_records, cells
 
 
 def arm_totals(cells, arm):
     runs = [r for d in DRIFTS for r in cells[(d, arm)]['runs']]
     infra = sum(cells[(d, arm)]['infra'] for d in DRIFTS)
+    ev_infra = sum(cells[(d, arm)]['evalInfra'] for d in DRIFTS)
     unev = sum(cells[(d, arm)]['unevaluated'] for d in DRIFTS)
-    attempted = len(runs) + infra + unev
-    return runs, infra, unev, attempted
+    head_err = sum(cells[(d, arm)]['headErr'] for d in DRIFTS)
+    attempted = len(runs) + infra + ev_infra + unev
+    return runs, infra, ev_infra, unev, head_err, attempted
+
+
+def infra_cell(infra, ev_infra, unev):
+    s = str(infra + ev_infra)
+    if ev_infra:
+        s += f' ({ev_infra} eval)'
+    if unev:
+        s += f' (+{unev} not eval.)'
+    return s
 
 
 def build(root):
@@ -139,13 +186,13 @@ def build(root):
     M['expAblRecords'] = str(n_records)
     lines = [
         '% Generated by paper/scripts/exp/ablation_numbers.py from bench/results/exp/ablation. Do not edit.',
-        '\\begin{tabular}{llrrrrrr}',
+        '\\begin{tabular}{llrrrrrrr}',
         '\\toprule',
-        'Drift & Arm & Live check & Held-out repro & Gates pass & Median turns & Mean cost (\\$) & Infra err. \\\\',
+        'Drift & Arm & Live check & Held-out repro & Gates pass & Head err. & Median turns & Mean cost (\\$) & Infra err. \\\\',
         '\\midrule',
     ]
     if n_records == 0:
-        lines.append('\\multicolumn{8}{c}{no runs} \\\\')
+        lines.append('\\multicolumn{9}{c}{no runs} \\\\')
     for d in DRIFTS:
         if n_records == 0:
             break
@@ -153,28 +200,28 @@ def build(root):
             c = cells[(d, a)]
             rs = c['runs']
             n = len(rs)
-            if n == 0 and c['infra'] == 0 and c['unevaluated'] == 0:
+            if n == 0 and c['infra'] == 0 and c['evalInfra'] == 0 and c['unevaluated'] == 0:
                 continue
             turns = f'{statistics.median([r["turns"] for r in rs]):g}' if rs else '--'
             cost = f'{sum(r["cost"] for r in rs) / n:.2f}' if rs else '--'
-            infra = str(c['infra']) + (f' (+{c["unevaluated"]} uneval.)' if c['unevaluated'] else '')
+            infra = infra_cell(c['infra'], c['evalInfra'], c['unevaluated'])
             lines.append(
                 f'{d} & {ARM_LABEL[a]} & {sum(r["live"] for r in rs)}/{n} & {sum(r["heldOut"] for r in rs)}/{n} & '
-                f'{sum(r["gates"] for r in rs)}/{n} & {turns} & {cost} & {infra} \\\\'
+                f'{sum(r["gates"] for r in rs)}/{n} & {c["headErr"]} & {turns} & {cost} & {infra} \\\\'
             )
     if n_records:
         lines.append('\\midrule')
     total_runs = 0
     total_infra = 0
     for a in ARMS:
-        runs, infra, unev, attempted = arm_totals(cells, a)
+        runs, infra, ev_infra, unev, head_err, attempted = arm_totals(cells, a)
         k = sum(r['live'] for r in runs)
         n = len(runs)
         lo, hi = wilson(k, n)
         mac = ARM_MACRO[a]
         total_runs += n
-        total_infra += infra
-        incomplete = attempted > 0 and infra / attempted > INFRA_STOP
+        total_infra += infra + ev_infra
+        incomplete = attempted > 0 and (infra + ev_infra) / attempted > INFRA_STOP
         M[f'expRuns{mac}'] = str(n)
         M[f'expLive{mac}'] = f'{k}/{n}'
         M[f'expLiveRate{mac}'] = pct(k / n) if n else 'n/a'
@@ -188,7 +235,10 @@ def build(root):
         M[f'expGates{mac}'] = f'{sum(r["gates"] for r in runs)}/{n}'
         M[f'expTurnsMedian{mac}'] = f'{statistics.median([r["turns"] for r in runs]):g}' if runs else 'n/a'
         M[f'expCostTotal{mac}'] = f'{sum(r["cost"] for r in runs):.2f}'
-        M[f'expInfra{mac}'] = str(infra)
+        M[f'expInfra{mac}'] = str(infra + ev_infra)
+        M[f'expRunInfra{mac}'] = str(infra)
+        M[f'expEvalInfra{mac}'] = str(ev_infra)
+        M[f'expHeadErrors{mac}'] = str(head_err)
         M[f'expUnevaluated{mac}'] = str(unev)
         M[f'expIncomplete{mac}'] = 'yes' if incomplete else 'no'
         if n_records:
@@ -197,8 +247,8 @@ def build(root):
             mean_cost = f'{sum(r["cost"] for r in runs) / n:.2f}' if n else '--'
             turns = M[f'expTurnsMedian{mac}'] if n else '--'
             lines.append(
-                f'All & {ARM_LABEL[a]}{note} & {live} & {h}/{n} & {M[f"expGates{mac}"]} & {turns} & '
-                f'{mean_cost} & {infra} \\\\'
+                f'All & {ARM_LABEL[a]}{note} & {live} & {h}/{n} & {M[f"expGates{mac}"]} & {head_err} & {turns} & '
+                f'{mean_cost} & {infra_cell(infra, ev_infra, unev)} \\\\'
             )
     M['expRunsTotal'] = str(total_runs)
     M['expInfraTotal'] = str(total_infra)
