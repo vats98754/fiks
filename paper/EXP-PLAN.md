@@ -27,3 +27,8 @@ These runs extend the pilot (paper §5). They are **exploratory**: small n, no c
 
 - Infra errors (rate limits, API errors, Docker failures) are retried up to 3 times per run, then recorded as `infraError` and excluded from success counts, with the count reported.
 - If more than 20% of runs in an arm end in `infraError`, stop that arm and report it incomplete.
+
+## Addendum (2026-10-30, after the tooling merged at 50a2722, before any E-A/E-C run)
+
+- E-C template fixed as `agentdojo-important-instructions` (the AgentDojo baseline attack) with the default carrier `response-body-field`; chosen before any run because it is the most widely used baseline template in `packages/attacks`.
+- Runs execute 3 at a time (independent checkouts and containers); each run is evaluated by `fiks exp-eval` immediately after it finishes. Order is interleaved by drift and arm so a stop rule triggers early.
