@@ -1,0 +1,169 @@
+{
+  "experiment": "E-B response mutations (paper/EXP-PLAN.md)",
+  "runId": "detect-20261030",
+  "source": "clean run detect-20261030",
+  "startedAt": "2026-10-30T23:20:57.704Z",
+  "finishedAt": "2026-10-30T23:20:59.598Z",
+  "replay": "offline: shop-mcp seed-v1 process over a recorded-response upstream; contracts via proxy replay",
+  "shopRef": "seed-v1",
+  "shopMcpSha": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7",
+  "fiksSha": "c9a7d8c5224395d7d2f5bd53ab4f5869d86cb488",
+  "fiksDirty": false,
+  "llm": "none (FIKS_LLM_FORBID=1)",
+  "seeds": 1,
+  "calls": 32,
+  "skippedRecordings": [],
+  "controls": {
+    "rows": 32,
+    "matchesLogged": 32,
+    "mismatches": [],
+    "unlogged": 0
+  },
+  "unmatchedRequests": 0,
+  "perOp": {
+    "M1": {
+      "rows": 32,
+      "applicable": 31,
+      "flagged": 16,
+      "toolError": 0,
+      "coupled": "range",
+      "coupledKindInContracts": true
+    },
+    "M2": {
+      "rows": 32,
+      "applicable": 31,
+      "flagged": 16,
+      "toolError": 1,
+      "coupled": "range",
+      "coupledKindInContracts": true
+    },
+    "M3": {
+      "rows": 32,
+      "applicable": 32,
+      "flagged": 3,
+      "toolError": 25,
+      "coupled": null,
+      "coupledKindInContracts": null
+    },
+    "M4": {
+      "rows": 32,
+      "applicable": 32,
+      "flagged": 3,
+      "toolError": 24,
+      "coupled": null,
+      "coupledKindInContracts": null
+    },
+    "M5": {
+      "rows": 32,
+      "applicable": 32,
+      "flagged": 1,
+      "toolError": 30,
+      "coupled": null,
+      "coupledKindInContracts": null
+    },
+    "M6": {
+      "rows": 32,
+      "applicable": 2,
+      "flagged": 2,
+      "toolError": 0,
+      "coupled": "countMatchesTotal",
+      "coupledKindInContracts": true
+    },
+    "M7": {
+      "rows": 32,
+      "applicable": 32,
+      "flagged": 0,
+      "toolError": 21,
+      "coupled": null,
+      "coupledKindInContracts": null
+    },
+    "M8": {
+      "rows": 32,
+      "applicable": 1,
+      "flagged": 1,
+      "toolError": 0,
+      "coupled": "freshness",
+      "coupledKindInContracts": true
+    },
+    "M9": {
+      "rows": 32,
+      "applicable": 0,
+      "flagged": 0,
+      "toolError": 0,
+      "coupled": "freshness",
+      "coupledKindInContracts": true
+    },
+    "M10": {
+      "rows": 32,
+      "applicable": 31,
+      "flagged": 0,
+      "toolError": 0,
+      "coupled": "enum",
+      "coupledKindInContracts": false
+    },
+    "M11": {
+      "rows": 32,
+      "applicable": 30,
+      "flagged": 0,
+      "toolError": 0,
+      "coupled": null,
+      "coupledKindInContracts": null
+    },
+    "M12": {
+      "rows": 32,
+      "applicable": 25,
+      "flagged": 0,
+      "toolError": 0,
+      "coupled": null,
+      "coupledKindInContracts": null
+    },
+    "M13": {
+      "rows": 32,
+      "applicable": 1,
+      "flagged": 1,
+      "toolError": 0,
+      "coupled": "freshness",
+      "coupledKindInContracts": true
+    },
+    "M14": {
+      "rows": 32,
+      "applicable": 16,
+      "flagged": 0,
+      "toolError": 16,
+      "coupled": "readAfterWrite",
+      "coupledKindInContracts": true
+    },
+    "B1": {
+      "rows": 32,
+      "applicable": 9,
+      "flagged": 0,
+      "toolError": 0,
+      "coupled": null,
+      "coupledKindInContracts": null
+    },
+    "B2": {
+      "rows": 32,
+      "applicable": 32,
+      "flagged": 0,
+      "toolError": 0,
+      "coupled": null,
+      "coupledKindInContracts": null
+    },
+    "B3": {
+      "rows": 32,
+      "applicable": 32,
+      "flagged": 0,
+      "toolError": 0,
+      "coupled": null,
+      "coupledKindInContracts": null
+    },
+    "B4": {
+      "rows": 32,
+      "applicable": 32,
+      "flagged": 0,
+      "toolError": 0,
+      "coupled": null,
+      "coupledKindInContracts": null
+    }
+  }
+}

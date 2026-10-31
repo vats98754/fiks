@@ -1,0 +1,45 @@
+{
+  "experiment": "E-B clean traffic (paper/EXP-PLAN.md)",
+  "runId": "detect-20261030",
+  "startedAt": "2026-10-30T23:20:52.437Z",
+  "finishedAt": "2026-10-30T23:20:55.344Z",
+  "vendor": "v1",
+  "via": "fiks-proxy (stdio, in-process harness)",
+  "shopRef": "seed-v1",
+  "shopMcpSha": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7",
+  "fiksSha": "c9a7d8c5224395d7d2f5bd53ab4f5869d86cb488",
+  "fiksDirty": false,
+  "llm": "none (FIKS_LLM_FORBID=1)",
+  "catalogSize": 15,
+  "fixedQueries": [
+    "",
+    "Laptop",
+    "aero",
+    "clarity",
+    "thunderbolt",
+    "usb4",
+    "cable 2m",
+    "hub pro",
+    "mech",
+    "2.1",
+    "no-such-product-zz"
+  ],
+  "seedOrders": [
+    "o-5001"
+  ],
+  "calls": 32,
+  "byKind": {
+    "product": 15,
+    "category": 5,
+    "query": 11,
+    "order": 1
+  },
+  "verdicts": {
+    "verified": 32,
+    "violated": 0,
+    "unverifiable": 0,
+    "none": 0
+  },
+  "violated": 0,
+  "entities": 16
+}
