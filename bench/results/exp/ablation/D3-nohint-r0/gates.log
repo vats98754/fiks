@@ -1,0 +1,33 @@
+
+=== try 0: suite (before re-record)
+JSON report written to /tmp/fiks-exp/vitest-4782-4.json
+
+
+
+=== try 0: rerecord
+{"log":{"profile":{"domain":"shop","base":"v2","ruleId":null,"ruleHash":null},"head":"b7390ad2b58255ebb12b2f5a425cfe22c74e4262","fromCommit":"b7390ad2b58255ebb12b2f5a425cfe22c74e4262","check":"suite","files":[{"path":"test/repro/tr_7280855590.json","mode":"stale","requestKeysBefore":["POST /orders body={\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2}]} headers=[content-type]","GET /orders/o-5002 body= headers=[]"],"requestKeysAfter":["POST /orders body={\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2}]} headers=[content-type]","GET /orders/o-5002 body= headers=[]","GET /orders/o-5002 body= headers=[]","GET /orders/o-5002 body= headers=[]","GET /orders/o-5002 body= headers=[]"],"outcome":"rerecorded"}],"at":"2026-10-31T00:55:51.057Z"}}
+
+stale rerecorded test/repro/tr_7280855590.json
+
+
+=== try 0: suite (after re-record)
+JSON report written to /tmp/fiks-exp/vitest-4782-5.json
+
+
+
+=== try 0: typecheck
+
+> shop-mcp@0.1.0 typecheck /opt/fiks/.work/shop-mcp
+> tsc -p tsconfig.json
+
+
+
+
+=== try 0: lint
+
+> shop-mcp@0.1.0 lint /opt/fiks/.work/shop-mcp
+> biome check .
+
+Checked 33 files in 300ms. No fixes applied.
+
+

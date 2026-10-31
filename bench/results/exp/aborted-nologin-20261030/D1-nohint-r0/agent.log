@@ -1,0 +1,5 @@
+=== try 0 (agent-sdk, infra_error)
+assistant: Not logged in · Please run /login
+try 1 failed: Not logged in · Please run /login
+
+infra_error after 1 tries: Not logged in · Please run /login

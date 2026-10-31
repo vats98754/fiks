@@ -1,0 +1,64 @@
+try 0: Error: docker run --rm --network … exited 1:
+eate directory '/fiks-nm/./.pnpm/expect-type@1.4.0': No space left on device
+cp: cannot create directory '/fiks-nm/./.pnpm/obug@2.2.1': No space left on device
+cp: cannot create directory '/fiks-nm/./.pnpm/std-env@4.3.0': No space left on device
+cp: cannot create directory '/fiks-nm/./.pnpm/tinybench@6.2.2': No space left on device
+cp: cannot create directory '/fiks-nm/./.pnpm/tinyexec@1.3.1': No space left on device
+cp: cannot create directory '/fiks-nm/./.pnpm/why-is-node-running@3.2.1': No space left on device
+cp: cannot create directory '/fiks-nm/./.pnpm/@hono+node-server@2.1.5_hono@4.13.13': No space left on device
+cp: cannot create directory '/fiks-nm/./.pnpm/es-module-lexer@2.3.2': No space left on device
+cp: cannot create directory '/fiks-nm/./.pnpm/hono@4.13.13': No space left on device
+cp: cannot create directory '/fiks-nm/./.pnpm/ajv@8.20.0': No space left on device
+cp: error writing '/fiks-nm/./.pnpm/lock.yaml': No space left on device
+cp: cannot create directory '/fiks-nm/./.pnpm/node_modules': No space left on device
+cp: cannot create symbolic link '/fiks-nm/./vitest': No space left on device
+cp: cannot create directory '/fiks-nm/./@biomejs': No space left on device
+cp: cannot create directory '/fiks-nm/./@types': No space left on device
+cp: cannot create directory '/fiks-nm/./@modelcontextprotocol': No space left on device
+cp: cannot create directory '/fiks-nm/./.bin': No space left on device
+cp: error writing '/fiks-nm/./.modules.yaml': No space left on device
+    at dockerOk (/Users/anvayvats/fiks-wt/RUNS/packages/sandbox/src/docker.ts:98:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async DockerExecBackend.doStart (/Users/anvayvats/fiks-wt/RUNS/packages/sandbox/src/backend.ts:176:7)
+    at async Function.create (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/sandbox.ts:237:5)
+    at async body (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/repair-run.ts:235:10)
+    at async runOnce (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/repair-run.ts:410:12)
+    at async runExpRepair (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/repair-run.ts:153:12)
+    at async Object.run (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/commands/exp-repair.ts:67:37)
+    at async <anonymous> (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/main.ts:67:14)
+try 1: Error: docker run --rm --network … exited 125:
+docker: Error response from daemon: write /var/lib/docker/containers/0fd37fdbc6ce00f6395b06f872e1c25fe91509f400a83fc47ae29f8891b95c81/hostname: no space left on device
+
+Run 'docker run --help' for more information
+    at dockerOk (/Users/anvayvats/fiks-wt/RUNS/packages/sandbox/src/docker.ts:98:11)
+    at async DockerExecBackend.doStart (/Users/anvayvats/fiks-wt/RUNS/packages/sandbox/src/backend.ts:176:7)
+    at async Function.create (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/sandbox.ts:237:5)
+    at async body (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/repair-run.ts:235:10)
+    at async runOnce (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/repair-run.ts:410:12)
+    at async runExpRepair (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/repair-run.ts:153:12)
+    at async Object.run (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/commands/exp-repair.ts:67:37)
+    at async <anonymous> (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/main.ts:67:14)
+try 2: Error: docker run --rm --network … exited 125:
+docker: Error response from daemon: write /var/lib/docker/containers/8e7542d3be5504b152f5f0cdbab9e49531c19b10ed479d326e6284140a0f1023/.tmp-hostconfig.json4084980146: no space left on device
+
+Run 'docker run --help' for more information
+    at dockerOk (/Users/anvayvats/fiks-wt/RUNS/packages/sandbox/src/docker.ts:98:11)
+    at async DockerExecBackend.doStart (/Users/anvayvats/fiks-wt/RUNS/packages/sandbox/src/backend.ts:176:7)
+    at async Function.create (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/sandbox.ts:237:5)
+    at async body (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/repair-run.ts:235:10)
+    at async runOnce (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/repair-run.ts:410:12)
+    at async runExpRepair (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/repair-run.ts:153:12)
+    at async Object.run (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/commands/exp-repair.ts:67:37)
+    at async <anonymous> (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/main.ts:67:14)
+try 3: Error: docker run --rm --network … exited 125:
+docker: Error response from daemon: mkdir /var/lib/docker/overlay2/a2cad75d8dd8a89a8cd33a7007a3eb095f0ed41be3f6804c6126ffd1a35e3442/merged: no space left on device
+
+Run 'docker run --help' for more information
+    at dockerOk (/Users/anvayvats/fiks-wt/RUNS/packages/sandbox/src/docker.ts:98:11)
+    at async DockerExecBackend.doStart (/Users/anvayvats/fiks-wt/RUNS/packages/sandbox/src/backend.ts:176:7)
+    at async Function.create (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/sandbox.ts:237:5)
+    at async body (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/repair-run.ts:235:10)
+    at async runOnce (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/repair-run.ts:410:12)
+    at async runExpRepair (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/repair-run.ts:153:12)
+    at async Object.run (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/commands/exp-repair.ts:67:37)
+    at async <anonymous> (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/main.ts:67:14)

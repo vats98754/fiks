@@ -1,0 +1,43 @@
+try 0: Error: docker build --progress=plain --pull=false … exited 102:
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile:
+#1 transferring dockerfile: 1.61kB 0.0s done
+#1 DONE 0.2s
+
+#2 [internal] load metadata for docker.io/library/node:22.23.3-bookworm-slim@sha256:3ed98443660ff48413b5af19ecefce3b9d50845a901a43420d47cc63a9fddbe9
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context:
+#3 transferring context: 2B 0.0s done
+#3 DONE 0.1s
+
+#4 [1/9] FROM docker.io/library/node:22.23.3-bookworm-slim@sha256:3ed98443660ff48413b5af19ecefce3b9d50845a901a43420d47cc63a9fddbe9
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 38.44kB 0.0s done
+#5 ERROR: write /var/lib/docker/overlay2/njr37jh7w3q8npd2gmzh2vu3w/diff/manifest/pnpm-lock.yaml: no space left on device
+------
+ > [internal] load build context:
+------
+ERROR: failed to build: failed to solve: ResourceExhausted: write /var/lib/docker/overlay2/njr37jh7w3q8npd2gmzh2vu3w/diff/manifest/pnpm-lock.yaml: no space left on device
+    at dockerOk (/Users/anvayvats/fiks-wt/RUNS/packages/sandbox/src/docker.ts:98:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async withLock (/Users/anvayvats/fiks-wt/RUNS/packages/sandbox/src/lock.ts:72:12)
+    at async buildRepoImage (/Users/anvayvats/fiks-wt/RUNS/packages/sandbox/src/build.ts:117:5)
+    at async <anonymous> (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/sandbox.ts:175:10)
+try 1: Error: docker build --progress=plain --pull=false … exited 102:
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.61kB 0.0s done
+#1 DONE 0.1s
+ERROR: failed to build: failed to solve: ResourceExhausted: failed to read dockerfile: failed to create temp dir: mkdir /var/lib/docker/tmp/buildkit-mount3478766125: no space left on device
+    at dockerOk (/Users/anvayvats/fiks-wt/RUNS/packages/sandbox/src/docker.ts:98:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async withLock (/Users/anvayvats/fiks-wt/RUNS/packages/sandbox/src/lock.ts:72:12)
+    at async buildRepoImage (/Users/anvayvats/fiks-wt/RUNS/packages/sandbox/src/build.ts:117:5)
+    at async <anonymous> (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/sandbox.ts:175:10)

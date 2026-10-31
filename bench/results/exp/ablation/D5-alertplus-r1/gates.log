@@ -1,0 +1,22 @@
+
+=== try 0: suite (before re-record)
+JSON report written to /tmp/fiks-exp/vitest-69712-4.json
+
+
+
+=== try 0: typecheck
+
+> shop-mcp@0.1.0 typecheck /opt/fiks/.work/shop-mcp
+> tsc -p tsconfig.json
+
+
+
+
+=== try 0: lint
+
+> shop-mcp@0.1.0 lint /opt/fiks/.work/shop-mcp
+> biome check .
+
+Checked 32 files in 118ms. No fixes applied.
+
+

@@ -1,0 +1,84 @@
+{
+  "schema": "fiks.exp.run/1",
+  "runId": "D3-alertplus-r1-20261031T111839Z-7f6c",
+  "experiment": "E-A",
+  "arm": "alertplus",
+  "drift": "D3",
+  "rep": 1,
+  "model": "claude-opus-5-5",
+  "runner": "agent-sdk",
+  "traceId": "tr_7280855590",
+  "traceFile": "packages/contract-update/test/fixtures/traces/D3-tr_7280855590.json",
+  "traceSha256": "100291a1def26cd9bb8a25b4ad684d22691413e3a525110cd3035d71bf660700",
+  "promptSha256": "69e1266679476357aa23ecbdb6b799f9fb5874841c3a8b614b2d1b163a9894e1",
+  "base": {
+    "ref": "seed-v1",
+    "commit": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7"
+  },
+  "reproCommit": null,
+  "head": {
+    "sha": "1dc7b12854c0702e3b28fd80fcd7b0b8bdca7e7a",
+    "ref": "refs/fiks-exp/D3-alertplus-r1-20261031T111839Z-7f6c"
+  },
+  "gates": [
+    {
+      "name": "F",
+      "ok": true,
+      "reason": "fails for the stated reason on 3/3 runs"
+    },
+    {
+      "name": "guard",
+      "ok": true,
+      "reason": "src changes: src/tools/get_order.ts"
+    },
+    {
+      "name": "repro",
+      "ok": false,
+      "reason": "repro test still fails: AssertionError: shop.create_order/readAfterWrite violated (/opt/fiks/.work/shop-mcp/test/repro/tr_7280855590.json): expected [ Array(1) ] to deeply equal []"
+    },
+    {
+      "name": "suite",
+      "ok": false,
+      "reason": "suite fails: test/repro/tr_7280855590.test.ts > shop.create_order/readAfterWrite holds for create_order [fiks tr_7280855590]"
+    },
+    {
+      "name": "typecheck",
+      "ok": true,
+      "reason": "pnpm typecheck passes"
+    },
+    {
+      "name": "lint",
+      "ok": true,
+      "reason": "pnpm lint passes"
+    },
+    {
+      "name": "integrity",
+      "ok": true,
+      "reason": "checked bytes unchanged"
+    }
+  ],
+  "gatesPassed": false,
+  "diff": {
+    "files": [
+      "src/tools/get_order.ts"
+    ],
+    "insertions": 5,
+    "deletions": 2
+  },
+  "nonSrcEdits": [],
+  "rerecorded": [],
+  "outcome": "completed",
+  "turns": 18,
+  "costUsd": 0.2045366,
+  "durationMs": 69464,
+  "infraError": null,
+  "sandbox": "docker",
+  "images": {
+    "repo": "sha256:46f9afe7349f11ed1286f827fc3a6c9a50a2958987e6264f475176ee14f67be1",
+    "tools": "sha256:58a532a29cb84f7dfc6f16f21299182adb95b2222d463ff50bfd66884c95465a"
+  },
+  "inject": null,
+  "startedAt": "2026-10-31T11:18:39.189Z",
+  "finishedAt": "2026-10-31T11:19:49.102Z",
+  "infraRetries": 0
+}

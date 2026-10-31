@@ -1,0 +1,43 @@
+{
+  "schema": "fiks.exp.run/1",
+  "runId": "D1-alert-r0-20261031T004531Z-83d6",
+  "experiment": "E-A",
+  "arm": "alert",
+  "drift": "D1",
+  "rep": 0,
+  "model": "claude-opus-5-5",
+  "runner": "agent-sdk",
+  "traceId": "tr_b47c5b77c6",
+  "traceFile": "packages/contract-update/test/fixtures/traces/D1-tr_b47c5b77c6.json",
+  "traceSha256": "02474787904e47675761ed6afb93883c8cf5cadc844ce8cdcbc449aafac5b687",
+  "promptSha256": "c965682a1638dad982ae9eb333110d56c1bb9c8b919b9e1199c3183cf207cf88",
+  "base": {
+    "ref": "seed-v1",
+    "commit": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7"
+  },
+  "reproCommit": null,
+  "head": null,
+  "gates": [],
+  "gatesPassed": false,
+  "diff": {
+    "files": [],
+    "insertions": 0,
+    "deletions": 0
+  },
+  "nonSrcEdits": [],
+  "rerecorded": [],
+  "outcome": "infra_error",
+  "turns": 1,
+  "costUsd": 0,
+  "durationMs": 22937,
+  "infraError": "runner: infra_error after 1 tries: Not logged in · Please run /login",
+  "sandbox": "docker",
+  "images": {
+    "repo": "sha256:46f9afe7349f11ed1286f827fc3a6c9a50a2958987e6264f475176ee14f67be1",
+    "tools": "sha256:58a532a29cb84f7dfc6f16f21299182adb95b2222d463ff50bfd66884c95465a"
+  },
+  "inject": null,
+  "startedAt": "2026-10-31T00:45:31.500Z",
+  "finishedAt": "2026-10-31T00:47:21.964Z",
+  "infraRetries": 3
+}

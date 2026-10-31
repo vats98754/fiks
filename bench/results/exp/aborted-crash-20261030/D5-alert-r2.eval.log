@@ -1,0 +1,17 @@
+node:fs:440
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open 'bench/results/exp/ablation/D5-alert-r2/record.json'
+    at readFileSync (node:fs:440:20)
+    at readRunRecord (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/evaluate.ts:272:26)
+    at evaluateRun (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/evaluate.ts:281:15)
+    at Object.run (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/commands/exp-eval.ts:96:24)
+    at <anonymous> (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/main.ts:67:24) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'bench/results/exp/ablation/D5-alert-r2/record.json'
+}
+
+Node.js v22.23.3

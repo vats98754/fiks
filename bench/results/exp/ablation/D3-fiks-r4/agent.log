@@ -1,0 +1,27 @@
+=== try 0 (agent-sdk, completed)
+tool_use Bash: {"command":"cd /Users/anvayvats/fiks-wt/RUNS/.work/exp/D3-fiks-r4-20261031T012936Z-5ba9-try0; ls src src/tools; cat src/tools/create_order.ts src/tools/get_order.ts src/vendor.ts; cat test/fixtures/v1/order-create.json; cat test/repro/tr_7280855590.json | head -c 3000"}
+tool_use Glob: {"pattern":"{src/**/*,test/fixtures/v1/*,test/repro/*}"}
+tool_use Read: {"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D3-fiks-r4-20261031T012936Z-5ba9-try0/src/tools/create_order.ts"}
+tool_use Read: {"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D3-fiks-r4-20261031T012936Z-5ba9-try0/src/tools/get_order.ts"}
+tool_use Read: {"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D3-fiks-r4-20261031T012936Z-5ba9-try0/src/vendor.ts"}
+tool_use Read: {"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D3-fiks-r4-20261031T012936Z-5ba9-try0/test/fixtures/v1/order-create.json"}
+tool_use Read: {"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D3-fiks-r4-20261031T012936Z-5ba9-try0/test/repro/tr_7280855590.json"}
+tool_use Grep: {"pattern":"orders|header|in\\\": \\\"header|Idempotency|Prefer|consisten|commit","path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D3-fiks-r4-20261031T012936Z-5ba9-try0/vendor/openapi.json","output_mode":"content","-i":true,"-C":3}
+tool_use Read: {"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D3-fiks-r4-20261031T012936Z-5ba9-try0/vendor/openapi.json","offset":70,"limit":120}
+assistant: Spec says POST /orders takes a recommended Idempotency-Key header that shop-mcp never sends. Next I'm checking how the replay harness matches request headers.
+tool_use Grep: {"pattern":"headers|UNMATCHED","path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D3-fiks-r4-20261031T012936Z-5ba9-try0/test","glob":"*.ts","output_mode":"content","-C":2}
+tool_use Read: {"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D3-fiks-r4-20261031T012936Z-5ba9-try0/test/fiks/check.ts"}
+assistant: The likely cause is that v2 only stores orders sent with an `Idempotency-Key`, so I'll send one with every create.
+tool_use Edit: {"replace_all":false,"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D3-fiks-r4-20261031T012936Z-5ba9-try0/src/tools/create_order.ts","old_string":"  const res = await vendor.post('/orders', { items: args.items });","new_string":"  // Vendor 2026-10-01 does not persist orders placed without an 
+tool_use Edit: {"replace_all":false,"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D3-fiks-r4-20261031T012936Z-5ba9-try0/src/tools/create_order.ts","old_string":"import { z } from 'zod';","new_string":"import { randomUUID } from 'node:crypto';\nimport { z } from 'zod';"}
+tool_use Bash: {"command":"pnpm typecheck && pnpm lint && pnpm test 2>&1 | tail -40"}
+tool_use Bash: {"command":"pnpm typecheck"}
+tool_use Bash: {"command":"pnpm lint"}
+tool_use Bash: {"command":"pnpm test"}
+assistant: Subject: send an Idempotency-Key when creating orders
+
+Vendor version 2026-10-01 still answers `POST /orders` with a 200 and an order id, but it seems to no longer save orders placed without an `Idempotency-Key` header. The spec has always listed that header as recommended, and shop-mcp never sent it, so `GET /orders/o-5002` returned 404 right after the create. I couldn't run the live vendor, so this cause is inferred, not confirmed: the header is the only thing the spec says the client can change on this request. The fix is in `src/tools/create_order.ts`: `create_order` now sends a new random UUID as the `Idempotency-Key` on every call, so each new order gets its own key and none is reused. Typecheck and lint pass, and so does every test except two, as the rules expect: the repro test and the v1 `order-create.json` fixture both report UNMATCHED_REQUEST because their recordings don't have the new header. They need re-recording, and the v1 output should stay the same because v1 accepts this optional header. I left one other change alone because it's outside this fix: 2026-10-01 now returns `created_at` as epoch milliseconds, and `get_order` doesn't parse that format yet.
+
+Subject: send an Idempotency-Key when creating orders
+
+Vendor version 2026-10-01 still answers `POST /orders` with a 200 and an order id, but it seems to no longer save orders placed without an `Idempotency-Key` header. The spec has always listed that header as recommended, and shop-mcp never sent it, so `GET /orders/o-5002` returned 404 right after the create. I couldn't run the live vendor, so this cause is inferred, not confirmed: the header is the only thing the spec says the client can change on this request. The fix is in `src/tools/create_order.ts`: `create_order` now sends a new random UUID as the `Idempotency-Key` on every call, so each new order gets its own key and none is reused. Typecheck and lint pass, and so does every test except two, as the rules expect: the repro test and the v1 `order-create.json` fixture both report UNMATCHED_REQUEST because their recordings don't have the new header. They need re-recording, and the v1 output should stay the same because v1 accepts this optional header. I left one other change alone because it's outside this fix: 2026-10-01 now returns `created_at` as epoch milliseconds, and `get_order` doesn't parse that format yet.

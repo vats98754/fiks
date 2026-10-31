@@ -1,0 +1,19 @@
+=== try 0 (agent-sdk, completed)
+tool_use Bash: {"command":"cd /Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-alertplus-r0-20261031T111633Z-abed-try0; ls src src/tools; cat src/tools/get_order.ts; grep -n \"created_at\" -A5 vendor/openapi.json | head -40; ls test* fixtures* 2>/dev/null"}
+tool_use Glob: {"pattern":"src/**/*.ts"}
+tool_use Grep: {"pattern":"created_at","output_mode":"content","glob":"!node_modules"}
+tool_use Read: {"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-alertplus-r0-20261031T111633Z-abed-try0/src/tools/get_order.ts"}
+tool_use Read: {"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-alertplus-r0-20261031T111633Z-abed-try0/vendor/openapi.json","offset":240,"limit":15}
+tool_use Grep: {"pattern":"version|typeof","path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-alertplus-r0-20261031T111633Z-abed-try0/src","output_mode":"content"}
+tool_use Edit: {"replace_all":false,"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-alertplus-r0-20261031T111633Z-abed-try0/src/tools/get_order.ts","old_string":"  created_at: string;\n}","new_string":"  // ISO-8601 string in older API versions; epoch milliseconds since 2026-10-01.\n  created_at: string | 
+tool_use Edit: {"replace_all":false,"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-alertplus-r0-20261031T111633Z-abed-try0/src/tools/get_order.ts","old_string":"  const createdAt = new Date(Date.parse(String(o.created_at)) || 0);","new_string":"  const createdAt =\n    typeof o.created_at === 'number'\n  
+tool_use Bash: {"command":"pnpm typecheck"}
+tool_use Bash: {"command":"pnpm lint"}
+tool_use Bash: {"command":"pnpm test"}
+assistant: Subject: parse epoch-millisecond created_at in get_order
+
+Starting with vendor API version 2026-10-01, `created_at` comes back as a number of milliseconds since 1970 (e.g. `1792142857943`), not the ISO-8601 string the published spec describes. `get_order` turned that number into a string and passed it to `Date.parse`, which returned NaN. The `|| 0` fallback then turned that into `1970-01-01T00:00:00.000Z`. Now, when `created_at` is a number, the handler builds the Date straight from it, so o-5001 returns `2026-10-16T09:27:37.943Z`, matching upstream. String values still go through the old code, so the v1 fixtures give the same output as before. Typecheck, lint and tests all pass. I left the `|| 0` fallback alone to keep the change small, but an unparseable value from a future change would still show up silently as 1970 instead of being flagged. It's worth replacing.
+
+Subject: parse epoch-millisecond created_at in get_order
+
+Starting with vendor API version 2026-10-01, `created_at` comes back as a number of milliseconds since 1970 (e.g. `1792142857943`), not the ISO-8601 string the published spec describes. `get_order` turned that number into a string and passed it to `Date.parse`, which returned NaN. The `|| 0` fallback then turned that into `1970-01-01T00:00:00.000Z`. Now, when `created_at` is a number, the handler builds the Date straight from it, so o-5001 returns `2026-10-16T09:27:37.943Z`, matching upstream. String values still go through the old code, so the v1 fixtures give the same output as before. Typecheck, lint and tests all pass. I left the `|| 0` fallback alone to keep the change small, but an unparseable value from a future change would still show up silently as 1970 instead of being flagged. It's worth replacing.

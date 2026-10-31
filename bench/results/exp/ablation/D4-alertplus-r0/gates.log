@@ -1,0 +1,33 @@
+
+=== try 0: suite (before re-record)
+JSON report written to /tmp/fiks-exp/vitest-52728-4.json
+
+
+
+=== try 0: rerecord
+{"log":{"profile":{"domain":"shop","base":"v2","ruleId":null,"ruleHash":null},"head":"933d85b9a1fb855d1a737c7b7416e5d3b32fd35f","fromCommit":"933d85b9a1fb855d1a737c7b7416e5d3b32fd35f","check":"suite","files":[{"path":"test/repro/tr_d02358451e.json","mode":"stale","requestKeysBefore":["GET /products?q=cable body= headers=[]"],"requestKeysAfter":["GET /products?q=cable body= headers=[]","GET /products?q=cable&cursor=5 body= headers=[]"],"outcome":"rerecorded"}],"at":"2026-10-31T11:17:58.738Z"}}
+
+stale rerecorded test/repro/tr_d02358451e.json
+
+
+=== try 0: suite (after re-record)
+JSON report written to /tmp/fiks-exp/vitest-52728-5.json
+
+
+
+=== try 0: typecheck
+
+> shop-mcp@0.1.0 typecheck /opt/fiks/.work/shop-mcp
+> tsc -p tsconfig.json
+
+
+
+
+=== try 0: lint
+
+> shop-mcp@0.1.0 lint /opt/fiks/.work/shop-mcp
+> biome check .
+
+Checked 33 files in 268ms. No fixes applied.
+
+

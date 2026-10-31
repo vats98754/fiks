@@ -1,0 +1,34 @@
+
+=== try 0: suite (before re-record)
+JSON report written to /tmp/fiks-exp/vitest-51438-4.json
+
+
+
+=== try 0: rerecord
+{"log":{"profile":{"domain":"shop","base":"v2","ruleId":null,"ruleHash":null},"head":"b7390ad2b58255ebb12b2f5a425cfe22c74e4262","fromCommit":"b7390ad2b58255ebb12b2f5a425cfe22c74e4262","check":"suite","files":[{"path":"test/fixtures/v1/order-create.json","mode":"stale","requestKeysBefore":["POST /orders body={\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2}]} headers=[content-type]","GET /orders/o-5002 body= headers=[]"],"requestKeysAfter":["POST /orders body={\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2}]} headers=[content-type,idempotency-key]","GET /orders/o-5002 body= headers=[]"],"outcome":"rerecorded"},{"path":"test/repro/tr_7280855590.json","mode":"stale","requestKeysBefore":["POST /orders body={\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2}]} headers=[content-type]","GET /orders/o-5002 body= headers=[]"],"requestKeysAfter":["POST /orders body={\"items\":[{\"product_id\":\"p-1004\",\"quantity\":2}]} headers=[content-type,idempotency-key]","GET /orders/o-5002 body= headers=[]"],"outcome":"rerecorded"}],"at":"2026-10-31T01:07:46.018Z"}}
+
+stale rerecorded test/fixtures/v1/order-create.json
+stale rerecorded test/repro/tr_7280855590.json
+
+
+=== try 0: suite (after re-record)
+JSON report written to /tmp/fiks-exp/vitest-51438-5.json
+
+
+
+=== try 0: typecheck
+
+> shop-mcp@0.1.0 typecheck /opt/fiks/.work/shop-mcp
+> tsc -p tsconfig.json
+
+
+
+
+=== try 0: lint
+
+> shop-mcp@0.1.0 lint /opt/fiks/.work/shop-mcp
+> biome check .
+
+Checked 34 files in 88ms. No fixes applied.
+
+

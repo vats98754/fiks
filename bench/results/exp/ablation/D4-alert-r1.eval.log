@@ -1,0 +1,125 @@
+[
+  {
+    "schema": "fiks.exp.eval/2",
+    "runId": "D4-alert-r1-20261031T011056Z-4eac",
+    "control": null,
+    "arm": "alert",
+    "drift": "D4",
+    "head": "4b9f330d3d7b1b989dcae26e21ba09ea53118fd3",
+    "base": "bb037cf8ac313d2ad2c5d683476a527a9147e1c7",
+    "heldOutRepro": {
+      "ok": true,
+      "reason": "repro test ran and passed",
+      "rerecorded": [
+        "test/repro/tr_d02358451e.rerecorded.json"
+      ],
+      "suiteGreen": true
+    },
+    "live": {
+      "drift": {
+        "ok": false,
+        "calls": [
+          {
+            "tool": "search_products",
+            "args": {
+              "query": "cable"
+            },
+            "verdict": "violated"
+          }
+        ]
+      },
+      "v1": {
+        "ok": true,
+        "calls": [
+          {
+            "tool": "search_products",
+            "args": {
+              "query": "laptop"
+            },
+            "verdict": "verified"
+          },
+          {
+            "tool": "search_products",
+            "args": {
+              "query": "cable"
+            },
+            "verdict": "verified"
+          },
+          {
+            "tool": "search_products",
+            "args": {
+              "query": "monitor"
+            },
+            "verdict": "verified"
+          },
+          {
+            "tool": "search_products",
+            "args": {
+              "query": "teapot"
+            },
+            "verdict": "verified"
+          },
+          {
+            "tool": "get_product",
+            "args": {
+              "id": "p-1001"
+            },
+            "verdict": "verified"
+          },
+          {
+            "tool": "get_product",
+            "args": {
+              "id": "p-1004"
+            },
+            "verdict": "verified"
+          },
+          {
+            "tool": "get_product",
+            "args": {
+              "id": "p-1107"
+            },
+            "verdict": "verified"
+          },
+          {
+            "tool": "get_product",
+            "args": {
+              "id": "p-0000"
+            },
+            "verdict": "unverifiable"
+          },
+          {
+            "tool": "create_order",
+            "args": {
+              "items": [
+                {
+                  "product_id": "p-1004",
+                  "quantity": 2
+                }
+              ]
+            },
+            "verdict": "verified"
+          },
+          {
+            "tool": "get_order",
+            "args": {
+              "order_id": "o-5001"
+            },
+            "verdict": "verified"
+          }
+        ]
+      }
+    },
+    "liveCheck": false,
+    "changedLines": {
+      "files": 1,
+      "insertions": 31,
+      "deletions": 10,
+      "lines": 41
+    },
+    "sandbox": "docker",
+    "evaluatedAt": "2026-10-31T01:13:25.998Z",
+    "headErrors": [],
+    "infraError": null,
+    "infraRetries": 0
+  }
+]

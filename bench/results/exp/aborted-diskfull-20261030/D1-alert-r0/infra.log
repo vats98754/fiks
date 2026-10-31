@@ -1,0 +1,15 @@
+try 0: exception: docker run --rm --network … exited 1:
+eate directory '/fiks-nm/./.pnpm/expect-type@1.4.0': No space left on device
+cp: cannot create directory '/fiks-nm/./.pnpm/obug@2.2.1': No space left on device
+cp: cannot create directory '/fiks-nm/./.pnpm/std-env@4.3.0': No space left on device
+cp: cannot create directory '/fiks-nm/./.pnpm/tinybench@6.2.2': No space left on device
+cp: cannot create directory '/fiks-nm/./.pnpm/tinyexec@1.3.1': No space left on device
+cp: cannot create directory '/fiks-nm/./.
+try 1: exception: docker run --rm --network … exited 125:
+docker: Error response from daemon: write /var/lib/docker/containers/0fd37fdbc6ce00f6395b06f872e1c25fe91509f400a83fc47ae29f8891b95c81/hostname: no space left on device
+
+Run 'docker run --help' for more information
+try 2: exception: docker run --rm --network … exited 125:
+docker: Error response from daemon: write /var/lib/docker/containers/8e7542d3be5504b152f5f0cdbab9e49531c19b10ed479d326e6284140a0f1023/.tmp-hostconfig.json4084980146: no space left on device
+
+Run 'docker run --help' for more information

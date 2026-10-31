@@ -1,0 +1,24 @@
+=== try 0 (agent-sdk, completed)
+tool_use Bash: {"command":"cd /Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-fiks-r2-20261031T012316Z-90fd-try0; ls src src/tools; cat src/tools/get_order.ts src/vendor.ts; cat test/fixtures/v1/order-o-5001.json; grep -n created_at -A5 vendor/openapi.json | head -30"}
+tool_use Glob: {"pattern":"src/**/*.ts"}
+tool_use Read: {"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-fiks-r2-20261031T012316Z-90fd-try0/test/fixtures/v1/order-o-5001.json"}
+tool_use Read: {"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-fiks-r2-20261031T012316Z-90fd-try0/src/tools/get_order.ts"}
+tool_use Read: {"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-fiks-r2-20261031T012316Z-90fd-try0/src/vendor.ts"}
+tool_use Edit: {"replace_all":false,"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-fiks-r2-20261031T012316Z-90fd-try0/src/tools/get_order.ts","old_string":"  created_at: string;\n}","new_string":"  // ISO-8601 string (2026-01-01) or epoch milliseconds (2026-10-01).\n  created_at: string | number;\n}"}
+tool_use Edit: {"replace_all":false,"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-fiks-r2-20261031T012316Z-90fd-try0/src/tools/get_order.ts","old_string":"  const createdAt = new Date(Date.parse(String(o.created_at)) || 0);","new_string":"  const createdAt = new Date(\n    typeof o.created_at === 'number
+tool_use Bash: {"command":"pnpm typecheck && pnpm lint && pnpm test 2>&1 | tail -30"}
+tool_use Bash: {"command":"pnpm typecheck"}
+tool_use Bash: {"command":"pnpm lint"}
+tool_use Bash: {"command":"pnpm test"}
+assistant: Tests pass; fixing a formatting lint error now.
+tool_use Edit: {"replace_all":false,"file_path":"/Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-fiks-r2-20261031T012316Z-90fd-try0/src/tools/get_order.ts","old_string":"  const createdAt = new Date(\n    typeof o.created_at === 'number' ? o.created_at : Date.parse(o.created_at) || 0,\n  );","new_string":"  const creat
+tool_use Bash: {"command":"pnpm lint"}
+tool_use Bash: {"command":"pnpm typecheck"}
+tool_use Bash: {"command":"pnpm test"}
+assistant: Subject: accept epoch-millisecond created_at in get_order
+
+Vendor version 2026-10-01 now sends `created_at` as a number of milliseconds since 1970 instead of an ISO-8601 string. `get_order` was turning that number into a string and parsing it as a date. That parse failed, the code fell back to `|| 0`, and orders were reported as created on 1970-01-01 with no error. The fix in `src/tools/get_order.ts` uses a numeric `created_at` directly as milliseconds and only parses strings, so old v1 responses still go through the same path and give the same output. I also widened the `VendorOrder.created_at` type to allow both forms. `pnpm typecheck`, `pnpm lint` and `pnpm test` all pass, including the repro test and the v1 fixtures.
+
+Subject: accept epoch-millisecond created_at in get_order
+
+Vendor version 2026-10-01 now sends `created_at` as a number of milliseconds since 1970 instead of an ISO-8601 string. `get_order` was turning that number into a string and parsing it as a date. That parse failed, the code fell back to `|| 0`, and orders were reported as created on 1970-01-01 with no error. The fix in `src/tools/get_order.ts` uses a numeric `created_at` directly as milliseconds and only parses strings, so old v1 responses still go through the same path and give the same output. I also widened the `VendorOrder.created_at` type to allow both forms. `pnpm typecheck`, `pnpm lint` and `pnpm test` all pass, including the repro test and the v1 fixtures.

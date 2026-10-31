@@ -1,0 +1,22 @@
+node:fs:1193
+  binding.rmdir(path);
+          ^
+
+Error: EACCES: permission denied, rmdir '/Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-alert-r2-20261031T012422Z-3551-try0/.git'
+    at rmdirSync (node:fs:1193:11)
+    at _rmdirSync (node:internal/fs/rimraf:236:5)
+    at rimrafSync (node:internal/fs/rimraf:194:7)
+    at node:internal/fs/rimraf:254:9
+    at Array.forEach (<anonymous>)
+    at _rmdirSync (node:internal/fs/rimraf:251:7)
+    at rimrafSync (node:internal/fs/rimraf:194:7)
+    at rmSync (node:fs:1239:10)
+    at Object.remove (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/checkout.ts:67:43)
+    at runOnce (/Users/anvayvats/fiks-wt/RUNS/packages/cli/src/exp/repair-run.ts:418:44) {
+  errno: -13,
+  code: 'EACCES',
+  syscall: 'rmdir',
+  path: '/Users/anvayvats/fiks-wt/RUNS/.work/exp/D5-alert-r2-20261031T012422Z-3551-try0/.git'
+}
+
+Node.js v22.23.3
