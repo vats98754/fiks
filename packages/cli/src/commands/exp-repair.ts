@@ -1,6 +1,6 @@
 // `fiks exp-repair` (paper/EXP-PLAN.md E-A, E-C): one exploratory repair run.
 //
-//   pnpm fiks exp-repair --drift D1..D5 --arm fiks|nohint|alert --rep N [--sandbox docker|host]
+//   pnpm fiks exp-repair --drift D1..D5 --arm fiks|nohint|alert|alertplus --rep N [--sandbox docker|host]
 //     [--inject <templateId> [--carrier <kind>]] [--out <dir>] [--agent-stub <script.json>]
 //     [--model <id>] [--max-turns N] [--max-budget-usd X] [--json]
 //
@@ -15,7 +15,7 @@ import { runExpRepair } from '../exp/repair-run.ts';
 import { ARMS, type ExpArm, type SandboxKind } from '../exp/types.ts';
 
 const USAGE =
-  'exp-repair --drift D1..D5 --arm fiks|nohint|alert --rep N [--sandbox docker|host] [--inject <templateId>] [--carrier <kind>] [--out <dir>] [--agent-stub <file>] [--model <id>] [--max-turns N] [--max-budget-usd X] [--json]';
+  'exp-repair --drift D1..D5 --arm fiks|nohint|alert|alertplus --rep N [--sandbox docker|host] [--inject <templateId>] [--carrier <kind>] [--out <dir>] [--agent-stub <file>] [--model <id>] [--max-turns N] [--max-budget-usd X] [--json]';
 
 const command: CliCommandModule = {
   name: 'exp-repair',

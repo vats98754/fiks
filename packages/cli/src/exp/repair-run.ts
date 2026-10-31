@@ -7,6 +7,9 @@
 //   NOHINT: as FIKS with buildNoHintPrompt.
 //   ALERT:  buildAlertPrompt (receipt text, violated properties, raw trace); no repro test is
 //           generated, shown or gated; gates = guard, suite, typecheck, lint, integrity.
+//   ALERT+: the ALERT prompt; the repro test is never shown (F runs on the seed, then the files are
+//           removed) but is generated after the attempt and gated (EXP-PLAN E-A2); gates = F,
+//           guard, repro (P), suite, typecheck, lint, integrity. The head keeps no test/repro files.
 //
 // Infrastructure errors (runner infra_error, Docker failures, exceptions) restart the run from a
 // fresh checkout up to `maxInfraRetries` times; then the record carries `infraError` and counts
@@ -241,8 +244,21 @@ async function runOnce(
     let startCommit = baseCommit;
     let prompt: string;
     let spec: ReturnType<typeof generateRepro> | undefined;
-    if (o.arm === 'alert') {
+    if (o.arm === 'alert' || o.arm === 'alertplus') {
       prompt = buildAlertPrompt({ trace, receiptText: receiptOf(trace) });
+      if (o.arm === 'alertplus') {
+        // F on the unfixed seed, then the repro files leave the checkout before the agent starts.
+        writeFileSync(join(outDir, 'trace.json'), `${JSON.stringify(trace, null, 2)}\n`);
+        const hidden = generateRepro(trace, join(outDir, 'trace.json'), dir);
+        const f = await fGate(sb, hidden, 3);
+        record.gates.push(f.gate);
+        if (!f.gate.ok) {
+          if (/^setup error: no vitest report/.test(f.gate.reason))
+            throw new Error(`F gate: ${f.gate.reason}`);
+          throw new SetupError(`F gate on seed-v1: ${f.gate.reason}`);
+        }
+        revertFiles(dir, baseCommit, changedSince(dir, baseCommit));
+      }
     } else {
       writeFileSync(join(outDir, 'trace.json'), `${JSON.stringify(trace, null, 2)}\n`);
       spec = generateRepro(trace, join(outDir, 'trace.json'), dir);
@@ -329,11 +345,24 @@ async function runOnce(
     const owned: Record<string, Buffer> = {};
     const deleted = srcFiles.filter((f) => !existsSync(join(dir, f)));
     for (const f of srcFiles) owned[f] = deleted.includes(f) ? Buffer.alloc(0) : readFileSync(join(dir, f));
+    // ALERT+: the hidden repro joins the gates now, committed on top of the start commit (as
+    // exp-eval does) so a stale recording of it can be re-recorded; it never enters the head.
+    let gateBase = startCommit;
+    const hiddenPaths: string[] = [];
+    if (o.arm === 'alertplus' && srcFiles.length) {
+      spec = generateRepro(trace, join(outDir, 'trace.json'), dir);
+      hiddenPaths.push(spec.testPath, spec.tracePath);
+      gateBase = commitPaths(
+        dir,
+        hiddenPaths,
+        `test: hidden repro for ${spec.propertyIds.join(', ')} (fiks exp)`,
+      );
+    }
     if (srcFiles.length) {
       let suite = await runSuiteIn(sb);
       logGate('suite (before re-record)', suite.output);
       if (hasStale(suite)) {
-        const rr = await sb.rerecord(startCommit, profileOf(trace));
+        const rr = await sb.rerecord(gateBase, profileOf(trace));
         logGate('rerecord', rr.output);
         gates.push({
           name: 'rerecord',
@@ -342,8 +371,9 @@ async function runOnce(
             ? `re-recorded: ${rr.files.join(', ') || 'nothing'}`
             : `re-recording failed: ${rr.output.slice(-500)}`,
         });
-        for (const f of rr.files) owned[f] = readFileSync(join(dir, f));
-        record.rerecorded = rr.files;
+        const kept = rr.files.filter((f) => !hiddenPaths.includes(f));
+        for (const f of kept) owned[f] = readFileSync(join(dir, f));
+        record.rerecorded = kept;
         suite = await runSuiteIn(sb);
         logGate('suite (after re-record)', suite.output);
       }
@@ -363,7 +393,7 @@ async function runOnce(
           return true;
         }
       });
-      const moved = git(dir, ['rev-parse', 'HEAD']) !== startCommit;
+      const moved = git(dir, ['rev-parse', 'HEAD']) !== gateBase;
       gates.push({
         name: 'integrity',
         ok: tampered.length === 0 && !moved,

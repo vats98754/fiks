@@ -20,8 +20,11 @@ Counting rules (EXP-PLAN stop rules):
   - an arm whose run + eval infra errors exceed 20% of its attempted runs is marked incomplete;
   - a run with a head but no eval.json yet is reported as not evaluated (exp-eval has not run on
     it; a warning is printed) and is in no count until it is evaluated;
-  - paired comparison FIKS vs NOHINT and FIKS vs ALERT: exact two-sided sign test over drifts on
-    the per-drift live-check success rates (ties dropped). n is small; all results are descriptive.
+  - paired comparison FIKS vs NOHINT, FIKS vs ALERT and FIKS vs ALERT+: exact two-sided sign test
+    over drifts on the per-drift live-check success rates (ties dropped). n is small; all results
+    are descriptive;
+  - ALERT+ (EXP-PLAN E-A2) runs the ALERT prompt; the script checks that per drift the prompts are
+    byte-identical (promptSha256) and also reports ALERT and ALERT+ pooled as samples of that prompt.
 
 Usage:
   python3 paper/scripts/exp/ablation_numbers.py [--root DIR] [--out-dir DIR]
@@ -37,9 +40,9 @@ from math import comb
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 DEFAULT_RESULTS = os.path.join(ROOT, 'bench', 'results', 'exp', 'ablation')
 DEFAULT_OUT = os.path.join(ROOT, 'paper', 'generated')
-ARMS = ['fiks', 'nohint', 'alert']
-ARM_LABEL = {'fiks': 'FIKS', 'nohint': 'NOHINT', 'alert': 'ALERT'}
-ARM_MACRO = {'fiks': 'Fiks', 'nohint': 'Nohint', 'alert': 'Alert'}
+ARMS = ['fiks', 'nohint', 'alert', 'alertplus']
+ARM_LABEL = {'fiks': 'FIKS', 'nohint': 'NOHINT', 'alert': 'ALERT', 'alertplus': 'ALERT+'}
+ARM_MACRO = {'fiks': 'Fiks', 'nohint': 'Nohint', 'alert': 'Alert', 'alertplus': 'Alertplus'}
 DRIFTS = ['D1', 'D2', 'D3', 'D4', 'D5']
 RUN_SCHEMA = 'fiks.exp.run/1'
 EVAL_SCHEMA = 'fiks.exp.eval/2'
@@ -125,12 +128,15 @@ def compute(root):
     }
     n_records = 0
     pending = []
+    prompts = {}
     for run_dir in find_runs(root):
         rec, ev = load(run_dir)
         if rec['experiment'] != 'E-A':
             continue
         n_records += 1
         c = cells[(rec['drift'], rec['arm'])]
+        if rec.get('promptSha256'):
+            prompts.setdefault((rec['drift'], rec['arm']), set()).add(rec['promptSha256'])
         if rec['infraError'] is not None:
             c['infra'] += 1
             continue
@@ -158,7 +164,7 @@ def compute(root):
         })
     for d in pending:
         print(f'warning: {d} has no eval.json (run `pnpm fiks exp-eval`); it is in no count', file=sys.stderr)
-    return n_records, cells
+    return n_records, cells, prompts
 
 
 def arm_totals(cells, arm):
@@ -181,7 +187,7 @@ def infra_cell(infra, ev_infra, unev):
 
 
 def build(root):
-    n_records, cells = compute(root)
+    n_records, cells, prompts = compute(root)
     M = {}
     M['expAblRecords'] = str(n_records)
     lines = [
@@ -237,6 +243,7 @@ def build(root):
         M[f'expGatesPassLiveFail{mac}'] = str(sum(r['gates'] and not r['live'] for r in runs))
         M[f'expGatesFailLiveFail{mac}'] = str(sum(not r['gates'] and not r['live'] for r in runs))
         M[f'expHeldPassLiveFail{mac}'] = str(sum(r['heldOut'] and not r['live'] for r in runs))
+        M[f'expGatesFailLivePass{mac}'] = str(sum(not r['gates'] and r['live'] for r in runs))
         M[f'expTurnsMedian{mac}'] = f'{statistics.median([r["turns"] for r in runs]):g}' if runs else 'n/a'
         M[f'expCostTotal{mac}'] = f'{sum(r["cost"] for r in runs):.2f}'
         M[f'expInfra{mac}'] = str(infra + ev_infra)
@@ -245,7 +252,7 @@ def build(root):
         M[f'expHeadErrors{mac}'] = str(head_err)
         M[f'expUnevaluated{mac}'] = str(unev)
         M[f'expIncomplete{mac}'] = 'yes' if incomplete else 'no'
-        if n_records:
+        if n_records and attempted:
             note = ' (incomplete)' if incomplete else ''
             live = f'{k}/{n} [{M[f"expLiveLo{mac}"]}--{M[f"expLiveHi{mac}"]}]' if n else '0/0'
             mean_cost = f'{sum(r["cost"] for r in runs) / n:.2f}' if n else '--'
@@ -257,7 +264,7 @@ def build(root):
     M['expRunsTotal'] = str(total_runs)
     M['expInfraTotal'] = str(total_infra)
     # Paired sign tests over drifts on per-drift live-check success rates.
-    for other in ('nohint', 'alert'):
+    for other in ('nohint', 'alert', 'alertplus'):
         wins = losses = ties = 0
         for d in DRIFTS:
             a, b = cells[(d, 'fiks')]['runs'], cells[(d, other)]['runs']
@@ -276,6 +283,18 @@ def build(root):
         M[f'{mac}Losses'] = str(losses)
         M[f'{mac}Ties'] = str(ties)
         M[f'{mac}P'] = fmt_p(sign_test_two_sided(wins, losses))
+    # ALERT and ALERT+ share the prompt: per drift, every run of both arms has the same prompt hash.
+    shared = [d for d in DRIFTS if (d, 'alert') in prompts and (d, 'alertplus') in prompts]
+    same = all(len(prompts[(d, 'alert')] | prompts[(d, 'alertplus')]) == 1 for d in shared)
+    M['expAlertPromptDrifts'] = str(len(shared))
+    M['expAlertPromptSame'] = 'yes' if shared and same else 'no'
+    pooled = [r for a in ('alert', 'alertplus') for d in DRIFTS for r in cells[(d, a)]['runs']]
+    k, n = sum(r['live'] for r in pooled), len(pooled)
+    lo, hi = wilson(k, n)
+    M['expLiveAlertPooled'] = f'{k}/{n}'
+    M['expLiveRateAlertPooled'] = pct(k / n) if n else 'n/a'
+    M['expLiveLoAlertPooled'] = pct(lo) if n else 'n/a'
+    M['expLiveHiAlertPooled'] = pct(hi) if n else 'n/a'
     lines += ['\\bottomrule', '\\end{tabular}', '']
     macros = '% Generated by paper/scripts/exp/ablation_numbers.py from bench/results/exp/ablation. Do not edit.\n' + ''.join(
         f'\\newcommand{{\\{k}}}{{{v}}}\n' for k, v in sorted(M.items())

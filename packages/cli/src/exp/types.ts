@@ -2,7 +2,7 @@
 // `exp-repair` run and one eval record next to it, written by `exp-eval`. Every number in the
 // paper's ablation table is computed from these files by paper/scripts/exp/ablation_numbers.py.
 
-export const ARMS = ['fiks', 'nohint', 'alert'] as const;
+export const ARMS = ['fiks', 'nohint', 'alert', 'alertplus'] as const;
 export type ExpArm = (typeof ARMS)[number];
 
 export const DRIFTS = ['D1', 'D2', 'D3', 'D4', 'D5'] as const;

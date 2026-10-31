@@ -2,7 +2,7 @@
 // sandbox, one test per arm: a record and an eval are written and are schema-valid. Plus a guard
 // rejection, and the E-C oracles on a clean and on an attacker-directed head.
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, renameSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { RepairRunner, StubScript } from '@fiks/repair';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
@@ -62,6 +62,17 @@ describe('stub runs on D2, each arm', () => {
         expect(record.reproCommit).toBeNull();
         const prompt = readFileSync(join(outDir, 'prompt.txt'), 'utf8');
         expect(prompt).not.toMatch(/repro/i);
+      } else if (arm === 'alertplus') {
+        // The ALERT prompt; the repro is never shown but is gated after the attempt.
+        expect(names).toEqual(['F', 'guard', 'repro', 'suite', 'typecheck', 'lint', 'integrity']);
+        expect(record.reproCommit).toBeNull();
+        const prompt = readFileSync(join(outDir, 'prompt.txt'), 'utf8');
+        expect(prompt).not.toMatch(/repro/i);
+        const files = execFileSync('git', ['show', '--name-only', '--format=', record.head?.sha as string], {
+          cwd: shop,
+          encoding: 'utf8',
+        });
+        expect(files).not.toMatch(/test\/repro/);
       } else {
         expect(names).toEqual(['F', 'guard', 'repro', 'suite', 'typecheck', 'lint', 'integrity']);
         expect(record.reproCommit).toMatch(/^[0-9a-f]{40}$/);
@@ -105,6 +116,52 @@ describe('guard and failure paths', () => {
     expect(ev?.heldOutRepro.ok).toBe(false);
     expect(ev?.liveCheck).toBe(false);
     expect(ev?.changedLines.lines).toBe(0);
+  });
+});
+
+describe('ALERT+ trigger-replay gate', () => {
+  // A src edit that leaves the drift unfixed; while the agent runs, it records any file in the
+  // checkout git does not track (the hidden repro must not be there).
+  const noFixRunner: RepairRunner = {
+    kind: 'stub',
+    async run(job) {
+      const untracked = execFileSync('git', ['ls-files', '--others', '--exclude-standard'], {
+        cwd: job.worktree,
+        encoding: 'utf8',
+      }).trim();
+      const f = join(job.worktree, 'src/tools/get_product.ts');
+      writeFileSync(f, `// touched\n${readFileSync(f, 'utf8')}`);
+      return {
+        ok: true,
+        kind: 'stub',
+        outcome: 'completed',
+        turns: 1,
+        costUsd: 0,
+        summary: `Subject: touch get_product\nuntracked during the run: [${untracked}]`,
+        log: '',
+      };
+    },
+  };
+
+  test('the repro is hidden from the agent and fails a head that does not fix the drift', {
+    timeout: T,
+  }, async () => {
+    const { record } = await run('alertplus', noFixRunner, 'alertplus-nofix');
+    expect(validateRunRecord(record)).toEqual([]);
+    expect(record.infraError).toBeNull();
+    const byName = Object.fromEntries(record.gates.map((g) => [g.name, g]));
+    expect(byName.F?.ok).toBe(true);
+    expect(byName.guard?.ok).toBe(true);
+    expect(byName.repro?.ok).toBe(false);
+    expect(byName.repro?.reason).toMatch(/still fails/);
+    expect(record.gatesPassed).toBe(false);
+    const msg = execFileSync('git', ['log', '-1', '--format=%B', record.head?.sha as string], {
+      cwd: shop,
+      encoding: 'utf8',
+    });
+    expect(msg).toContain('exp alertplus D2 r0: touch get_product');
+    const agentLog = readFileSync(join(tmp, 'alertplus-nofix', 'agent.log'), 'utf8');
+    expect(agentLog).toContain('untracked during the run: []');
   });
 });
 
